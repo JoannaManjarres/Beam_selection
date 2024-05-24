@@ -109,10 +109,10 @@ def select_best_beam(input_train,
         numero_experimentos = 2
     else:
 
-        #address_size = [8, 24, 64]
+        address_size = [8, 24, 64]
         #address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
         #address_size = [6,  12, 18, 24, 28, 30, 36, 42, 48, 54, 60]
-        address_size = [4,   8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+        #address_size = [4,   8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
         numero_experimentos = 1
 
     vector_time_train_media = []

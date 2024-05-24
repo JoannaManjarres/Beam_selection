@@ -446,7 +446,7 @@ def beam_selection_wisard_lidar_2D_and_coord():
 
 def beam_selection_wisard_with_lidar_3D():
     top_k_accuracy = False
-    input_type = 'lidar_3D'
+    input_type =  'lidar_3D_without_variance' #'lidar_3D'
     # ------- Get Beams
     index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
     index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
@@ -456,42 +456,46 @@ def beam_selection_wisard_with_lidar_3D():
     print('Labels Train = ',len(label_train))
     print('Labels Test =',len(label_test))
 
-    data_lidar_3D_train, data_lidar_3D_test = pre_process_lidar.data_lidar_3D_binary_without_variance()
+    if input_type == 'lidar_3D_without_variance':
+        data_lidar_3D_train, data_lidar_3D_test = pre_process_lidar.data_lidar_3D_binary_without_variance()
+        print ('Input Train = ', data_lidar_3D_train.shape)
+        print ('Input Test = ', data_lidar_3D_test.shape)
 
-    data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
-    data_lidar_3D_process_all, data_position_rx, data_position_tx = pre_process_lidar.read_data (data_path)
+        input_train = data_lidar_3D_train
+        input_test = data_lidar_3D_test
 
-    data_path = "../data/lidar/s008/lidar_validation_raymobtime.npz"
-    data_lidar_3D_process_all_val, data_position_rx_val, data_position_tx_val = pre_process_lidar.read_data (data_path)
+    if input_type == 'lidar_3D':
+        data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
+        data_lidar_3D_process_all, data_position_rx, data_position_tx = pre_process_lidar.read_data (data_path)
 
-    data_lidar_3D_train = np.concatenate((data_lidar_3D_process_all, data_lidar_3D_process_all_val), axis=0)
-    pre_process_lidar.plot_3D_scene(data_lidar_3D_train, data_position_rx, data_position_tx, sample_for_plot=0)
+        data_path = "../data/lidar/s008/lidar_validation_raymobtime.npz"
+        data_lidar_3D_process_all_val, data_position_rx_val, data_position_tx_val = pre_process_lidar.read_data (data_path)
 
-    data_path = "../data/lidar/s009/lidar_test_raymobtime.npz"
-    data_lidar_3D_test, data_position_rx_test, data_position_tx_test = pre_process_lidar.read_data (data_path)
+        data_lidar_3D_train = np.concatenate((data_lidar_3D_process_all, data_lidar_3D_process_all_val), axis=0)
+        pre_process_lidar.plot_3D_scene(data_lidar_3D_train, data_position_rx, data_position_tx, sample_for_plot=0)
 
+        data_path = "../data/lidar/s009/lidar_test_raymobtime.npz"
+        data_lidar_3D_test, data_position_rx_test, data_position_tx_test = pre_process_lidar.read_data (data_path)
 
-    #pre_process_lidar.plot_3D_scene(data_lidar_3D_train, data_position_rx, data_position_tx, sample_for_plot=0)
+        print('Input Train = ',data_lidar_3D_train.shape)
+        print('Input Test = ',data_lidar_3D_test.shape)
 
+        dimension_of_data = data_lidar_3D_train.shape[1] * data_lidar_3D_train.shape[2] * data_lidar_3D_train.shape[3]
+        samples_train = data_lidar_3D_train.shape [0]
+        data_lidar_3D_as_vector_train = np.zeros([samples_train, dimension_of_data], dtype=np.int8)
 
-    print('Input Train = ',data_lidar_3D_train.shape)
-    print('Input Test = ',data_lidar_3D_test.shape)
+        samples_test = data_lidar_3D_test.shape[0]
+        data_lidar_3D_as_vector_test = np.zeros([samples_test, dimension_of_data], dtype=np.int8)
 
-    dimension_of_data = data_lidar_3D_train.shape [1] * data_lidar_3D_train.shape [2] * data_lidar_3D_train.shape [3]
-    samples_train = data_lidar_3D_train.shape [0]
-    data_lidar_3D_as_vector_train = np.zeros ([samples_train, dimension_of_data], dtype=np.int8)
+        # Reshape the data to be used in the model
+        for i in range (samples_train):
+            data_lidar_3D_as_vector_train[i] = data_lidar_3D_train[i, :, :].reshape(1, dimension_of_data)
 
-    samples_test = data_lidar_3D_test.shape [0]
-    data_lidar_3D_as_vector_test = np.zeros ([samples_test, dimension_of_data], dtype=np.int8)
+        for i in range (samples_test):
+            data_lidar_3D_as_vector_test[i] = data_lidar_3D_test [i, :, :].reshape(1, dimension_of_data)
 
-
-
-    # Reshape the data to be used in the model
-    for i in range (samples_train):
-        data_lidar_3D_as_vector_train [i] = data_lidar_3D_train [i, :, :].reshape (1, dimension_of_data)
-
-    for i in range (samples_test):
-        data_lidar_3D_as_vector_test [i] = data_lidar_3D_test [i, :, :].reshape (1, dimension_of_data)
+        input_train = data_lidar_3D_as_vector_train
+        input_test = data_lidar_3D_as_vector_test
 
 
     name_of_figure = 's008_train_s009_test_' + input_type + '_'
@@ -500,8 +504,7 @@ def beam_selection_wisard_with_lidar_3D():
     data_set = 's008-s009'
     flag_test = 'Test'
 
-    input_train = data_lidar_3D_as_vector_train
-    input_test = data_lidar_3D_as_vector_test
+
 
     if top_k_accuracy:
         size_of_address = 64
@@ -685,7 +688,7 @@ def beam_selection_wisard_using_encoder_lidar_2D():
 def beam_selection_wisard_using_pca():
     x_train, x_test = pca.pca()
     top_k_accuracy = False
-    input_type = 'lidar_2D_pca'
+    input_type = 'lidar_3D_pca'
     # ------- Get Beams
     index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
     index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
@@ -721,6 +724,6 @@ def beam_selection_wisard_using_pca():
 
 
 
-beam_selection_wisard_with_lidar_3D()
+beam_selection_wisard_using_pca()
 
 

@@ -454,17 +454,25 @@ def read_pre_processed_data_rx_like_cube():
 
     return data_lidar_train, data_lidar_test
 def read_lidar_data_of_s008():
-    data_path = "../data/lidar/s008/lidar_train.npz"
+    data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     label_cache_file = np.load (data_path)
     key = list (label_cache_file.keys ())
     data_lidar_train = label_cache_file [key [0]]
 
-    data_path = "../data/lidar/s008/lidar_val.npz"
+    data_path = "../data/lidar/s008/lidar_validation_raymobtime.npz"
     label_cache_file = np.load (data_path)
     key = list (label_cache_file.keys ())
     data_lidar_val = label_cache_file [key [0]]
 
     return data_lidar_train, data_lidar_val
+
+def read_lidar_data_of_s009():
+    data_path = "../data/lidar/s009/lidar_test_raymobtime.npz"
+    label_cache_file = np.load (data_path)
+    key = list(label_cache_file.keys())
+    data_lidar_test = label_cache_file[key[0]]
+
+    return data_lidar_test
 
 def process_lidar_2D_dilation(ite):
     path = '../data/lidar/s008/lidar_train_raymobtime.npz'
@@ -577,6 +585,37 @@ def data_lidar_2D_binary_without_variance():
 
     return data_lidar_2D_train_without_var, data_lidar_2D_test_without_var
 
+
+
+def data_lidar_3D():
+    data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
+    data_lidar_all_train, data_position_rx, data_position_tx = read_data (data_path)
+
+    data_path = "../data/lidar/s008/lidar_validation_raymobtime.npz"
+    data_lidar_all_val, data_position_rx_val, data_position_tx_val = read_data (data_path)
+
+    data_path = "../data/lidar/s009/lidar_test_raymobtime.npz"
+    data_lidar_all_test, data_position_rx_test, data_position_tx_test = read_data (data_path)
+
+    dimension_of_data = data_lidar_all_train.shape [1] * data_lidar_all_train.shape [2] * data_lidar_all_train.shape [3]
+
+    # Reshape the data to be used in the model
+    samples_train = data_lidar_all_train.shape [0]
+    data_lidar_3D_train_as_vector = (np.zeros ([samples_train, dimension_of_data], dtype=np.int8))
+    for i in range(samples_train):
+        data_lidar_3D_train_as_vector[i] = data_lidar_all_train [i, :, :, :].reshape(1, dimension_of_data)
+
+    samples_val = data_lidar_all_val.shape [0]
+    data_lidar_3D_val_as_vector = (np.zeros([samples_val, dimension_of_data], dtype=np.int8))
+    for i in range(samples_val):
+        data_lidar_3D_val_as_vector[i] = data_lidar_all_val[i, :, :, :].reshape(1, dimension_of_data)
+
+    data_train = np.concatenate((data_lidar_3D_train_as_vector, data_lidar_3D_val_as_vector), axis=0)
+    data_test = data_lidar_all_test
+
+
+    return data_train, data_test
+
 def data_lidar_3D_binary_without_variance():
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     data_lidar_all_train, data_position_rx, data_position_tx = read_data(data_path)
@@ -588,7 +627,6 @@ def data_lidar_3D_binary_without_variance():
     data_lidar_all_test, data_position_rx_test, data_position_tx_test = read_data (data_path)
 
     dimension_of_data = data_lidar_all_train.shape[1] * data_lidar_all_train.shape[2]* data_lidar_all_train.shape[3]
-
 
     # Reshape the data to be used in the model
     samples_train = data_lidar_all_train.shape [0]
@@ -609,20 +647,21 @@ def data_lidar_3D_binary_without_variance():
     data_lidar_3D_vector_train = np.concatenate((data_lidar_3D_train_as_vector,
                                                         data_lidar_3D_val_as_vector), axis=0)
 
-    th = 0
+    th = 0.1
     selector = VarianceThreshold(threshold=th)
+    print("******** PRE PROCESSING DATA ********")
+    print('Eliminando variâncias menores que ', th)
     print('\tMax variancias')
     print('\tTrain\t\tTest')
     print('\t',round(np.max(np.var(data_lidar_3D_vector_train, axis=0)),2),'\t',np.max(np.var(data_lidar_3D_test_as_vector, axis=0)))
 
-    vt_train = selector.fit(data_lidar_3D_vector_train)
-    vt_test = selector.fit(data_lidar_3D_test_as_vector)
-    data_lidar_3D_train_without_var = data_lidar_3D_vector_train[:, vt_train.variances_ > th]
-    data_lidar_3D_test_without_var = data_lidar_3D_test_as_vector[:, vt_test.variances_ > th]
+    variance_threshold = selector.fit(data_lidar_3D_vector_train)
+    #vt_test = selector.fit(data_lidar_3D_test_as_vector)
+    data_lidar_3D_train_without_var = data_lidar_3D_vector_train[:, variance_threshold.variances_ > th]
+    data_lidar_3D_test_without_var = data_lidar_3D_test_as_vector[:, variance_threshold.variances_ > th]
 
     print('\tNew size of Dataset')
-    print('\tTrain\t\tTest')
-    print('\t',data_lidar_3D_train_without_var.shape,'\t',data_lidar_3D_test_without_var.shape)
+    print('\tTrain',data_lidar_3D_train_without_var.shape,'\tTest',data_lidar_3D_test_without_var.shape)
 
     return data_lidar_3D_train_without_var, data_lidar_3D_test_without_var
 
