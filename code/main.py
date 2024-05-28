@@ -43,7 +43,6 @@ def beam_selection_wisard_with_article_data():
                                            type_of_input='coord',
                                            titulo_figura='Accuracy [Train: s008 - Test: s008] - Article Data resolution 8  ',
                                            user='all')
-
 def beam_selection_wisard_with_s008_from_ray_tracing():
     #Este metodo faz selecao de beam usando wisard com dados gerados por ray tracing.
     #e as coordenadas sao tomadas das, já preprocessadas pro artigo
@@ -102,7 +101,6 @@ def beam_selection_wisard_with_s008_from_ray_tracing():
                                                type_of_input='coord',
                                                titulo_figura='Accuracy [Train: s008 - Test: s008]',
                                                user='all')
-
 def beam_selection_wisard_with_s008_and_s009_from_ray_tracing():
     # Este medoto faz selecao de beam usando wisard com dados gerados por ray tracing.
     # e as coordenas foram pre-processadas para s008 e s009 devido a diferenca de tamanhas na entrada dos dataset
@@ -532,9 +530,10 @@ def beam_selection_wisard_lidar_2D():
     top_k_accuracy = False
 
     lidar_2D = False
+    lidar_2D_without_variance = True
     lidar_rx_2D_like_thermometer = False
     lidar_2D_with_rx_2D_thermometer = False
-    lidar_2D_dilated = True
+    lidar_2D_dilated = False
 
     if lidar_2D:
         data_lidar_2D_train, data_lidar_2D_test = pre_process_lidar.read_pre_processed_data_lidar_2D()
@@ -542,6 +541,13 @@ def beam_selection_wisard_lidar_2D():
 
         input_train = data_lidar_2D_train
         input_test = data_lidar_2D_test
+
+    if lidar_2D_without_variance:
+        data_lidar_2D_without_variance_train, data_lidar_2D_without_variance_test = pre_process_lidar.data_lidar_2D_binary_without_variance()
+        input_type = 'lidar_2D_without_variance'
+
+        input_train = data_lidar_2D_without_variance_train
+        input_test = data_lidar_2D_without_variance_test
 
     if lidar_rx_2D_like_thermometer:
         position_of_rx_2D_as_thermomether_train, position_of_rx_2D_as_thermomether_test = pre_process_lidar.process_data_rx_2D_like_thermomether()
@@ -566,6 +572,8 @@ def beam_selection_wisard_lidar_2D():
 
         input_train = data_lidar_2D_dilated_train
         input_test = data_lidar_2D_dilated_test
+
+
 
 
     # ------- Get Beams
@@ -686,7 +694,7 @@ def beam_selection_wisard_using_encoder_lidar_2D():
 
 
 def beam_selection_wisard_using_pca():
-    x_train, x_test = pca.pca()
+    x_train, x_test = pca.pca(nro_components=70)
     top_k_accuracy = False
     input_type = 'lidar_3D_pca'
     # ------- Get Beams
@@ -721,9 +729,54 @@ def beam_selection_wisard_using_pca():
                           titulo_figura=title_of_figure,
                           user='all')
 
+def beam_selection_wisard_using_pca_with_lidar_2D():
+    print ('-------------------------------------------------------------------')
+    print("   SELECIONANDO BEAM USANDO PCA COM DADOS DE LIDAR 2D BINARIOS")
+    print ('-------------------------------------------------------------------')
+    x_train, x_test = pca.pca(nro_components=70, type_of_data='2D_binary')
+    print('-------------------------')
+    print('--- Input for WiSARD ---')
+    print('   X_train = ', x_train.shape)
+    print('   X_test = ', x_test.shape)
+    print ('-------------------------')
+    top_k_accuracy = False
+    input_type = 'lidar_2D_pca'
+    # ------- Get Beams
+    index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
+    index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
+
+    label_train = np.concatenate ((index_beams_train, index_beam_validation), axis=0)
+    label_test = index_beams_test
+
+    name_of_figure = 's008_train_s009_test_' + input_type + '_'
+    title_of_figure = "Accuracy [Train: s008 - Test: s009] /n - Input[", input_type, "] -"
+    data_set = 's008-s009'
+    size_of_address = 64
+
+    if top_k_accuracy:
+        beam_selection_top_k_wisard (x_train=x_train,
+                                     x_test=x_test,
+                                     y_train=label_train,
+                                     y_test=label_test,
+                                     data_input=input_type,
+                                     data_set=data_set,
+                                     address_of_size=size_of_address)
+    else:
+
+        select_best_beam (input_train=x_train,
+                          input_validation=x_test,
+                          label_train=label_train,
+                          label_validation=label_test,
+                          figure_name=name_of_figure,
+                          antenna_config='8x32',
+                          type_of_input=input_type,
+                          titulo_figura=title_of_figure,
+                          user='all')
 
 
 
-beam_selection_wisard_using_pca()
+beam_selection_wisard_using_pca_with_lidar_2D()
+#beam_selection_wisard_using_pca()
+#beam_selection_wisard_lidar_2D()
 
 

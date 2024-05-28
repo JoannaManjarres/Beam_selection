@@ -575,16 +575,53 @@ def data_lidar_2D_binary_without_variance():
 
     data_lidar_2D_vector_test = pre_process_data_lidar_2D_vector_test
 
-    th = 0
-    selector = VarianceThreshold (threshold=th)
-    vt_train = selector.fit(data_lidar_2D_vector_train)
-    data_lidar_2D_train_without_var = data_lidar_2D_vector_train[:, vt_train.variances_ > th]
 
-    vt_test = selector.fit(data_lidar_2D_vector_test)
-    data_lidar_2D_test_without_var = data_lidar_2D_vector_test[:, vt_test.variances_ > th]
+    th = 0.15
+    selector = VarianceThreshold (threshold=th)
+    print ("******** PRE PROCESSING DATA ********")
+    print ('Eliminando variâncias menores que ', th)
+    print ('\tMax variancias')
+    print ('\tTrain\t\tTest')
+    print ('\t', round (np.max (np.var (data_lidar_2D_vector_train, axis=0)), 2), '\t',
+           np.max (np.var (data_lidar_2D_vector_test, axis=0)))
+
+    variance_threshold = selector.fit (data_lidar_2D_vector_train)
+    # vt_test = selector.fit(data_lidar_3D_test_as_vector)
+    data_lidar_2D_train_without_var = data_lidar_2D_vector_train [:, variance_threshold.variances_ > th]
+    data_lidar_2D_test_without_var = data_lidar_2D_vector_test [:, variance_threshold.variances_ > th]
+
+    print ('\tNew size of Dataset')
+    print ('\tTrain', data_lidar_2D_train_without_var.shape, '\tTest', data_lidar_2D_test_without_var.shape)
+
+
 
     return data_lidar_2D_train_without_var, data_lidar_2D_test_without_var
+def plot_results_lidar_2D_binary_without_variance():
 
+    fig, ax = plt.subplots()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    # Example data
+    threshold = ('0', '0,1', '0,15', '0,20', '0,24')
+    y_pos = np.arange(len(threshold))
+    accuracy = (24.5, 33.1, 35.2, 34.7, 33.02)
+    dataset_size = (2642, 376, 347, 299, 223)
+
+    ax.barh (y_pos, accuracy,  align='center')
+    for i, v in enumerate (accuracy):
+        ax.text(v - 15, i , 'Dataset size = '+str(dataset_size[i]), color='white', fontsize=9)
+
+    for i, v in enumerate (accuracy):
+        ax.text(v + 0.15, i - 0.05, str(v), color='red', fontsize=9)
+
+    ax.set_yticks(y_pos, labels=threshold)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel('Accuracy [%]')
+    ax.set_ylabel('Threshold')
+    ax.set_title('Performance of Wisard with variance elimination for LiDAR 2D')
+
+    plt.show()
 
 
 def data_lidar_3D():
@@ -610,8 +647,13 @@ def data_lidar_3D():
     for i in range(samples_val):
         data_lidar_3D_val_as_vector[i] = data_lidar_all_val[i, :, :, :].reshape(1, dimension_of_data)
 
+    samples_test = data_lidar_all_test.shape[0]
+    data_lidar_3D_test_as_vector = (np.zeros([samples_test, dimension_of_data], dtype=np.int8))
+    for i in range(samples_test):
+        data_lidar_3D_test_as_vector[i] = data_lidar_all_test[i, :, :, :].reshape(1, dimension_of_data)
+
     data_train = np.concatenate((data_lidar_3D_train_as_vector, data_lidar_3D_val_as_vector), axis=0)
-    data_test = data_lidar_all_test
+    data_test = data_lidar_3D_test_as_vector
 
 
     return data_train, data_test
@@ -665,6 +707,32 @@ def data_lidar_3D_binary_without_variance():
 
     return data_lidar_3D_train_without_var, data_lidar_3D_test_without_var
 
+def plot_results_lidar_3D_binary_without_variance():
+
+    fig, ax = plt.subplots()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    # Example data
+    threshold = ('0', '0,1', '0,15', '0,18', '0,20', '0,24')
+    y_pos = np.arange(len(threshold))
+    accuracy = (26.1, 27.6, 27.3, 27.1, 27, 26.7)
+    dataset_size = (14.564, 1.993, 1.583, 1.329, 1.118, 348)
+
+    ax.barh (y_pos, accuracy,  align='center')
+    for i, v in enumerate (accuracy):
+        ax.text(v - 15, i , 'Dataset size = '+str(dataset_size[i]), color='white', fontsize=9)
+
+    for i, v in enumerate (accuracy):
+        ax.text(v + 0.15, i - 0.05, str(v), color='red', fontsize=9)
+
+    ax.set_yticks(y_pos, labels=threshold)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel('Accuracy [%]')
+    ax.set_ylabel('Threshold')
+    ax.set_title('Performance of Wisard with variance elimination')
+
+    plt.show()
 
 
 def process_data_lidar_into_2D_matrix():
@@ -723,5 +791,6 @@ def pre_process_data_lidar_into_2D(data_lidar_process_all, data_position_rx, dat
 
 
 
-
+#plot_results_lidar_3D_binary_without_variance()
 #data_lidar_3D_binary_without_variance()
+#plot_results_lidar_2D_binary_without_variance()

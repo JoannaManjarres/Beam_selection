@@ -1,4 +1,5 @@
 import numpy as np
+import pandas
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import VarianceThreshold
 import pre_process_lidar
@@ -6,6 +7,7 @@ import matplotlib.pyplot as plt
 import plot_scenes
 import seaborn as sns
 from sklearn import preprocessing
+import pandas as pd
 
 def read_3D_lidar():
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
@@ -46,18 +48,29 @@ def read_2D_lidar():
 
     return data_lidar_2D_train, data_lidar_2D_test, data_lidar_2D_vector_train, pre_process_data_lidar_2D_vector_test
 
-def pca():
-    data_type = '3D' #'2D_binary' 2D_int'
+def pca(nro_components, type_of_data):
+    data_type = type_of_data #'2D_binary' #'2D_binary' 2D_int'
+    plot = False
 
     if data_type == '2D_binary':
-        a=0
-        #data_lidar_2D_train_without_var, data_lidar_2D_test_without_var = pre_process_lidar.data_lidar_2D_binary_without_variance()
+        raw_data_lidar_2D = False
+        if raw_data_lidar_2D:
+            data_lidar_2D_train, data_lidar_2D_test = pre_process_lidar.read_pre_processed_data_lidar_2D ()
+            a=0
+        else:
+            data_lidar_2D_train_without_var, data_lidar_2D_test_without_var = pre_process_lidar.data_lidar_2D_binary_without_variance()
+            print ("Data shape Train: ", data_lidar_2D_train_without_var.shape)
+            print ("Data shape Test: ", data_lidar_2D_test_without_var.shape)
+            data_train = data_lidar_2D_train_without_var
+            data_test = data_lidar_2D_test_without_var
 
     if data_type == '3D':
-        raw_lidar_data = True
+        raw_lidar_data = False
         if raw_lidar_data:
             '''Read 3D lidar data'''
             data_lidar_3D_train, data_lidar_3D_test = pre_process_lidar.data_lidar_3D()
+            print("Data shape Train: ", data_lidar_3D_train.shape)
+            print("Data shape Test: ", data_lidar_3D_test.shape)
             data_train = data_lidar_3D_train
             data_test = data_lidar_3D_test
         else:
@@ -90,7 +103,7 @@ def pca():
     #plt.show()
     '''
 
-    components = 30
+    components = nro_components
     pca = PCA(n_components=components)
     principal_component_lidar = pca.fit(data_train)
     pca_lidar_comp = principal_component_lidar.components_
@@ -99,21 +112,24 @@ def pca():
     print("Variance explained by each component: ", var_explained)
     print("Cumulative variance explained: ", var_explained_cum)
 
-    fig = plt.figure (figsize=(8, 5))
-    plt.plot(var_explained, 'ro-', linewidth=2)
-    plt.title('Scree Plot')
-    plt.xlabel('Principal Component')
-    plt.ylabel('Eigenvalue')
-    plt.show()
+    if plot:
+        fig = plt.figure (figsize=(8, 5))
+        plt.plot(var_explained, 'ro-', linewidth=2)
+        plt.title('Scree Plot')
+        plt.xlabel('Principal Component')
+        plt.ylabel('Eigenvalue')
+        plt.show()
 
     PCA_components_train = pca.transform(data_train)
     PCA_components_test = pca.transform(data_test)
 
-    components_binarized_train = thermometer_2(PCA_components_train, components)
-    components_binarized_test = thermometer_2(PCA_components_test, components)
-
     #components_binarized_train = thermometer_1(PCA_components_train, components)
     #components_binarized_test = thermometer_1(PCA_components_test, components)
+
+    #components_binarized_train, max_train = thermometer_2 (PCA_components_train, components)
+    #components_binarized_test, max_test = thermometer_2 (PCA_components_test, components)
+
+    components_binarized_train, components_binarized_test = binarize_data_by_threshold(PCA_components_train, PCA_components_test, 0.5)
 
     return components_binarized_train, components_binarized_test
 
@@ -145,7 +161,69 @@ def thermometer_2(data, components_of_pca):
         sample = sum_of_components[i]
         thermometer[i, 0:sample] = 1
 
-    return thermometer
+    return thermometer, max_value
+
+def binarize_data_by_threshold(data_train, data_test, threshold):
+
+    abs_value_data_train = np.abs(data_train)
+    abs_value_data_test = np.abs(data_test)
+
+    #normalizer = preprocessing.Normalizer().fit(abs_value_data_train)
+    #data_normalized_train_1 = normalizer.transform(abs_value_data_train)
+    #data_normalized_test_1 = normalizer.transform(abs_value_data_test)
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    train_data = min_max_scaler.fit_transform(data_train)
+    test_data = min_max_scaler.fit_transform(data_test)
+
+    #data_normalized_train = preprocessing.normalize(abs_value_data_train, norm='l1')
+    #data_normalized_test = preprocessing.normalize(abs_value_data_test, norm='l1')
+
+    train_data[train_data < threshold] = 0
+    train_data[train_data >= threshold] = 1
+
+    test_data[test_data < threshold] = 0
+    test_data[test_data >= threshold] = 1
+
+    return train_data.astype(np.int8) , test_data.astype(np.int8)
+
+
+def plot_3_variables():
+
+    x = [20, 30, 40, 50]
+    y = [21.5, 21.4, 21.08, 20.89]
+    y2 = [11.4, 11.4, 11.9, 12.5]
+    z = [75.5, 79.9, 82.3, 83.9]
+    z2 = [79.9, 79.9, 82.3, 83.9]
+
+    components = ("20", "30", "40", "50")
+    scores = {
+        'Termomether 1': (21.5, 21.4, 21.08, 20.89),
+        'Termomether 2': (11.4, 11.4, 11.9, 12.5),
+        #'Flipper Length': (189.95, 195.82, 217.19),
+    }
+
+    x = np.arange(len(components))  # the label locations
+    width = 0.25  # the width of the bars
+    multiplier = 0
+
+    fig, ax = plt.subplots (layout='constrained')
+
+    for attribute, measurement in scores.items ():
+        offset = width * multiplier
+        rects = ax.bar (x + offset, measurement, width, label=attribute)
+        ax.bar_label (rects, padding=3)
+        multiplier += 1
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel ('Accuracy [%]')
+    ax.set_xlabel ('Components of PCA')
+    ax.set_title ('Performance of WiSARD using PCA \n Input LiDAR 3D with elimination of variance', size=14)
+    ax.set_xticks (x + width, components)
+    ax.legend (loc='best', ncols=3)
+    ax.set_ylim (0, 25)
+
+    plt.show()
 
 
 
@@ -221,7 +299,9 @@ def thermometer_2(data, components_of_pca):
     return feature_binarized_train, feature_binarized_test
     '''
 
-#pca()
+
+#pca(nro_components=20)
+#plot_3_variables()
 
 
 
@@ -229,4 +309,5 @@ def thermometer_2(data, components_of_pca):
 
 
 
-#pca()
+
+#pca(10)
