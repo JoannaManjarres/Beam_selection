@@ -5,6 +5,7 @@ import autoencoder
 from beam_selection_wisard import beam_selection_top_k_wisard
 from beam_selection_wisard import select_best_beam
 import analyse_s009, analyse_s008
+import oversampling
 import numpy as np
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -694,9 +695,10 @@ def beam_selection_wisard_using_encoder_lidar_2D():
 
 
 def beam_selection_wisard_using_pca():
-    x_train, x_test = pca.pca(nro_components=70)
-    top_k_accuracy = False
     input_type = 'lidar_3D_pca'
+    x_train, x_test = pca.pca(nro_components=70, type_of_data=input_type)
+    top_k_accuracy = False
+
     # ------- Get Beams
     index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
     index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
@@ -733,14 +735,15 @@ def beam_selection_wisard_using_pca_with_lidar_2D():
     print ('-------------------------------------------------------------------')
     print("   SELECIONANDO BEAM USANDO PCA COM DADOS DE LIDAR 2D BINARIOS")
     print ('-------------------------------------------------------------------')
-    x_train, x_test = pca.pca(nro_components=70, type_of_data='2D_binary')
+    input_type = 'lidar_2D_pca'
+    x_train, x_test = pca.pca(nro_components=10, type_of_data=input_type)
     print('-------------------------')
     print('--- Input for WiSARD ---')
     print('   X_train = ', x_train.shape)
     print('   X_test = ', x_test.shape)
     print ('-------------------------')
     top_k_accuracy = False
-    input_type = 'lidar_2D_pca'
+
     # ------- Get Beams
     index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
     index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
@@ -773,8 +776,48 @@ def beam_selection_wisard_using_pca_with_lidar_2D():
                           titulo_figura=title_of_figure,
                           user='all')
 
+def beam_selection_wisard_using_oversampled():
+    print ('-------------------------------------------------------------------')
+    print ("   SELECIONANDO BEAM USANDO OVERSAMPLE")
+    print ('-------------------------------------------------------------------')
+    input_type = 'lidar_2D'
+    x_train, y_train, x_test, y_test = oversampling.oversampling(input_type)
+    print ('-------------------------')
+    print ('--- Input for WiSARD ---')
+    print ('   X_train = ', x_train.shape)
+    print ('   X_test = ', x_test.shape)
+    print ('-------------------------')
+    top_k_accuracy = False
 
 
+
+    name_of_figure = 's008_train_s009_test_' + input_type + '_'
+    title_of_figure = "Accuracy [Train: s008 - Test: s009] /n - Input[", input_type, "] -"
+    data_set = 's008-s009'
+    size_of_address = 64
+
+    if top_k_accuracy:
+        beam_selection_top_k_wisard (x_train=x_train,
+                                     x_test=x_test,
+                                     y_train=y_train,
+                                     y_test=y_test,
+                                     data_input=input_type,
+                                     data_set=data_set,
+                                     address_of_size=size_of_address)
+    else:
+
+        select_best_beam (input_train=x_train,
+                          input_validation=x_test,
+                          label_train=y_train,
+                          label_validation=y_test,
+                          figure_name=name_of_figure,
+                          antenna_config='8x32',
+                          type_of_input=input_type,
+                          titulo_figura=title_of_figure,
+                          user='all')
+
+
+#beam_selection_wisard_using_oversampled()
 beam_selection_wisard_using_pca_with_lidar_2D()
 #beam_selection_wisard_using_pca()
 #beam_selection_wisard_lidar_2D()

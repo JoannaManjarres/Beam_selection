@@ -52,17 +52,21 @@ def pca(nro_components, type_of_data):
     data_type = type_of_data #'2D_binary' #'2D_binary' 2D_int'
     plot = False
 
-    if data_type == '2D_binary':
+    if data_type == 'lidar_2D_pca':
         raw_data_lidar_2D = False
         if raw_data_lidar_2D:
             data_lidar_2D_train, data_lidar_2D_test = pre_process_lidar.read_pre_processed_data_lidar_2D ()
+            data_train = data_lidar_2D_train
+            data_test = data_lidar_2D_test
+            print ("Data shape Train: ", data_train.shape)
+            print ("Data shape Test: ", data_test.shape)
             a=0
         else:
             data_lidar_2D_train_without_var, data_lidar_2D_test_without_var = pre_process_lidar.data_lidar_2D_binary_without_variance()
-            print ("Data shape Train: ", data_lidar_2D_train_without_var.shape)
-            print ("Data shape Test: ", data_lidar_2D_test_without_var.shape)
             data_train = data_lidar_2D_train_without_var
             data_test = data_lidar_2D_test_without_var
+            print ("Data shape Train: ", data_train.shape)
+            print ("Data shape Test: ", data_test.shape)
 
     if data_type == '3D':
         raw_lidar_data = False
