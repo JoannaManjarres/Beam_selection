@@ -70,24 +70,37 @@ def plot_results_top_k(top_k, input, filename,
     size_of_marker_lidar = 3
     width_of_line_lidar = 1
 
-    color_ref_17 = 'red'
+    color_ref_17 = 'blue'
+    color_wisard_s008_s009 = 'red'#'seagreen'
+
     color_ref_17_s008 = 'pink'
-    color_wisard_s008_s009 = 'seagreen'
     color_wisard_s008 = 'goldenrod'
     color_wisard_s009 = 'blue'
 
 
     # sns.set()
     plt.figure()
-
-    plt.plot(top_k, accuracy_ref_17, color=color_ref_17, marker=type_of_marker_s008_s009, linestyle=style_of_line_s008_s009,
-              linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_ref_17)
+    plt.plot (top_k, accuracy_wisard_s008_s009,
+              color=color_wisard_s008_s009,
+              marker=type_of_marker_s008_s009,
+              linestyle=style_of_line_s008_s009,
+              linewidth=width_of_line_lidar,  markersize=size_of_marker_lidar, label=label_wisard_s008_s009) #
+    for i, v in enumerate (accuracy_wisard_s008_s009):
+        plt.text (top_k [i]-2.5, v+0.015 , str (v), color=color_wisard_s008_s009, size=8)
+    plt.plot(top_k, accuracy_ref_17,
+             color=color_ref_17,
+             marker=type_of_marker_s008_s009,
+             linestyle=style_of_line_s008_s009,
+              linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_ref_17, alpha=0.5,)
+    for i, v in enumerate (accuracy_ref_17):
+        plt.text (top_k [i] + 2.3, v+0.010 , str (v), color=color_ref_17, size=8)
     #plt.plot(top_k, accuracy_ref_17_s008, color=color_ref_17_s008, marker=type_of_marker_lidar, linestyle=style_of_line_lidar,
     #          linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_ref_17_s008)
-    plt.plot(top_k, accuracy_wisard_s008_s009, color=color_wisard_s008_s009, marker=type_of_marker_lidar, linestyle=style_of_line_s008_s009,
-              linewidth=5,alpha=0.5, markersize=5, label=label_wisard_s008_s009)
-    plt.plot(top_k, accuracy_batool, color='black', marker=type_of_marker_s008_s009, linestyle=style_of_line_s008_s009,
+
+    plt.plot(top_k, accuracy_batool, color='teal', marker=type_of_marker_s008_s009, linestyle=style_of_line_s008_s009,
               linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_batool)
+    for i, v in enumerate (accuracy_batool):
+        plt.text (top_k [i]+1.5, v-0.010, str (v), color='teal', size=8)
     #plt.plot(top_k, accuracy_wisard_s008, color=color_wisard_s008, marker=type_of_marker_lidar, linestyle=style_of_line_lidar,
     #          linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_wisard_s008)
     #plt.plot(top_k, accuracy_wisard_s009, color=color_wisard_s009, marker=type_of_marker_lidar, linestyle=style_of_line_lidar,
@@ -95,19 +108,23 @@ def plot_results_top_k(top_k, input, filename,
 
 
 
-    plt.title('Top-k Accuracy of '+ input+' data', color='steelblue', size=14, fontweight='bold')
+
+    plt.title('Comparacao entre as referencias e a WiSARD \n Acuracia Top-K dos dados '+ input , color='steelblue', size=14, fontweight='bold')
     plt.xticks(top_k)
     plt.xlabel('Top-k', color='steelblue', size=14, fontweight='bold')
+    plt.yscale('linear')
+    plt.ylim([0.1,1.1])
     plt.ylabel('Accuracy', color='steelblue', size=14, fontweight='bold')
     plt.legend()
-    plt.grid()
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.grid(False)
+    #plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
 
 def read_csv_file(input, filename):
     path = '../results/accuracy/8x32/' + input + '/'
     usecols = ["Top-k", "Acuracia"]
     data = pd.read_csv (path + filename, header=None, usecols=usecols, names=["Top-k", "Acuracia"])
+    print(path + filename)
     accuracy = data['Acuracia'].tolist()
     accuracy = [float (i) for i in accuracy [1:]]
     accuracy = [round (i, 2) for i in accuracy]
@@ -117,9 +134,9 @@ def read_csv_file(input, filename):
 
     return top_k, accuracy
 def read_results_top_k_lidar_e_coord():
-    only_coord = False
+    only_coord = True
     only_lidar = False
-    lidar_coord = True
+    lidar_coord = False
     compare_by_ref = False
 
     path_of_compare = '../results/accuracy/8x32/'
@@ -207,6 +224,7 @@ def read_results_top_k_lidar_e_coord():
                                          accuracy_Lidar_batool,
                                          accuracy_lidar_coord_batool,
                                          'Performance of Strategy Batool \n [Train: s008 - Test: s009]')
+        a=0
     else:
         if only_lidar:
 
@@ -242,6 +260,10 @@ def read_results_top_k_lidar_e_coord():
             filename = 'ref_batool/acuracia_batool_lidar_top_k.csv'
             top_k, accuracy_Lidar_batool = read_csv_file(input='lidar', filename=filename)
 
+            filename = 'acuracia_wisard_LiDAR_2D_+_Rx_Term_SVar_top_k.csv'
+            _, accuracy_wisard_lidar_2D_rx_therm_sv = read_csv_file(input= 'lidar_+_coord/top_k' ,
+                                                                    filename=filename)
+
 
             '''
             filename = 'acuracia_wisard_lidar_s008-s009_top_k.csv'
@@ -270,11 +292,12 @@ def read_results_top_k_lidar_e_coord():
             accuracy_Lidar_batool = [round(i, 2) for i in accuracy_Lidar_batool]
             '''
 
-            label_ref_17 = 'LIDAR: Ref-17 [s008-s009]'
+            label_ref_17 ='Ruseckas [CNN 2D]: LiDAR' #'LIDAR: Ref-17 [s008-s009]'
             label_wisard_lidar_2D_s008_s009 = 'LIDAR 2D: Wisard [s008-s009]'
             label_wisard_s008 = 'LIDAR: Wisard [s008]'
             label_wisard_s009 = 'LIDAR: Wisard [s009]'
-            label_batool = 'LIDAR: Batool [s008-s009]'
+            label_batool ='Batool [DNN 3D]: LiDAR' #'LIDAR: Batool [s008-s009]'
+            label_wisard_lidar_2D_rx_term_sv = 'UFRJ [WiSARD] LiDAR 2D + Rx Term SVar'
 
             figure_name = path_of_compare+'campare_top_k_accuracy_lidar.png'
             input = 'LIDAR'
@@ -282,15 +305,18 @@ def read_results_top_k_lidar_e_coord():
                                 input,
                                 figure_name,
                                 accuracy_lidar_ref_17,
-                                accuracy_wisard_lidar_2D_rx_therm_s008_s009,
+                                accuracy_wisard_lidar_2D_rx_therm_sv,
+                                #accuracy_wisard_lidar_2D_rx_therm_s008_s009,
                                 #accuracy_wisard_lidar_s008,
                                 #accuracy_wisard_lidar_s009,
                                 accuracy_Lidar_batool,
                                 label_ref_17,
-                                label_wisard_lidar_2D_s008_s009,
+                                label_wisard_lidar_2D_rx_term_sv,
+                                #label_wisard_lidar_2D_s008_s009,
                                 #label_wisard_s008,
                                 #label_wisard_s009,
                                 label_batool)
+            a=0
 
 
         if only_coord:
@@ -313,6 +339,9 @@ def read_results_top_k_lidar_e_coord():
 
             filename = 'ref_batool/acuracia_batool_coord_top_k.csv'
             top_k, accuracy_coord_batool = read_csv_file(input='coord', filename=filename)
+
+            filename = 'acuracia_wisard_coord_top_k.csv'
+            _, accuracy_wisard_coord = read_csv_file(input='lidar_+_coord/top_k', filename=filename)
 
             path = '../results/accuracy/8x32/' + input + '/'
 
@@ -355,11 +384,11 @@ def read_results_top_k_lidar_e_coord():
             accuracy_coord_batool = [round(i, 2) for i in accuracy_coord_batool]
             '''
 
-            label_ref_17 = 'COORD: Ref-17 [s008-s009]'
-            label_wisard_s008_s009 = 'COORD: Wisard [s008-s009]'
+            label_ref_17 = 'COORD: Ruseckas [MLP]'
+            label_wisard_s008_s009 = 'COORD: UFRJ [WiSARD]'
             label_wisard_s008 = 'COORD: Wisard [s008]'
             label_wisard_s009 = 'COORD: Wisard [s009]'
-            label_batool = 'COORD: Batool [s008-s009]'
+            label_batool = 'COORD: Batool [CNN-1D]'
 
             figure_name = path_of_compare+'campare_top_k_accuracy_coord.png'
             input = 'COORD'
@@ -402,6 +431,9 @@ def read_results_top_k_lidar_e_coord():
 
             filename = 'acuracia_wisard_lidar_2D_with_rx_2D_therm_and_coord_s008-s009_top_k.csv'
             top_k, accuracy_wisard_lidar_2D_coord_s008_s009 = read_csv_file(input='lidar_2D_with_rx_2D_therm_and_coord', filename=filename)
+
+            filename = 'acuracia_wisard_LiDAR_2D_+_Rx_Term_+_Coord_16_SVar_top_k.csv'
+            _, accuracy_wisard_lidar_2D_rx_therm_coord_sv = read_csv_file(input='lidar_+_coord/top_k', filename=filename)
 
             '''
             data_lidar_coord_ref_17 = pd.read_csv(path + filename, header=None, usecols=usecols, names=["Top-k", "Acuracia"])
@@ -446,13 +478,15 @@ def read_results_top_k_lidar_e_coord():
             accuracy_coord_lidar_batool = [round(i, 2) for i in accuracy_coord_lidar_batool]
             '''
 
-            label_ref_17 = 'COORD + LIDAR: Ref-17 [s008-s009]'
+            label_ref_17 = 'COORD + LIDAR: Ruseckas [MLP+CNN]'
+            label_batool = 'COORD + LIDAR: Batool [DNN]'
+            label_wisard_2D_s008_s009 = 'COORD + LIDAR 2D: UFRJ [WiSARD]'
+
             label_ref_17_s008 = 'COORD + LIDAR: Ref-17 [s008]'
             label_wisard_s008_s009 = 'COORD + LIDAR: Wisard [s008-s009]'
             label_wisard_s008 = 'COORD + LIDAR: Wisard [s008]'
             label_wisard_s009 = 'COORD + LIDAR: Wisard [s009]'
-            label_batool = 'COORD + LIDAR: Batool [s008-s009]'
-            label_wisard_2D_s008_s009 = 'COORD + LIDAR 2D: Wisard [s008-s009]'
+
 
             figure_name = path_of_compare+'campare_top_k_accuracy_coord_lidar.png'
             input = 'COORD + LIDAR'
@@ -461,7 +495,8 @@ def read_results_top_k_lidar_e_coord():
                                input,
                                figure_name,
                                accuracy_lidar_coord_ref_17,
-                               accuracy_wisard_lidar_2D_coord_s008_s009,
+                               accuracy_wisard_lidar_2D_rx_therm_coord_sv,
+                               #accuracy_wisard_lidar_2D_coord_s008_s009,
                                #accuracy_wisard_lidar_coord_s008_s009,
                                #accuracy_wisard_lidar_coord_s008,
                                #accuracy_wisard_lidar_coord_s009,

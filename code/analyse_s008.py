@@ -33,7 +33,7 @@ def read_beams_output_generated_by_rt():
     return index_beam_train_str, index_beam_validation_str, index_beam_output_train, index_beam_output_validation, index_beams
 
 def read_beams_output_from_baseline():
-    path = '../data/beams_output/dataset_s008/beam_output_baseline_raymobtime_s008/'
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/'
     beam_output_train = np.load(path + "beams_output_train.npz", allow_pickle=True)#['output_classification']
     key_beam_output_train = list(beam_output_train.keys())
     beam_output_train = beam_output_train[key_beam_output_train[0]]
@@ -42,7 +42,9 @@ def read_beams_output_from_baseline():
     key_index_beam_validation = list(beam_output_validation.keys())
     beam_output_validation = beam_output_validation[key_index_beam_validation[0]]
 
-    print("\t\tBeams generation from Baseline")
+    #print("\t\tBeams generation from Baseline")
+    print("------------------------------------------------------------")
+    print ("\t\tGerando Beams do Baseline...")
     index_beams_train = calculate_index_beams(beam_output_train)
     index_beam_train_str = [str (i) for i in index_beams_train]
     index_beams_test = calculate_index_beams(beam_output_validation)
