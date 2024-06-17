@@ -1,4 +1,4 @@
-SELEÇÃO DE BEAM USANDO UM REDE NEURAL WISARD
+SELEÇÃO DE BEAM USANDO UMA REDE NEURAL WISARD
 
 Neste repositorio se encontra o codigo que realiza a seleção de Beam com uma rede neural sem peso WiSARD. 
 São usados dados do dataset Raymobtime (https://www.lasse.ufpa.br/raymobtime/) especificamente o dataset s008 para treinamento e s009 para teste. 
