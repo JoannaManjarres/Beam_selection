@@ -15,14 +15,15 @@ Antes de realizar a selecao de Beam com a rede WiSARD verifique:
  			 se os dados de treinamento e teste estao disponiveis 					
 																					
 * 	 COORDENADAS 			
- 			 data/coord/CoordVehiclesRxPerScene_s008.csv 	
- 			 data/coord/CoordVehiclesRxPerScene_s009.csv 
- 	 LiDAR 2D 		
- 			 data/lidar/s008/lidar_train_raymobtime.npz 
-  			 data/lidar/s009/all_data_lidar_+_rx_like_cube_test.npz 
+<br> <pre> data/coord/CoordVehiclesRxPerScene_s008.csv </pre>
+<br> <pre> data/coord/CoordVehiclesRxPerScene_s009.csv </pre>
+* 	 LiDAR 2D 		
+<br> <pre> data/lidar/s008/lidar_train_raymobtime.npz </pre>
+<br> <pre> data/lidar/s008/lidar_validation_raymobtime.npz </pre>
+<br> <pre> data/lidar/s009/lidar_test_raymobtime.npz </pre>
 * 	 BEAMS 			
-     		data/beams_output/beam_output_baseline_raymobtime_s008/
- 			 beams_output_train.npz 		 beams_output_test.npz 	
- 		 data/beams_output/beam_output_baseline_raymobtime_s009/ 
- 			 beams_output_test_s009.npz 		
+<br> <pre> data/beams_output/beam_output_baseline_raymobtime_s008/ </pre>
+<br> <pre> beams_output_train.npz </pre>		<pre> beams_output_test.npz 	</pre>
+<br> <pre> data/beams_output/beam_output_baseline_raymobtime_s009/ </pre>
+<br> <pre> beams_output_test_s009.npz 	</pre>	
 ------------------------------------------------------------------------------------------
