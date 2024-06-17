@@ -10,3 +10,19 @@ Dentre as propostas se encontra:
   - Autoencoder: atualizacao do modelo
 
 No link (https://drive.google.com/drive/folders/1m2-OCTeLE6pwMnNCsiObMW0L-W3XOhHB?usp=sharing) na pasta data se encontram os dados necessarios para compilar este algoritmo corretamente
+------------------------------------------------------------------------------------------
+Antes de realizar a selecao de Beam com a rede WiSARD verifique: 			
+ 			 se os dados de treinamento e teste estao disponiveis 					
+																					
+* 	 COORDENADAS 																	*
+* 			 data/coord/CoordVehiclesRxPerScene_s008.csv 							*
+* 			 data/coord/CoordVehiclesRxPerScene_s009.csv 							*
+* 	 LiDAR 2D 																		*
+* 			 data/lidar/s008/lidar_train_raymobtime.npz 							*
+* 			 data/lidar/s009/all_data_lidar_+_rx_like_cube_test.npz 				*
+* 	 BEAMS 																			*
+* 		 data/beams_output/beam_output_baseline_raymobtime_s008/ 					*
+* 			 beams_output_train.npz 		 beams_output_test.npz 					*
+* 		 data/beams_output/beam_output_baseline_raymobtime_s009/ 					*
+* 			 beams_output_test_s009.npz 											*
+------------------------------------------------------------------------------------------
