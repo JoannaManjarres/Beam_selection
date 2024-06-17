@@ -8,6 +8,8 @@ from scipy import ndimage
 from sklearn.feature_selection import VarianceThreshold
 from skimage.transform import rescale, resize, downscale_local_mean
 from skimage import data, color
+import plot_scenes
+
 
 def read_data(data_path):
     label_cache_file = np.load(data_path)
@@ -20,7 +22,6 @@ def read_data(data_path):
     data_position_tx = np.where(data_lidar == -1, 1, 0)
 
     return data_lidar_process_all, data_position_rx, data_position_tx
-
 def process_data_rx_like_cube_of_s008_and_s009():
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     data_lidar_process_all, data_position_rx, data_position_tx = read_data(data_path)
@@ -167,23 +168,22 @@ def read_pre_processed_data_lidar_2D():
 def process_data_rx_2D_like_thermomether():
     path = '../data/lidar/s008/lidar_train_raymobtime.npz'
     data_lidar_process_all, data_position_rx, data_position_tx = read_data (path)
-    position_of_rx_2D_as_thermomether_train_s008 = pre_process_data_rx_2D_like_thermometer(data_position_rx)
+    position_of_rx_2D_as_thermomether_train_s008 = pre_process_data_rx_2D_like_thermometer(data_position_rx, False)
 
     path = '../data/lidar/s008/lidar_validation_raymobtime.npz'
     data_lidar_process_all_val, data_position_rx_val, data_position_tx_val = read_data (path)
-    position_of_rx_2D_as_thermomether_val_s008 = pre_process_data_rx_2D_like_thermometer(data_position_rx_val)
+    position_of_rx_2D_as_thermomether_val_s008 = pre_process_data_rx_2D_like_thermometer(data_position_rx_val, False)
 
     position_of_rx_2D_as_thermomether_train = np.concatenate((position_of_rx_2D_as_thermomether_train_s008, position_of_rx_2D_as_thermomether_val_s008), axis=0)
 
     path = '../data/lidar/s009/lidar_test_raymobtime.npz'
     data_lidar_process_all_test, data_position_rx_test, data_position_tx_test = read_data (path)
-    position_of_rx_2D_as_thermomether_test = pre_process_data_rx_2D_like_thermometer(data_position_rx_test)
+    position_of_rx_2D_as_thermomether_test = pre_process_data_rx_2D_like_thermometer(data_position_rx_test, False)
 
     return position_of_rx_2D_as_thermomether_train, position_of_rx_2D_as_thermomether_test
-def pre_process_data_rx_2D_like_thermometer(data_position_rx):#, data_name, plot=True, sample_for_plot=0):
-    #path = '../data/lidar/s008/lidar_train_raymobtime.npz'
-    #data_lidar_process_all, data_position_rx, data_position_tx = read_data (path)
+def pre_process_data_rx_2D_like_thermometer(data_position_rx, plot):#, data_name, plot=True, sample_for_plot=0):
 
+    #plot = True
     x_dimension = len(data_position_rx [0, :, 0, 0])
     y_dimension = len(data_position_rx [0, 0, :, 0])
     z_dimension = len(data_position_rx [0, 0, 0, :])
@@ -207,15 +207,8 @@ def pre_process_data_rx_2D_like_thermometer(data_position_rx):#, data_name, plot
     for i in range(number_of_samples):
         position_of_rx_as_thermomether_vector[i] = position_of_rx_as_thermomether[i, :, :].reshape(1, dimension_of_coordenadas)
 
-    #plot_2D_scene(position_of_rx_as_thermomether, sample_for_plot=3)
-    #a=0
-
-    #all_data = np.zeros ([number_of_samples, dimension_of_coordenadas * 2], dtype=np.int8)
-
-    #for i in range (number_of_samples):
-    #    position_of_rx_cube_as_vector = position_of_rx_as_cube [i, :, :, :].reshape (1, dimension_of_coordenadas)
-    #    b = data_lidar_process_all [i, :, :, :].reshape (1, dimension_of_coordenadas)
-    #    all_data [i] = np.concatenate ((position_of_rx_cube_as_vector, b), axis=1)
+    if plot:
+        plot_2D_scene(position_of_rx_as_thermomether, sample_for_plot=3)
 
     return position_of_rx_as_thermomether_vector
 
@@ -268,6 +261,21 @@ def pre_process_all_data_2D_with_rx_like_thermometer(data_lidar_process_all, dat
         x_rx, y_rx, z_rx = np.unravel_index (pos_rx_in_each_sample.argmax (), pos_rx_in_each_sample.shape)
         # position_of_rx_as_cube[i, 0:x_rx, 0:y_rx, 0:z_rx] = 1
         position_of_rx_as_thermomether[i, 0:x_rx, 0:y_rx] = 1
+
+    plot = False
+    if plot:
+        sample_for_plot = 3
+        fig = plt.figure()
+        fig.suptitle('Dados LiDAR em 2D', fontsize=16)
+        ax1 = fig.add_subplot(2, 1, 1)
+        ax2 = fig.add_subplot(2, 1, 2)
+        ax1.imshow(data_lidar_2D[sample_for_plot], cmap='Blues', origin='lower', extent=[0, 200, 0, 20])
+        ax2.imshow(position_of_rx_as_thermomether[sample_for_plot], cmap='Blues', origin='lower', extent=[0, 200, 0, 20])
+
+        ax1.title.set_text('cena '+str(sample_for_plot) + ' completa')
+        ax2.title.set_text('Posição do Rx em forma de termometro da cena '+str(sample_for_plot))
+        plt.subplots_adjust( hspace=0.1)#bottom=0.2, wspace=0.1, hspace=0.1)
+        plt.show()
 
     position_of_rx_as_thermomether_vector = np.zeros([number_of_samples, dimension_of_coordenadas], dtype=np.int8)
     data_lidar_2D_with_rx_as_vector = np.zeros([samples, dimension_of_data*2], dtype=np.int8)
@@ -347,7 +355,7 @@ def plot_3D_scene(data_lidar_process_all, data_position_rx, data_position_tx, sa
     ax.legend (handles=[c1, c2, c3], loc='center left', bbox_to_anchor=(-0.1, 0.9))
 
 
-def pre_process_data_rx_like_cube(data_lidar_process_all, data_position_rx, data_position_tx, data_name, plot=True, sample_for_plot=0):
+def pre_process_data_rx_like_cube(data_lidar_process_all, data_position_rx, data_position_tx, plot, sample_for_plot):
 
     x_dimension = len(data_position_rx[0, :, 0, 0])
     y_dimension = len(data_position_rx[0, 0, :, 0])
@@ -370,75 +378,12 @@ def pre_process_data_rx_like_cube(data_lidar_process_all, data_position_rx, data
         b = data_lidar_process_all[i, :, :, :].reshape(1, dimension_of_coordenadas)
         all_data[i] = np.concatenate((position_of_rx_cube_as_vector, b), axis=1)
 
-
     if plot:
-        print("plotando o cenario...")
-        # ------- PLOT RX E CENA COMPLETA
-        sample_for_plot = sample_for_plot
-        rx_as_cube = position_of_rx_as_cube[sample_for_plot, :, :, :]
-        rx = data_position_rx[sample_for_plot, :, :, :]
-        tx = data_position_tx[sample_for_plot,:,:,:]
-        scenario_complet = data_lidar_process_all[sample_for_plot, :, :, :]
-        fig = plt.figure()
-
-        plt.rcParams.update ({'font.size': 14})
-        title = 'Scene ' + str(sample_for_plot) + ' of dataset ' + data_name
-        plt.title(title)
-
-        ax = fig.add_subplot(1, 2, 1, projection='3d')
-        ax.voxels(rx_as_cube, alpha=0.12, edgecolor=None, shade=True, color='red')  # Voxel visualization
-        ax.set_title('Rx')
-        ax.set_xlabel('x', labelpad=10)
-        ax.set_ylabel('y', labelpad=10)
-        ax.set_zlabel('z', labelpad=10)
-        plt.tight_layout()
-
-        objects = scenario_complet
-        objects = np.array(objects, dtype=bool)
-        rx = np.array(rx, dtype=bool)
-        tx = np.array(tx, dtype=bool)
-
-        voxelarray = objects | rx | tx
-
-        # set the colors of each object
-        colors = np.empty(voxelarray.shape, dtype=object)
-
-        color_object = '#cccccc90'
-        color_rx = 'red'
-        color_tx = 'blue'
-
-        colors[objects] = color_object
-        colors[rx] = color_rx
-        colors[tx] = color_tx
-
-        # and plot everything
-        #ax = plt.figure().add_subplot(projection='3d')
-
-        # Set axes label
-        ax.set_xlabel('x', labelpad=10)
-        ax.set_ylabel('y', labelpad=10)
-        ax.set_zlabel('z', labelpad=10)
-
-        # set predefine rotation
-        # ax.view_init(elev=49, azim=115)
-
-        ax = fig.add_subplot(1, 2, 2, projection='3d')
-        #ax.voxels(voxelarray, alpha=0.5, edgecolor=None, shade=True, antialiased=False,
-         #         color='#cccccc90')  # Voxel visualization
-        ax.voxels(voxelarray, facecolors=colors, edgecolor=None, antialiased=False)
-        ax.set_title('Full scenario')
-        ax.set_xlabel('x', labelpad=10)
-        ax.set_ylabel('y', labelpad=10)
-        ax.set_zlabel('z', labelpad=10)
-        plt.tight_layout()
-
-        c1 = mpatches.Patch(color=color_object, label='Objects')
-        c2 = mpatches.Patch(color=color_rx, label='Rx')
-        c3 = mpatches.Patch(color=color_tx, label='Tx')
-
-        ax.legend(handles=[c1, c2, c3], loc='center left', bbox_to_anchor=(-0.1, 0.9))
-
-        #plot('plotei')
+        plot_scenes.plot_3D_scene_with_rx_as_cube(data_lidar_process_all=data_lidar_process_all,
+                                                  data_position_rx=data_position_rx,
+                                                  data_position_tx=data_position_tx,
+                                                  data_position_rx_as_cube=position_of_rx_as_cube,
+                                                  sample_for_plot=sample_for_plot)
 
     return all_data
 def read_pre_processed_data_rx_like_cube():
@@ -553,7 +498,8 @@ def pre_process_lidar_3D_rx_therm_2D():
 
 
 #-------------------------------------------
-def data_lidar_2D_binary_without_variance():
+def data_lidar_2D_binary_without_variance(data_train, data_test, threshold):
+    '''
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     data_lidar_process_all, data_position_rx, data_position_tx = read_data(data_path)
     pre_process_data_lidar_2D_vector_train, pre_process_data_lidar_2D_train = pre_process_data_lidar_2D(
@@ -574,9 +520,11 @@ def data_lidar_2D_binary_without_variance():
         data_lidar_process_all, data_position_rx, data_position_tx)
 
     data_lidar_2D_vector_test = pre_process_data_lidar_2D_vector_test
+     '''
 
-
-    th = 0.15
+    data_lidar_2D_vector_train = data_train
+    data_lidar_2D_vector_test = data_test
+    th = threshold
     selector = VarianceThreshold (threshold=th)
     print ("******** PRE PROCESSING DATA ********")
     print ('Eliminando variâncias menores que ', th)
@@ -593,38 +541,13 @@ def data_lidar_2D_binary_without_variance():
     print ('\tNew size of Dataset')
     print ('\tTrain', data_lidar_2D_train_without_var.shape, '\tTest', data_lidar_2D_test_without_var.shape)
 
-
-
     return data_lidar_2D_train_without_var, data_lidar_2D_test_without_var
-def plot_results_lidar_2D_binary_without_variance():
 
-    fig, ax = plt.subplots()
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
 
-    # Example data
-    threshold = ('0', '0,1', '0,15', '0,20', '0,24')
-    y_pos = np.arange(len(threshold))
-    accuracy = (24.5, 33.1, 35.2, 34.7, 33.02)
-    dataset_size = (2642, 376, 347, 299, 223)
-
-    ax.barh (y_pos, accuracy,  align='center')
-    for i, v in enumerate (accuracy):
-        ax.text(v - 15, i , 'Dataset size = '+str(dataset_size[i]), color='white', fontsize=9)
-
-    for i, v in enumerate (accuracy):
-        ax.text(v + 0.15, i - 0.05, str(v), color='red', fontsize=9)
-
-    ax.set_yticks(y_pos, labels=threshold)
-    ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel('Accuracy [%]')
-    ax.set_ylabel('Threshold')
-    ax.set_title('Performance of Wisard with variance elimination for LiDAR 2D')
-
-    plt.show()
 
 
 def data_lidar_3D():
+    plot = True
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     data_lidar_all_train, data_position_rx, data_position_tx = read_data (data_path)
 
@@ -655,10 +578,44 @@ def data_lidar_3D():
     data_train = np.concatenate((data_lidar_3D_train_as_vector, data_lidar_3D_val_as_vector), axis=0)
     data_test = data_lidar_3D_test_as_vector
 
+    if plot:
+        plot_3D_scene(data_lidar_all_train, data_position_rx, data_position_tx, sample_for_plot=0)
+
+
+    return data_train, data_test
+def data_lidar_3D_with_rx_in_thermometer_as_cube():
+    data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
+    data_lidar_all_train, data_position_rx, data_position_tx = read_data (data_path)
+
+    data_path = "../data/lidar/s008/lidar_validation_raymobtime.npz"
+    data_lidar_all_val, data_position_rx_val, data_position_tx_val = read_data (data_path)
+
+    data_path = "../data/lidar/s009/lidar_test_raymobtime.npz"
+    data_lidar_all_test, data_position_rx_test, data_position_tx_test = read_data (data_path)
+
+    all_scenario_with_rx_as_cube_train = pre_process_data_rx_like_cube(data_lidar_process_all=data_lidar_all_train,
+                                                                       data_position_rx=data_position_rx,
+                                                                       data_position_tx=data_position_tx,
+                                                                       plot=False,
+                                                                       sample_for_plot=0)
+    all_scenario_with_rx_as_cube_val = pre_process_data_rx_like_cube(data_lidar_all_val,
+                                                                     data_position_rx_val,
+                                                                     data_position_tx_val,
+                                                                     plot=False,
+                                                                     sample_for_plot=0)
+    all_scenario_with_rx_as_cube_test = pre_process_data_rx_like_cube(data_lidar_all_test,
+                                                                      data_position_rx_test,
+                                                                      data_position_tx_test,
+                                                                      plot=False,
+                                                                      sample_for_plot=0)
+    data_train = np.concatenate((all_scenario_with_rx_as_cube_train, all_scenario_with_rx_as_cube_val), axis=0)
+    data_test = all_scenario_with_rx_as_cube_test
 
     return data_train, data_test
 
-def data_lidar_3D_binary_without_variance():
+
+def data_lidar_3D_binary_without_variance(data_train, data_test, threshold):
+    '''
     data_path = "../data/lidar/s008/lidar_train_raymobtime.npz"
     data_lidar_all_train, data_position_rx, data_position_tx = read_data(data_path)
 
@@ -688,8 +645,12 @@ def data_lidar_3D_binary_without_variance():
 
     data_lidar_3D_vector_train = np.concatenate((data_lidar_3D_train_as_vector,
                                                         data_lidar_3D_val_as_vector), axis=0)
+    '''
 
-    th = 0.1
+    data_lidar_3D_vector_train = data_train
+    data_lidar_3D_test_as_vector = data_test
+
+    th = threshold
     selector = VarianceThreshold(threshold=th)
     print("******** PRE PROCESSING DATA ********")
     print('Eliminando variâncias menores que ', th)
@@ -707,6 +668,7 @@ def data_lidar_3D_binary_without_variance():
 
     return data_lidar_3D_train_without_var, data_lidar_3D_test_without_var
 
+'''
 def plot_results_lidar_3D_binary_without_variance():
 
     fig, ax = plt.subplots()
@@ -733,6 +695,7 @@ def plot_results_lidar_3D_binary_without_variance():
     ax.set_title('Performance of Wisard with variance elimination')
 
     plt.show()
+'''
 
 
 def process_data_lidar_into_2D_matrix():
@@ -751,9 +714,11 @@ def process_data_lidar_into_2D_matrix():
     data_lidar_process_all_test, data_position_rx_test, data_position_tx_test = read_data (data_path)
     data_lidar_2D_vector_test, data_lidar_2D_matrix_test = pre_process_data_lidar_into_2D(data_lidar_process_all_test, data_position_rx_test, data_position_tx_test)
 
+
+
     return data_lidar_2D_vector_train, data_lidar_2D_vector_test, data_lidar_2D_matrix_train, data_lidar_2D_matrix_test
 
-def pre_process_data_lidar_into_2D(data_lidar_process_all, data_position_rx, data_position_tx, plot=True, sample_for_plot=0):
+def pre_process_data_lidar_into_2D(data_lidar_process_all, data_position_rx, data_position_tx):#, plot=True, sample_for_plot=0):
     ''' criated a 2D matrix from the 3D matrix of lidar data preserving the high information '''
 
     plot = False
@@ -770,27 +735,29 @@ def pre_process_data_lidar_into_2D(data_lidar_process_all, data_position_rx, dat
             #test_matriz [var, :] = np.where (test_matriz [var, :] > 0, 1, 0)
         data_lidar_2D[sample] = test_matriz
 
+    # pre-process of Rx as 2D-Thermometer
+    rx_as_therm_vector = pre_process_data_rx_2D_like_thermometer(data_position_rx, plot=False)
+
+
     dimension_of_data = data_lidar_process_all.shape [1] * data_lidar_process_all.shape [2]
     data_lidar_2D_as_vector = np.zeros([samples, dimension_of_data], dtype=np.int8)
 
     # Reshape the data to be used in the model
     for i in range(samples):
         data_lidar_2D_as_vector[i] = data_lidar_2D[i, :, :].reshape (1, dimension_of_data)
-        # b = data_lidar_process_all [i, :, :, :].reshape (1, dimension_of_coordenadas)
-        # all_data [i] = np.concatenate ((position_of_rx_cube_as_vector, b), axis=1)
+
+    all_data_vector = np.concatenate((data_lidar_2D_as_vector, rx_as_therm_vector), axis=1)
 
     if plot:
         #plot_3D_scene (data_lidar_process_all, data_position_rx, data_position_tx, sample_for_plot=sample_for_plot)
-        plot_2D_scene (data_lidar_2D, sample_for_plot=sample_for_plot)
-        print('entro no plot')
-
-    return data_lidar_2D_as_vector, data_lidar_2D
+        #plot_2D_scene (data_lidar_2D, sample_for_plot=sample_for_plot)
+        plot_scenes.plot_2D_scene(data_lidar_2D, sample_for_plot=sample_for_plot)
 
 
 
 
+    return all_data_vector, data_lidar_2D
 
 
-#plot_results_lidar_3D_binary_without_variance()
-#data_lidar_3D_binary_without_variance()
-#plot_results_lidar_2D_binary_without_variance()
+
+

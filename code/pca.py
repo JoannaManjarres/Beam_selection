@@ -48,64 +48,8 @@ def read_2D_lidar():
 
     return data_lidar_2D_train, data_lidar_2D_test, data_lidar_2D_vector_train, pre_process_data_lidar_2D_vector_test
 
-def pca(nro_components, type_of_data):
-    data_type = type_of_data #'2D_binary' #'2D_binary' 2D_int'
+def pca(data_train, data_test, nro_components, binarization_type):
     plot = False
-
-    if data_type == 'lidar_2D_pca':
-        raw_data_lidar_2D = False
-        if raw_data_lidar_2D:
-            data_lidar_2D_train, data_lidar_2D_test = pre_process_lidar.read_pre_processed_data_lidar_2D ()
-            data_train = data_lidar_2D_train
-            data_test = data_lidar_2D_test
-            print ("Data shape Train: ", data_train.shape)
-            print ("Data shape Test: ", data_test.shape)
-            a=0
-        else:
-            data_lidar_2D_train_without_var, data_lidar_2D_test_without_var = pre_process_lidar.data_lidar_2D_binary_without_variance()
-            data_train = data_lidar_2D_train_without_var
-            data_test = data_lidar_2D_test_without_var
-            print ("Data shape Train: ", data_train.shape)
-            print ("Data shape Test: ", data_test.shape)
-
-    if data_type == '3D':
-        raw_lidar_data = False
-        if raw_lidar_data:
-            '''Read 3D lidar data'''
-            data_lidar_3D_train, data_lidar_3D_test = pre_process_lidar.data_lidar_3D()
-            print("Data shape Train: ", data_lidar_3D_train.shape)
-            print("Data shape Test: ", data_lidar_3D_test.shape)
-            data_train = data_lidar_3D_train
-            data_test = data_lidar_3D_test
-        else:
-            '''Read 3D lidar data and pre process data without variance'''
-            data_lidar_3D_train_without_var, data_lidar_3D_test_without_var = pre_process_lidar.data_lidar_3D_binary_without_variance()
-            correlation = np.corrcoef (data_lidar_3D_train_without_var.T)
-            data_train = data_lidar_3D_train_without_var
-            data_test = data_lidar_3D_test_without_var
-
-    if data_type == '2D_int':
-        '''Read 3D lidar data'''
-        '''transform to 2D matriz, preserve the original height information'''
-        #data_lidar_in_vector_train, data_lidar_in_vector_test, data_lidar_2D_matrix_train, data_lidar_2D_matrix_test = pre_process_lidar.process_data_lidar_into_2D_matrix ()
-
-    '''
-    # preprocess data
-    # Data without variance
-    th = 0
-    selector = VarianceThreshold (threshold=th)
-    vt_train = selector.fit (data_lidar_in_vector_train)
-    data_lidar_2D_train_without_var = data_lidar_in_vector_train [:, vt_train.variances_ > th]
-
-    vt_test = selector.fit (data_lidar_in_vector_test)
-    data_lidar_2D_test_without_var = data_lidar_in_vector_test [:, vt_test.variances_ > th]
-
-    correlation = np.corrcoef(data_lidar_2D_train_without_var.T)
-
-    #heat map
-    #sns.heatmap(correlation)
-    #plt.show()
-    '''
 
     components = nro_components
     pca = PCA(n_components=components)
@@ -127,45 +71,77 @@ def pca(nro_components, type_of_data):
     PCA_components_train = pca.transform(data_train)
     PCA_components_test = pca.transform(data_test)
 
-    #components_binarized_train = thermometer_1(PCA_components_train, components)
-    #components_binarized_test = thermometer_1(PCA_components_test, components)
-
-    #components_binarized_train, max_train = thermometer_2 (PCA_components_train, components)
-    #components_binarized_test, max_test = thermometer_2 (PCA_components_test, components)
-
-    components_binarized_train, components_binarized_test = binarize_data_by_threshold(PCA_components_train, PCA_components_test, 0.5)
+    if binarization_type == 'thermometer_1':
+        components_binarized_train, components_binarized_test = thermometer_1(PCA_components_train, PCA_components_test, components)
+    elif binarization_type == 'thermometer_2':
+        components_binarized_train, components_binarized_test = thermometer_2(PCA_components_train, PCA_components_test)
+    elif binarization_type == 'simple_threshold':
+        components_binarized_train, components_binarized_test = binarize_data_by_threshold(PCA_components_train, PCA_components_test, 0.5)
 
     return components_binarized_train, components_binarized_test
 
-def thermometer_1(data, components_of_pca):
+def thermometer_1(data_train, data_test, components_of_pca):
 
-    abs_value_data = np.round(np.abs(data))
+    abs_value_data = np.round(np.abs(data_train))
     data_int = abs_value_data.astype(int)
     max_value = np.max(data_int)
 
-    binarized_data = np.zeros((len(data_int), (max_value*components_of_pca)), dtype=np.int8)
+    abs_value_data_test = np.round (np.abs (data_test))
+    data_int_test = abs_value_data_test.astype (int)
+    max_value_test = np.max (data_int_test)
+
+    if max_value < max_value_test:
+        size_of_termometer = max_value_test
+    else:
+        size_of_termometer = max_value
+
+    binarized_data = np.zeros((len(data_int), (size_of_termometer*components_of_pca)), dtype=np.int8)
     for i in range(len(data_int)):
-        termomether = np.zeros((components_of_pca, max_value), dtype=np.int8)
+        termomether = np.zeros((components_of_pca, size_of_termometer), dtype=np.int8)
         sample = data_int[i]
         for j in range(components_of_pca):
             termomether[j, 0:sample[j]] = 1
-        binarized_data[i] = termomether.reshape(1,max_value*components_of_pca)
+        binarized_data[i] = termomether.reshape(1, size_of_termometer*components_of_pca)
 
-    return binarized_data
+    binarized_data_test = np.zeros((len(data_int_test), (size_of_termometer*components_of_pca)), dtype=np.int8)
+    for i in range(len(data_int_test)):
+        termomether = np.zeros((components_of_pca, size_of_termometer), dtype=np.int8)
+        sample = data_int_test[i]
+        for j in range(components_of_pca):
+            termomether[j, 0:sample[j]] = 1
+        binarized_data_test[i] = termomether.reshape(1, size_of_termometer*components_of_pca)
 
-def thermometer_2(data, components_of_pca):
+    return binarized_data, binarized_data_test
 
-    abs_value_data = np.round(np.abs(data))
-    sum_of_components = np.sum(abs_value_data, axis=1).astype(int)
-    max_value = np.max (sum_of_components)
-    data_int = abs_value_data.astype(int)
-    thermometer = np.zeros((len(data), 100), dtype=np.int8)
+def thermometer_2(data_train, data_test):
 
-    for i in range(len(data)):
-        sample = sum_of_components[i]
-        thermometer[i, 0:sample] = 1
+    abs_value_data_train = np.round(np.abs(data_train))
+    sum_of_components_train = np.sum(abs_value_data_train, axis=1).astype(int)
+    max_value_train = np.max (sum_of_components_train)
 
-    return thermometer, max_value
+    abs_value_data_test = np.round (np.abs (data_test))
+    sum_of_components_test = np.sum (abs_value_data_test, axis=1).astype (int)
+    max_value_test = np.max (sum_of_components_test)
+
+
+    if max_value_train < max_value_test:
+        size_of_thermometer = max_value_test
+    else:
+        size_of_thermometer = max_value_train
+
+    thermometer_train = np.zeros((len(data_train), size_of_thermometer), dtype=np.int8)
+    thermometer_test = np.zeros((len (data_test), size_of_thermometer), dtype=np.int8)
+
+    for i in range(len(data_train)):
+        sample_train = sum_of_components_train[i]
+        thermometer_train[i, 0:sample_train] = 1
+
+    for i in range(len(data_test)):
+        sample_test = sum_of_components_test[i]
+        thermometer_test[i, 0:sample_test] = 1
+
+
+    return thermometer_train, thermometer_test
 
 def binarize_data_by_threshold(data_train, data_test, threshold):
 

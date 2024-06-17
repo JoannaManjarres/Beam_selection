@@ -108,11 +108,15 @@ def select_best_beam(input_train,
         address_size = [28]
         numero_experimentos = 2
     else:
+        #address_size = [28]
 
-        address_size = [4, 8, 10]
-        #address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+        #address_size = [4, 8, 10]
+        #address_size = [4, 8, 12, 16, 20,24, 28,]
+        #address_size = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48,]
+        #address_size = [ 8, 12, 16, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
         #address_size = [6,  12, 18, 24, 28, 30, 36, 42, 48, 54, 60]
-        #address_size = [4,   8, 12, 16, 20]
+        address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+
         numero_experimentos = 1
 
     vector_time_train_media = []
@@ -248,11 +252,12 @@ def select_best_beam(input_train,
 def beam_selection_top_k_wisard(x_train, x_test,
                                 y_train, y_test,
                                 data_input, data_set,
-                                address_of_size):
+                                address_of_size,
+                                name_of_conf_input):
 
-    print("Calculate top-k with Wisard")
+    #print("Calculate top-k with Wisard")
+    print ("... Calculando os top-k com Wisard")
     addressSize = address_of_size
-    #addressSize = 58
     ignoreZero = False
     verbose = True
     var = True
@@ -267,9 +272,9 @@ def beam_selection_top_k_wisard(x_train, x_test,
     # the output is a list of string, this represent the classes attributed to each input
     out = wsd.classify(x_test)
 
-    wsd_1 = wp.Wisard(addressSize, ignoreZero=ignoreZero, verbose=verbose)
-    wsd_1.train(x_train, y_train)
-    out_1 = wsd_1.classify(x_test)
+    #wsd_1 = wp.Wisard(addressSize, ignoreZero=ignoreZero, verbose=verbose)
+    #wsd_1.train(x_train, y_train)
+    #out_1 = wsd_1.classify(x_test)
 
 
     content_index = 0
@@ -286,14 +291,16 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
     #f = open('../results/accuracy/8X32/'+data_input+'/Acurcacia_top_k_wisard.txt', 'w')
 
-    print('address memory: ', addressSize)
+    #print('address memory: ', addressSize)
+    print ('Enderecamento de memoria: ', addressSize)
     for i in range(len(top_k)):
         acerto = 0
         nao_acerto = 0
 
         if top_k[i] == 1:
-            acuracia_tpo_1 = accuracy_score(y_test, out_1)
-            print('Acuracia top k =1: ', acuracia_tpo_1)
+            a=0
+            #acuracia_tpo_1 = accuracy_score(y_test, out_1)
+            #print('Acuracia top k =1: ', acuracia_tpo_1)
 
         for amostra_a_avaliar in range(len(out)):
 
@@ -314,22 +321,36 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
         acuracia.append(acerto/len(out))
 
-    print("len(out):", len(out))
-    print("TOP-K: ", top_k)
-    print("Acuracia: ",acuracia)
+    #print("len(out):", len(out))
+    #print("TOP-K: ", top_k)
+    #print("Acuracia: ",acuracia)
     #f.close()
+
+    print ("-----------------------------")
+    print ("TOP-K \t\t|\t Acuracia")
+    print("-----------------------------")
+    for i in range(len(top_k)):
+        if top_k[i] == 1:
+            print('K = ', top_k[i], '\t\t|\t ', np.round(acuracia[i],3)), '\t\t|'
+        elif top_k[i] == 5:
+            print ('K = ', top_k [i], '\t\t|\t ', np.round (acuracia [i], 3)), '\t\t|'
+        else:
+            print('K = ', top_k[i], '\t|\t ', np.round(acuracia[i],3)), '\t\t|'
+    print ("-----------------------------")
 
 
     df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
-    path_csv='../results/accuracy/8X32/'+data_input+'/'
-    print(path_csv+'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv')
-    df_acuracia_wisard_top_k.to_csv(path_csv + 'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv', index=False)
+    path_csv='../results/accuracy/8X32/'+data_input+'/top_k/'
+    #print(path_csv+'acuracia_wisard_' + data_input + '_top_k.csv')
+    #df_acuracia_wisard_top_k.to_csv(path_csv + 'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv', index=False)
+    df_acuracia_wisard_top_k.to_csv (path_csv + 'acuracia_wisard_' + name_of_conf_input + '_top_k.csv',
+                                     index=False)
 
 
-    plot_top_k(top_k, acuracia, data_input, dataset=data_set)
+    plot_top_k(top_k, acuracia, data_input, name_of_conf_input=name_of_conf_input)
     return top_k, acuracia
 
-def plot_top_k(top, acuracia, data_input,dataset):
+def plot_top_k(top, acuracia, data_input, name_of_conf_input):
     plt.figure()
     #plt.plot(top, acuracia, 'o-')
     plt.bar(top, acuracia, width=3, label='Wisard')
@@ -338,10 +359,13 @@ def plot_top_k(top, acuracia, data_input,dataset):
 
     #plt.text(1, acuracia[0], str(acuracia[0]), ha='center', va='bottom')
     #plt.grid(False)
-    plt.title('Classificacao Top-k Wisard com '+data_input)
+    plt.title('Classificacao Top-k Wisard com '+name_of_conf_input)
     plt.xlabel('Top-K')
     plt.xticks(top)
     plt.ylabel('Acuracia')
     plt.legend()
-    plt.savefig('../results/accuracy/8X32/'+data_input+'/acuracia_top_k_wisard_'+data_input+'_'+dataset+'.png', dpi=300, bbox_inches='tight')
+    #plt.savefig('../results/accuracy/8X32/'+data_input+'/acuracia_top_k_wisard_'+data_input+'_'+dataset+'.png', dpi=300, bbox_inches='tight')
+    plt.savefig (
+        '../results/accuracy/8X32/' + data_input + '/top_k/acuracia_top_k_wisard_' + name_of_conf_input + '.png',
+        dpi=300, bbox_inches='tight')
     #plt.show()

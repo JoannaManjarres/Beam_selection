@@ -382,7 +382,7 @@ def autoencoder():
 
     # This model maps an input to its reconstruction
     model = keras.Model(inputs=input_img, outputs=r)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']) #optimizer=''adadelta''
+    model.compile(optimizer='adam', loss='CategoricalCrossentropy', metrics=['accuracy']) #optimizer=''adadelta''
     model.summary()
     #plot_model(model, 'autoencoder.png' )#, show_shapes=True, show_layer_names=True)
     #, show_layer_names=True, rankdir='TB', expand_nested=False, dpi=96)
