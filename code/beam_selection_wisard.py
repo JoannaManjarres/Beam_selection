@@ -88,6 +88,7 @@ def plotarResultados(x_vector,
     plt.title(titulo)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    plt.xticks(x_vector)
     plt.savefig(ruta, dpi=300, bbox_inches='tight')
     #plt.show()
 
