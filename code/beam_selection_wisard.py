@@ -117,7 +117,7 @@ def select_best_beam(input_train,
         #address_size = [6,  12, 18, 24, 28, 30, 36, 42, 48, 54, 60]
         address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
 
-        numero_experimentos = 1
+        numero_experimentos = 10
 
     vector_time_train_media = []
     vector_time_test_media = []
@@ -204,7 +204,7 @@ def select_best_beam(input_train,
 
     with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user + '/time_train_' + figure_name + '.csv', 'w') as f:
         writer_time_train = csv.writer(f, delimiter='\t')
-        writer_time_train.writerows(zip(address_size, vector_acuracia_media, vector_time_train_desvio_padrao))
+        writer_time_train.writerows(zip(address_size, vector_time_train_media, vector_time_train_desvio_padrao))
 
     with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_' + figure_name + '.csv', 'w') as f:
         writer_time_test = csv.writer(f, delimiter='\t')
