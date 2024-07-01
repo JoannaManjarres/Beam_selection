@@ -71,18 +71,18 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
                 insiteDictionary [thisKey] = row
         lastEpisode = int (row ['EpisodeID'])
 
-    allOutputs = np.nan * np.ones ((numExamples, number_Rx_antennas, number_Tx_antennas), np.complex128)
+    allOutputs = np.nan * np.ones((numExamples, number_Rx_antennas, number_Tx_antennas), np.complex128)
 
     for e in range (numEpisodes):
         print ("Episode # ", e)
         b = h5py.File (inputPath + str (e) + '.hdf5', 'r')
-        allEpisodeData = b.get ('allEpisodeData')
-        numScenes = allEpisodeData.shape [0]
-        numReceivers = allEpisodeData.shape [1]
+        allEpisodeData = b.get('allEpisodeData')
+        numScenes = allEpisodeData.shape[0]
+        numReceivers = allEpisodeData.shape[1]
         # store the position (x,y,z), 4 angles of strongest (first) ray and LOS or not
         receiverPositions = np.nan * np.ones ((numScenes, numReceivers, 8), np.float32)
         # store two integers converted to 1
-        episodeOutputs = np.nan * np.ones ((numScenes, numReceivers, number_Rx_antennas, number_Tx_antennas),
+        episodeOutputs = np.nan * np.ones((numScenes, numReceivers, number_Rx_antennas, number_Tx_antennas),
                                            np.float32)
 
         for s in range (numScenes):
@@ -92,14 +92,14 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
 
                 # if insiteData corresponds to an invalid channel, all its values will be NaN.
                 # We check for that below
-                numNaNsInThisChannel = sum (np.isnan (insiteData.flatten ()))
-                if numNaNsInThisChannel == np.prod (insiteData.shape):
+                numNaNsInThisChannel = sum(np.isnan(insiteData.flatten()))
+                if numNaNsInThisChannel == np.prod(insiteData.shape):
                     numOfInvalidChannels += 1
                     continue  # next Tx / Rx pair
-                thisKey = str (e) + ',' + str (s) + ',' + str (r)
+                thisKey = str(e) + ',' + str(s) + ',' + str(r)
 
                 try:
-                    thisInSiteLine = list (insiteDictionary [thisKey].items ())  # recover from dic
+                    thisInSiteLine = list(insiteDictionary[thisKey].items())  # recover from dic
                 except KeyError:
                     print ('Could not find in dictionary the key: ', thisKey)
                     print ('Verify file', insiteCSVFile)
@@ -107,31 +107,31 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
                 # tokens = thisInSiteLine.split(',')
                 # new_data = data[~np.isnan(data)] ; new_data = data[np.isfinite(data)]
                 if numNaNsInThisChannel > 0:
-                    numOfValidRays = int (thisInSiteLine [8] [1])  # number of rays is in 9-th position in CSV list
+                    numOfValidRays = int(thisInSiteLine[8][1])  # number of rays is in 9-th position in CSV list
                     # I could simply use
                     # insiteData = insiteData[0:numOfValidRays]
                     # given the NaN are in the last rows, but to be safe given that did not check, I will go for a slower solution
                     insiteDataTemp = np.zeros ((numOfValidRays, insiteData.shape [1]))
                     numMaxRays = insiteData.shape [0]
                     validRayCounter = 0
-                    for itemp in range (numMaxRays):
+                    for itemp in range(numMaxRays):
                         if sum (np.isnan (insiteData [itemp].flatten ())) == 1:  # if insite version 3.2, else use 0
                             insiteDataTemp [validRayCounter] = insiteData [itemp]
                             validRayCounter += 1
                     insiteData = insiteDataTemp  # replace by smaller array without NaN
-                receiverPositions [s, r, 0:3] = np.array (
-                    [thisInSiteLine [5] [1], thisInSiteLine [6] [1], thisInSiteLine [7] [1]])
+                receiverPositions[s, r, 0:3] = np.array(
+                    [thisInSiteLine[5][1], thisInSiteLine[6][1], thisInSiteLine[7][1]])
 
                 numOfValidChannels += 1
-                gain_in_dB = insiteData [:, 0]
-                timeOfArrival = insiteData [:, 1]
+                gain_in_dB = insiteData[:, 0]
+                timeOfArrival = insiteData[:, 1]
                 # InSite provides angles in degrees. Convert to radians
                 # This conversion is being done within the channel function
-                AoD_el = insiteData [:, 2]
-                AoD_az = insiteData [:, 3]
-                AoA_el = insiteData [:, 4]
-                AoA_az = insiteData [:, 5]
-                RxAngle = insiteData [:, 8] [0]
+                AoD_el = insiteData[:, 2]
+                AoD_az = insiteData[:, 3]
+                AoA_el = insiteData[:, 4]
+                AoA_az = insiteData[:, 5]
+                RxAngle = insiteData[:, 8] [0]
                 RxAngle = RxAngle + 90.0
                 if RxAngle > 360.0:
                     RxAngle = RxAngle - 360.0
@@ -139,13 +139,13 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
                 AoA_az = - RxAngle + AoA_az  # angle_new = - delta_axis + angle_wi;
 
                 # first ray is the strongest, store its angles
-                receiverPositions [s, r, 3] = AoD_el [0]
-                receiverPositions [s, r, 4] = AoD_az [0]
-                receiverPositions [s, r, 5] = AoA_el [0]
-                receiverPositions [s, r, 6] = AoA_az [0]
+                receiverPositions [s, r, 3] = AoD_el[0]
+                receiverPositions [s, r, 4] = AoD_az[0]
+                receiverPositions [s, r, 5] = AoA_el[0]
+                receiverPositions [s, r, 6] = AoA_az[0]
 
-                isLOSperRay = insiteData [:, 6]
-                pathPhases = insiteData [:, 7]
+                isLOSperRay = insiteData[:, 6]
+                pathPhases = insiteData[:, 7]
 
                 # in case any of the rays in LOS, then indicate that the output is 1
                 isLOS = 0  # for the channel
