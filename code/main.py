@@ -129,13 +129,13 @@ def beam_selection_wisard_with_s008_and_s009_from_ray_tracing():
         index_beam_train_ref_17_str, index_beam_validation_ref_17_str, index_beam_test_ref17_str = analyse_s008.read_beams_output_used_in_ref_17 ()
 
         print ('Beams para Treinamento')
-        for i in range (len (index_beams_train_baseline)):
-            if index_beams_train_baseline [i] != index_beams_train_batool [i] != index_beam_train_ref_17_str [i]:
+        for i in range (len (index_beams_train)):
+            if index_beams_train [i] != index_beams_train_batool [i] != index_beam_train_ref_17_str [i]:
                 print ("Diferente")
 
         print ('Beams para Teste')
         for i in range (len (index_beam_test_ref17_str)):
-            if index_beam_test_ref17_str [i] != index_beams_test_batool [i] != index_beams_test_baseline [i]:
+            if index_beam_test_ref17_str [i] != index_beams_test_batool [i] != index_beams_test [i]:
                 print ("Diferente")
 
         flag_beam = "_baseline"
@@ -442,7 +442,6 @@ def beam_selection_wisard_lidar_2D_and_coord():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
-
 def beam_selection_wisard_with_lidar_3D():
     top_k_accuracy = False
     input_type = 'lidar_3D_without_variance' #'lidar_3D_rx_as_therm_cube' #'lidar_3D' #'lidar_3D_without_variance'
@@ -509,8 +508,6 @@ def beam_selection_wisard_with_lidar_3D():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
-
-
 def beam_selection_wisard_lidar_2D():
     top_k_accuracy = False
 
@@ -608,11 +605,6 @@ def beam_selection_wisard_lidar_2D():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
-
-
-
-
-
 def beam_selection_wisard_lidar_3D_rx_therm_2D():
     top_k_accuracy = False
     input_type = 'lidar_3D_rx_therm_2D'
@@ -692,8 +684,6 @@ def beam_selection_wisard_using_encoder_lidar_2D():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
-
-
 def beam_selection_wisard_using_pca():
     input_type = 'lidar_3D_pca'
     x_train, x_test = pca.pca(nro_components=70, type_of_data=input_type)
@@ -730,7 +720,6 @@ def beam_selection_wisard_using_pca():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
-
 def beam_selection_wisard_using_pca_with_lidar_2D():
     print ('-------------------------------------------------------------------')
     print("   SELECIONANDO BEAM USANDO PCA COM DADOS ")
@@ -833,7 +822,6 @@ def beam_selection_wisard_using_pca_with_lidar_2D():
                               type_of_input=input_type,
                               titulo_figura=title_of_figure,
                               user='all')
-
 def beam_selection_wisard_using_pca_with_lidar_3D_into_2D():
 
     variance_eliminination = False
@@ -1114,12 +1102,14 @@ def beam_selection_wisard_with_lidar_and_coord(input_type_comb, top_k):
     print ('Input Test = ', input_test.shape)
 
 
-    # ------- Get Beams
+    # ------- Get Beams of baseline
     index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
     index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
 
     label_train = np.concatenate ((index_beams_train, index_beam_validation), axis=0)
     label_test = index_beams_test
+    
+
     print ('Labels Train = ', len (label_train))
     print ('Labels Test =', len (label_test))
     print ("------------------------------------------------------------")
@@ -1219,6 +1209,6 @@ def main():
 
 #beam_selection_wisard_using_pca_with_lidar_2D()
 #beam_selection_wisard_with_lidar_and_coord()
-main()
-
+#main()
+#beam_selection_wisard_with_s008_and_s009_from_ray_tracing()
 
