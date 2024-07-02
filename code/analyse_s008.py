@@ -151,6 +151,8 @@ def read_beams_output_ailton():
     index_test = index_test.tolist()
 
     return index_train, index_test
+
+
 def calculate_index_beams(beam_output):
     # calculate the index of the best beam
     tx_size = beam_output.shape[2]

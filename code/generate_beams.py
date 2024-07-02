@@ -15,7 +15,7 @@ def generated_beams_output_from_ray_tracing():
     numEpisodes = 2086  # total number of episodes
     outputFolder = '../data/beams_output/beams_generate_by_me/'
 
-    #mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
+    mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
 
     # BEAMS DE TESTE
     inputPath = '../data/ray_tracing_data_s009_carrier60GHz/rosslyn_mobile_60GHz_ts0.1s_V_Lidar_e'
@@ -23,18 +23,23 @@ def generated_beams_output_from_ray_tracing():
     numEpisodes = 2000  # total number of episodes
     outputFolder = '../data/beams_output/beams_generate_by_me/'
 
-    mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
+    #mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
 
 def read_beams_output_generated_by_ray_tracing():
-    path = '../data/beams_output/beams_generate_by_me/'
-    beam_output_test = np.load(path + "beams_output_8x32_test.npz", allow_pickle=True)['output_classification']
-    print("\t\tGeracao de Beams pelo Ray-tracing para teste ")
-    index_beams_test = calculate_index_beams(beam_output_test)
-
+    print ("\t\tRead Beams output generated from Ray-tracing ")
     path = '../data/beams_output/beams_generate_by_me/'
     beam_output_train = np.load (path + "beams_output_8x32_train.npz", allow_pickle=True) ['output_classification']
-    print ("\t\tGeracao de Beams pelo Ray-tracing para treinamento")
+    print("\t\tCalculated Beams Index for training ")
     index_beams_train = calculate_index_beams (beam_output_train)
+    index_beams_train_str = [str (i) for i in index_beams_train]
+
+    path = '../data/beams_output/beams_generate_by_me/'
+    beam_output_test = np.load(path + "beams_output_8x32_test.npz", allow_pickle=True)['output_classification']
+    print("\t\tCalculated Beams Index for test ")
+    index_beams_test = calculate_index_beams(beam_output_test)
+    index_beams_test_str = [str (i) for i in index_beams_test]
+
+
 
     path = '../data/beams_output/dataset_s008/beam_output_ref_17/'
     beam_output = np.load (path + "beams_output_train.npz", allow_pickle=True)
@@ -48,11 +53,8 @@ def read_beams_output_generated_by_ray_tracing():
 
     index_beams_r3 = np.concatenate((index_beams_r3_train, index_beams_r3_val), axis=0).tolist()
 
-    #beam_output = np.load (path + "best_beam_index.npz", allow_pickle=True) ['output_classification']
-    #print ("\t\tGeracao de Beams pelo Ray-tracing")
-    #index_beams_r3 = calculate_index_beams (beam_output)
 
-    return index_beams_train, index_beams_test
+    return index_beams_train_str, index_beams_test_str, index_beams_train, index_beams_test
 def calculate_index_beams(beam_output):
     # calculate the index of the best beam
     tx_size = beam_output.shape[2]
@@ -70,6 +72,8 @@ def calculate_index_beams(beam_output):
     return(best_beam_index)
 
 
+
+
 def compare_index_generate():
     index_beams_r1, index_beams_r2 = read_beams_output_generated_by_ray_tracing ()
 
@@ -82,5 +86,5 @@ def compare_index_generate():
 
     a =0
 
-compare_index_generate()
-#generated_beams_output_from_ray_tracing()
+#compare_index_generate()
+generated_beams_output_from_ray_tracing()

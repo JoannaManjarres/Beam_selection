@@ -73,6 +73,9 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
 
     allOutputs = np.nan * np.ones((numExamples, number_Rx_antennas, number_Tx_antennas), np.complex128)
 
+    #Joanna
+    h_matrix = np.zeros((numExamples, number_Rx_antennas, number_Tx_antennas), np.complex128)
+
     for e in range (numEpisodes):
         print ("Episode # ", e)
         b = h5py.File (inputPath + str (e) + '.hdf5', 'r')
@@ -162,6 +165,9 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
                 equivalentChannelMagnitude = np.abs (equivalentChannel)
                 episodeOutputs [s, r] = np.abs (equivalentChannel)
                 allOutputs [count] = episodeOutputs [s, r]
+
+                #Joanna
+                h_matrix [count] = equivalentChannel
                 count += 1
 
             # finished processing this episode
@@ -171,6 +177,10 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
         np.savez(npz_name, episodeOutputs=episodeOutputs)
         np.savez(npz_name, receiverPositions=receiverPositions)
         print('Saved file ', npz_name) '''
+
+
+    npz_h_matrix = outputFolder + f'h_matrix_{number_Rx_antennas}x{number_Tx_antennas}' + '.npz'
+    np.savez (npz_h_matrix, h_matrix=h_matrix)
 
     npz_name_train = outputFolder + f'beams_output_{number_Rx_antennas}x{number_Tx_antennas}' + '.npz'
     np.savez (npz_name_train, output_classification=allOutputs)
@@ -184,6 +194,8 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
     print ('total numNLOS = ', numNLOS)
     print ('total numLOS = ', numLOS)
     print ('Sum = ', numLOS + numNLOS)
+
+
 
 
 #if __name__ == '__main__':
