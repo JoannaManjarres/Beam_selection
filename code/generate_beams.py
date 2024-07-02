@@ -87,4 +87,4 @@ def compare_index_generate():
     a =0
 
 #compare_index_generate()
-generated_beams_output_from_ray_tracing()
+#generated_beams_output_from_ray_tracing()

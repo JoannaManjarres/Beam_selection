@@ -85,7 +85,7 @@ def throughput_ratio():
 
 
     # calculate the power of the signal received
-throughput_ratio()
+#throughput_ratio()
 
 
 

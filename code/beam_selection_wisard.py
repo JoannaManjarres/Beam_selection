@@ -163,6 +163,8 @@ def select_best_beam(input_train,
 
             #print('\n Measuring output performance ...')
             acuracia = accuracy_score(label_validation, out_red)
+            npz_index_predict = path_result+'/'+type_of_input+'/index_beams_predict/' + f'index_beams_predict_{i}' + '.npz'
+            np.savez (npz_index_predict, output_classification=npz_index_predict)
             vector_acuracia.append(acuracia)
             print('\t\t\t\t\t' + str(i) + '\t|\t' + str(acuracia))
 
@@ -314,6 +316,10 @@ def beam_selection_top_k_wisard(x_train, x_test,
                 classes_na_ordem_descendente.append(dict_com_classes_na_ordem[x]['class'])
 
             top_5 = classes_na_ordem_descendente[0:top_k[i]]
+
+            npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{i}' + '.npz'
+            np.savez (npz_index_predict, output_classification=npz_index_predict)
+
 
             if( y_test[amostra_a_avaliar] in top_5):
                 acerto = acerto + 1
