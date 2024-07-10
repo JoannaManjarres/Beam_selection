@@ -363,6 +363,14 @@ def plot_of_bars(data_1, data_2, data_3, data_4, data_5, path):
     plt.savefig (path + 'Top_k_lidar_2D.png', dpi=300, bbox_inches='tight')
     plt.show ()
 
+def plot_powers_comparition(true_power, predicted_power):#, path):
+    plt.plot(true_power, label='True power')
+    plt.plot(predicted_power, label='Predicted power')
+    plt.xlabel('scenes')
+    plt.ylabel('Power')
+    plt.show()
+    #fig.savefig(path + 'true_predicted_power.png', transparent=True, bbox_inches='tight', pad_inches=0.1)
+    #plt.close(fig
 
 
 '''
@@ -379,5 +387,6 @@ def test:
               color='darkred', label='lidar 2D with rx term and coord svar', alpha=0.5)
     plt.xticks (ticks=space, labels=[str (i) for i in score_coord ['top_k']])
 '''
-plot_results_lidar_with_coord_top_k()
+#plot_results_lidar_with_coord_top_k()
 #plot_of_bars()
+

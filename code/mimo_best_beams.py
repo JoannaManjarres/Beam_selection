@@ -22,7 +22,7 @@ import random
 random.seed(0)
 
 #def processBeamsOutput(data_folder='.', dataset='.'):
-def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
+def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath, dataset_name):
     print ('Generating Beams ...')
     # file generated with ak_generateInSitePlusSumoList.py:
     # need to use both LOS and NLOS here, cannot use restricted list because script does a loop over all scenes
@@ -182,7 +182,7 @@ def processBeamsOutput(csvFile, num_episodes, outputFolder, inputPath):
     npz_h_matrix = outputFolder + f'h_matrix_{number_Rx_antennas}x{number_Tx_antennas}' + '.npz'
     np.savez (npz_h_matrix, h_matrix=h_matrix)
 
-    npz_name_train = outputFolder + f'beams_output_{number_Rx_antennas}x{number_Tx_antennas}' + '.npz'
+    npz_name_train = outputFolder + f'beams_output_{number_Rx_antennas}x{number_Tx_antennas}' + dataset_name +'.npz'
     np.savez (npz_name_train, output_classification=allOutputs)
     print ('Saved file ', npz_name_train)
 

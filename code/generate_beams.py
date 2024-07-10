@@ -14,16 +14,28 @@ def generated_beams_output_from_ray_tracing():
     insiteCSVFile = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
     numEpisodes = 2086  # total number of episodes
     outputFolder = '../data/beams_output/beams_generate_by_me/'
+    dataset_name = 'train'
 
-    mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
+    mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile,
+                                       num_episodes=numEpisodes,
+                                       outputFolder=outputFolder,
+                                       inputPath=inputPath,
+                                       dataset_name=dataset_name)
+    print('Generated training beams in'+ outputFolder)
 
     # BEAMS DE TESTE
     inputPath = '../data/ray_tracing_data_s009_carrier60GHz/rosslyn_mobile_60GHz_ts0.1s_V_Lidar_e'
     insiteCSVFile = '../data/coord/CoordVehiclesRxPerScene_s009.csv'
     numEpisodes = 2000  # total number of episodes
     outputFolder = '../data/beams_output/beams_generate_by_me/'
+    dataset_name = 'test'
 
-    #mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile, num_episodes=numEpisodes, outputFolder=outputFolder, inputPath=inputPath)
+    mimo_best_beams.processBeamsOutput(csvFile=insiteCSVFile,
+                                       num_episodes=numEpisodes,
+                                       outputFolder=outputFolder,
+                                       inputPath=inputPath,
+                                       dataset_name=dataset_name)
+    print('Generated test beams'+ outputFolder)
 
 def read_beams_output_generated_by_ray_tracing():
     print ("\t\tRead Beams output generated from Ray-tracing ")

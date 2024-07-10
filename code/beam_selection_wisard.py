@@ -291,6 +291,13 @@ def beam_selection_top_k_wisard(x_train, x_test,
     acerto = 0
     nao_acerto = 0
     acuracia = []
+    index_predict_top_1 =[]
+    index_predict_top_5 = []
+    index_predict_top_10 = []
+    index_predict_top_20 = []
+    index_predict_top_30 = []
+    index_predict_top_40 = []
+    index_predict_top_50 = []
 
     #f = open('../results/accuracy/8X32/'+data_input+'/Acurcacia_top_k_wisard.txt', 'w')
 
@@ -317,8 +324,20 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
             top_5 = classes_na_ordem_descendente[0:top_k[i]]
 
-            npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{i}' + '.npz'
-            np.savez (npz_index_predict, output_classification=npz_index_predict)
+            if top_k[i] == 1:
+                index_predict_top_1.append(top_5)
+            elif top_k[i] == 5:
+                index_predict_top_5.append(top_5)
+            elif top_k[i] == 10:
+                index_predict_top_10.append(top_5)
+            elif top_k[i] == 20:
+                index_predict_top_20.append(top_5)
+            elif top_k[i] == 30:
+                index_predict_top_30.append(top_5)
+            elif top_k[i] == 40:
+                index_predict_top_40.append(top_5)
+            elif top_k[i] == 50:
+                index_predict_top_50.append(top_5)
 
 
             if( y_test[amostra_a_avaliar] in top_5):
@@ -332,6 +351,27 @@ def beam_selection_top_k_wisard(x_train, x_test,
     #print("TOP-K: ", top_k)
     #print("Acuracia: ",acuracia)
     #f.close()
+    path_index_predict = '../results/index_beams_predict/top_k/'
+    for i in range(len(top_k)):
+        file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
+        npz_index_predict = path_index_predict + file_name
+        if top_k[i] == 1:
+            np.savez(npz_index_predict, output_classification=index_predict_top_1)
+        elif top_k[i] == 5:
+            np.savez(npz_index_predict, output_classification=index_predict_top_5)
+        elif top_k[i] == 10:
+            np.savez(npz_index_predict, output_classification=index_predict_top_10)
+        elif top_k[i] == 20:
+            np.savez(npz_index_predict, output_classification=index_predict_top_20)
+        elif top_k[i] == 30:
+            np.savez(npz_index_predict, output_classification=index_predict_top_30)
+        elif top_k[i] == 40:
+            np.savez(npz_index_predict, output_classification=index_predict_top_40)
+        elif top_k[i] == 50:
+            np.savez(npz_index_predict, output_classification=index_predict_top_50)
+
+    #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
+    #np.savez (npz_index_predict, output_classification=estimated_beams)
 
     print ("-----------------------------")
     print ("TOP-K \t\t|\t Acuracia")
