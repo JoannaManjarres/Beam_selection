@@ -351,7 +351,7 @@ def beam_selection_top_k_wisard(x_train, x_test,
     #print("TOP-K: ", top_k)
     #print("Acuracia: ",acuracia)
     #f.close()
-    path_index_predict = '../results/index_beams_predict/top_k/'
+    path_index_predict = '../results/index_beams_predict/WiSARD/top_k/'+name_of_conf_input+'/'
     for i in range(len(top_k)):
         file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
         npz_index_predict = path_index_predict + file_name
