@@ -249,22 +249,80 @@ def calculate_RT_top_k(index_top_1,
 
     return rt
 
-def calculate_RT_for_coord():
-    input = 'coord'
+def throughput_ratio_for_all_techniques():
+    input = 'coord' #'lidar', 'lidar_coord'
+
+    
     technique = 'WiSARD'
-    path_index_beams_estimated = '../results/index_beams_predict/'+technique+'/top_k/'+input+'/'
-    index_top_1, index_top_5, index_top_10, index_top_20, index_top_30, index_top_40, index_top_50 = read_index_beams_estimated (path_index_beams_estimated)
-    rt_WiSARD = calculate_RT_top_k(index_top_1, index_top_5, index_top_10, index_top_20, index_top_30, index_top_40, index_top_50)
-    a=0
+    path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
+    index_top_1_W, index_top_5_W, index_top_10_W, index_top_20_W, index_top_30_W, index_top_40_W, index_top_50_W = read_index_beams_estimated (
+        path_index_beams_estimated)
+    rt_WiSARD = calculate_RT_top_k (index_top_1_W,
+                                    index_top_5_W,
+                                    index_top_10_W,
+                                    index_top_20_W,
+                                    index_top_30_W,
+                                    index_top_40_W,
+                                    index_top_50_W)
+
+    technique = 'Batool'
+    path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
+    index_top_1_B, index_top_5_B, index_top_10_B, index_top_20_B, index_top_30_B, index_top_40_B, index_top_50_B = read_index_beams_estimated (
+        path_index_beams_estimated)
+    rt_Batool = calculate_RT_top_k (index_top_1_B,
+                                    index_top_5_B,
+                                    index_top_10_B,
+                                    index_top_20_B,
+                                    index_top_30_B,
+                                    index_top_40_B,
+                                    index_top_50_B)
+
+    technique = 'Ruseckas'
+    path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
+    index_top_1_R, index_top_5_R, index_top_10_R, index_top_20_R, index_top_30_R, index_top_40_R, index_top_50_R = read_index_beams_estimated (
+        path_index_beams_estimated)
+    rt_Ruseckas = calculate_RT_top_k (index_top_1_R,
+                                      index_top_5_R,
+                                      index_top_10_R,
+                                      index_top_20_R,
+                                      index_top_30_R,
+                                      index_top_40_R,
+                                      index_top_50_R)
+
+    plot_results.plot_powers_comparition (rt_WiSARD,
+                                          rt_Batool,
+                                          rt_Ruseckas,
+                                          'WiSARD',
+                                          'Batool',
+                                          'Ruseckas',
+                                          input)
+
+def test_calculo_rt():
+    true_all_power_norm, all_possible_power_norm = power_of_sinal_rx ()
+    top_1_wisard = []
+    top_1_batool = []
+    top_5_wisard = []
+    top_5_batool = []
+
+    a = []
+    a1 = []
+    for i in range (len (index_top_1)):
+        top_1_wisard.append (all_possible_power_norm [i] [index_top_1 [i]])
+        # top_1_batool.append (all_possible_power_norm [i] [index_top_1_B [i]])
+        top_1_batool.append (all_possible_power_norm [i] [index_top_1_B [i]])
+
+        top_5_wisard.append (np.flip (np.sort (all_possible_power_norm [i] [index_top_5 [i]])))
+        top_5_batool.append (np.flip (np.sort (all_possible_power_norm [i] [index_top_5_B [i]])))
+        # top_5_wisard.append (all_possible_power_norm[i] [index_top_5[i]])
+        # top_5_batool.append(all_possible_power_norm[i][index_top_5_B[i]])
+
+    rt_1_w = througput_ratio (true_all_power_norm, np.array (top_1_wisard) [:, 0])
+    rt_1_b = througput_ratio (true_all_power_norm, np.array (top_1_batool) [:, 0])
+    rt_5_w = througput_ratio (true_all_power_norm, np.array (top_5_wisard) [:, 0])
+    rt_5_b = througput_ratio (true_all_power_norm, np.array (top_5_batool) [:, 0])
 
 
-
-
-
-
-
-
-calculate_RT_for_coord()
+throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()
 

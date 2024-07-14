@@ -363,11 +363,23 @@ def plot_of_bars(data_1, data_2, data_3, data_4, data_5, path):
     plt.savefig (path + 'Top_k_lidar_2D.png', dpi=300, bbox_inches='tight')
     plt.show ()
 
-def plot_powers_comparition(true_power, predicted_power):#, path):
-    plt.plot(true_power, label='True power')
-    plt.plot(predicted_power, label='Predicted power')
-    plt.xlabel('scenes')
-    plt.ylabel('Power')
+def plot_powers_comparition(predicted_A,
+                            predicted_B,
+                            predicted_C,
+                            label_A,
+                            label_B,
+                            label_C,
+                            input):#, path):
+    top_k =[1,5,10,20,30,40,50]
+    plt.plot(top_k, predicted_A, label=label_A)
+    plt.plot(top_k, predicted_B, label=label_B)
+    plt.plot (top_k, predicted_C, label=label_C)
+    plt.xlabel('top-k')
+    plt.ylabel('Throughput Ratio')
+    plt.xticks(top_k)
+    plt.title('Throughput Ratio of '+ input)
+    plt.legend()
+    plt.grid()
     plt.show()
     #fig.savefig(path + 'true_predicted_power.png', transparent=True, bbox_inches='tight', pad_inches=0.1)
     #plt.close(fig

@@ -37,7 +37,85 @@ def generated_beams_output_from_ray_tracing():
                                        dataset_name=dataset_name)
     print('Generated test beams'+ outputFolder)
 
+def read_valid_coordinates():
+    # filename = '/Users/Joanna/git/Analise_de_dados/data/coordinates/CoordVehiclesRxPerScene_s008.csv'
+    filename = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
+    limit_ep_train = 1564
+
+    with open (filename) as csvfile:
+        reader = csv.DictReader (csvfile)
+        number_of_rows = len (list (reader))
+
+    all_info_coord_val = np.zeros ([11194, 5], dtype=object)
+
+    with open (filename) as csvfile:
+        reader = csv.DictReader (csvfile)
+        cont = 0
+        for row in reader:
+            if row ['Val'] == 'V':
+                all_info_coord_val [cont] = int (row ['EpisodeID']), float (row ['x']), float (row ['y']), float (
+                    row ['z']), row ['LOS']
+                cont += 1
+
+    # all_info_coord = np.array(all_info_coord)
+
+    coord_train = all_info_coord_val [(all_info_coord_val [:, 0] < limit_ep_train + 1)]
+    coord_test = all_info_coord_val [(all_info_coord_val [:, 0] > limit_ep_train)]
+
+    return all_info_coord_val, coord_train, coord_test
+
+
+def divide_beams_in_train_validation():
+    save_data = True
+    beams_output_train, beams_output_test = read_beams_output_generated_by_ray_tracing()
+
+    beamoutput_train = beams_output_train[0:9234]
+    beamoutput_validation = beams_output_train[9234::]
+
+    '''
+    #all_data = np.column_stack((all_coord, beams_output_train))
+    coord_and_beam_output = np.zeros((all_coord.shape[0], 2),dtype=object)
+    for i in range(len(all_coord)):
+        coord_and_beam_output[i] = all_coord[i][0], beams_output_train[i]
+
+    limit_ep_train = 1564
+
+    data_train = coord_and_beam_output [(coord_and_beam_output [:, 0] < limit_ep_train + 1)]
+    data_validation = coord_and_beam_output [(coord_and_beam_output [:, 0] > limit_ep_train)]
+
+    beam_output_train = data_train [:, -1]
+    beam_output_validation = data_validation [:, -1]
+
+    for i in range(len(beam_output_train)):
+        if beam_output_train[i].all() != beamoutput_train[i].all():
+            print('not ok')
+
+    for i in range(len(beamoutput_validation)):
+        if beam_output_validation[i].all() != beamoutput_validation[i].all():
+            print('not ok')
+    
+    '''
+
+    if save_data:
+
+        save_path = '../data/beams_output/beams_generate_by_me/train_val/'
+        np.savez (save_path + 'beam_output_train' + '.npz', output_classification=beamoutput_train)
+        np.savez (save_path + 'beam_output_validation' + '.npz', output_classification=beamoutput_validation)
+
+
+
 def read_beams_output_generated_by_ray_tracing():
+    print ("\t\tRead Beams output generated from Ray-tracing ")
+    path = '../data/beams_output/beams_generate_by_me/'
+    beam_output_train = np.load (path + "beams_output_8x32_train.npz", allow_pickle=True) ['output_classification']
+
+    path = '../data/beams_output/beams_generate_by_me/'
+    beam_output_test = np.load(path + "beams_output_8x32_test.npz", allow_pickle=True)['output_classification']
+
+
+    return beam_output_train, beam_output_test
+
+def read_index_beams_generated_by_ray_tracing():
     print ("\t\tRead Beams output generated from Ray-tracing ")
     path = '../data/beams_output/beams_generate_by_me/'
     beam_output_train = np.load (path + "beams_output_8x32_train.npz", allow_pickle=True) ['output_classification']
@@ -66,7 +144,8 @@ def read_beams_output_generated_by_ray_tracing():
     index_beams_r3 = np.concatenate((index_beams_r3_train, index_beams_r3_val), axis=0).tolist()
 
 
-    return index_beams_train_str, index_beams_test_str, index_beams_train, index_beams_test
+    return index_beams_train, index_beams_test, index_beams_train_str, index_beams_test_str,
+
 def calculate_index_beams(beam_output):
     # calculate the index of the best beam
     tx_size = beam_output.shape[2]
@@ -98,5 +177,7 @@ def compare_index_generate():
 
     a =0
 
+
+#divide_beams_in_train_validation()
 #compare_index_generate()
 #generated_beams_output_from_ray_tracing()
