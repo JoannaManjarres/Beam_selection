@@ -286,23 +286,54 @@ def beam_selection_top_k_wisard(x_train, x_test,
     #print(wsd.json())
     #print(out)
 
-    top_k = [1,5,10,20,30,40,50]
+    #top_k = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50]
+    #top_k = [ 10, 20, 30, 40, 50]
+    top_k = np.arange(1, 51, 1)
 
-    acerto = 0
-    nao_acerto = 0
+
     acuracia = []
-    index_predict_top_1 =[]
-    index_predict_top_5 = []
-    index_predict_top_10 = []
-    index_predict_top_20 = []
-    index_predict_top_30 = []
-    index_predict_top_40 = []
-    index_predict_top_50 = []
+    score = []
 
-    #f = open('../results/accuracy/8X32/'+data_input+'/Acurcacia_top_k_wisard.txt', 'w')
+    all_classes_order = []
 
-    #print('address memory: ', addressSize)
+    for sample in range(len(out)):
+
+        classes_degree = out[sample]['classesDegrees']
+        dict_classes_degree_order = sorted(classes_degree, key=itemgetter('degree'), reverse=True)
+
+        classes_by_sample_in_order = []
+        for x in range(len(dict_classes_degree_order)):
+            classes_by_sample_in_order.append(dict_classes_degree_order[x]['class'])
+        all_classes_order.append(classes_by_sample_in_order)
+
+    path_index_predict = '../results/index_beams_predict/WiSARD/top_k/' + name_of_conf_input + '/'
+    for i in range (len(top_k)):
+        acerto = 0
+        nao_acerto = 0
+        best_classes = []
+        best_classes_int = []
+        for sample in range (len(all_classes_order)):
+            best_classes.append(all_classes_order[sample][:top_k[i]])
+            best_classes_int.append([int(x) for x in best_classes[sample]])
+            if (y_test[sample] in best_classes[sample]):
+                acerto = acerto + 1
+            else:
+                nao_acerto = nao_acerto + 1
+
+        score.append(acerto / len(out))
+
+        file_name = 'index_beams_predict_top_' + str(top_k[i]) + '.npz'
+        npz_index_predict = path_index_predict + file_name
+        np.savez(npz_index_predict, output_classification=best_classes_int)
+
+    df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
+    path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
+    df_score_wisard_top_k.to_csv (path_csv + 'score_wisard_' + name_of_conf_input + '_top_k.csv', index=False)
+
+
+
     print ('Enderecamento de memoria: ', addressSize)
+    '''
     for i in range(len(top_k)):
         acerto = 0
         nao_acerto = 0
@@ -326,8 +357,22 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
             if top_k[i] == 1:
                 index_predict_top_1.append(top_5)
+            if top_k[i] == 2:
+                index_predict_top_2.append(top_5)
+            if top_k[i] == 3:
+                index_predict_top_3.append(top_5)
+            if top_k [i] == 4:
+                index_predict_top_4.append (top_5)
             elif top_k[i] == 5:
                 index_predict_top_5.append(top_5)
+            elif top_k[i] == 6:
+                index_predict_top_6.append(top_5)
+            elif top_k[i] == 7:
+                index_predict_top_7.append(top_5)
+            elif top_k[i] == 8:
+                index_predict_top_8.append(top_5)
+            elif top_k[i] == 9:
+                index_predict_top_9.append(top_5)
             elif top_k[i] == 10:
                 index_predict_top_10.append(top_5)
             elif top_k[i] == 20:
@@ -357,8 +402,22 @@ def beam_selection_top_k_wisard(x_train, x_test,
         npz_index_predict = path_index_predict + file_name
         if top_k[i] == 1:
             np.savez(npz_index_predict, output_classification=index_predict_top_1)
+        if top_k[i] == 2:
+            np.savez(npz_index_predict, output_classification=index_predict_top_2)
+        if top_k[i] == 3:
+            np.savez(npz_index_predict, output_classification=index_predict_top_3)
+        if top_k[i] == 4:
+            np.savez(npz_index_predict, output_classification=index_predict_top_4)
         elif top_k[i] == 5:
             np.savez(npz_index_predict, output_classification=index_predict_top_5)
+        elif top_k[i] == 6:
+            np.savez(npz_index_predict, output_classification=index_predict_top_6)
+        elif top_k[i] == 7:
+            np.savez(npz_index_predict, output_classification=index_predict_top_7)
+        elif top_k[i] == 8:
+            np.savez(npz_index_predict, output_classification=index_predict_top_8)
+        elif top_k[i] == 9:
+            np.savez(npz_index_predict, output_classification=index_predict_top_9)
         elif top_k[i] == 10:
             np.savez(npz_index_predict, output_classification=index_predict_top_10)
         elif top_k[i] == 20:
@@ -372,37 +431,37 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
     #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
     #np.savez (npz_index_predict, output_classification=estimated_beams)
-
+    '''
     print ("-----------------------------")
     print ("TOP-K \t\t|\t Acuracia")
     print("-----------------------------")
     for i in range(len(top_k)):
         if top_k[i] == 1:
-            print('K = ', top_k[i], '\t\t|\t ', np.round(acuracia[i],3)), '\t\t|'
+            print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
         elif top_k[i] == 5:
-            print ('K = ', top_k [i], '\t\t|\t ', np.round (acuracia [i], 3)), '\t\t|'
+            print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
         else:
-            print('K = ', top_k[i], '\t|\t ', np.round(acuracia[i],3)), '\t\t|'
+            print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
     print ("-----------------------------")
 
 
-    df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
-    path_csv='../results/accuracy/8X32/'+data_input+'/top_k/'
+    #df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
+    #path_csv='../results/accuracy/8X32/'+data_input+'/top_k/'
     #print(path_csv+'acuracia_wisard_' + data_input + '_top_k.csv')
     #df_acuracia_wisard_top_k.to_csv(path_csv + 'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv', index=False)
-    df_acuracia_wisard_top_k.to_csv (path_csv + 'acuracia_wisard_' + name_of_conf_input + '_top_k.csv',
-                                     index=False)
+    #df_acuracia_wisard_top_k.to_csv (path_csv + 'acuracia_wisard_' + name_of_conf_input + '_top_k.csv',
+    #                                 index=False)
 
 
-    plot_top_k(top_k, acuracia, data_input, name_of_conf_input=name_of_conf_input)
+    plot_top_k(top_k, score, data_input, name_of_conf_input=name_of_conf_input)
     return top_k, acuracia
 
 def plot_top_k(top, acuracia, data_input, name_of_conf_input):
     plt.figure()
-    #plt.plot(top, acuracia, 'o-')
-    plt.bar(top, acuracia, width=3, label='Wisard')
-    for i in range(len(top)):
-        plt.text(top[i], acuracia[i], str("{:.2f}".format(acuracia[i])), ha='center', va='bottom')
+    plt.plot(top, acuracia, 'o-')
+    #plt.plot(top, acuracia, width=3, label='Wisard')
+    #for i in range(len(top)):
+    #    plt.text(top[i], acuracia[i], str("{:.2f}".format(acuracia[i])), ha='center', va='bottom')
 
     #plt.text(1, acuracia[0], str(acuracia[0]), ha='center', va='bottom')
     #plt.grid(False)
@@ -412,7 +471,7 @@ def plot_top_k(top, acuracia, data_input, name_of_conf_input):
     plt.ylabel('Acuracia')
     plt.legend()
     #plt.savefig('../results/accuracy/8X32/'+data_input+'/acuracia_top_k_wisard_'+data_input+'_'+dataset+'.png', dpi=300, bbox_inches='tight')
-    plt.savefig (
-        '../results/accuracy/8X32/' + data_input + '/top_k/acuracia_top_k_wisard_' + name_of_conf_input + '.png',
-        dpi=300, bbox_inches='tight')
-    #plt.show()
+    #plt.savefig (
+    #    '../results/accuracy/8X32/' + data_input + '/top_k/acuracia_top_k_wisard_' + name_of_conf_input + '.png',
+    #    dpi=300, bbox_inches='tight')
+    plt.show()

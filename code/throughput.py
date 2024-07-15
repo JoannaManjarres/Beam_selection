@@ -252,7 +252,7 @@ def calculate_RT_top_k(index_top_1,
 def throughput_ratio_for_all_techniques():
     input = 'coord' #'lidar', 'lidar_coord'
 
-    
+
     technique = 'WiSARD'
     path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
     index_top_1_W, index_top_5_W, index_top_10_W, index_top_20_W, index_top_30_W, index_top_40_W, index_top_50_W = read_index_beams_estimated (
@@ -322,7 +322,7 @@ def test_calculo_rt():
     rt_5_b = througput_ratio (true_all_power_norm, np.array (top_5_batool) [:, 0])
 
 
-throughput_ratio_for_all_techniques()
+#throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()
 
