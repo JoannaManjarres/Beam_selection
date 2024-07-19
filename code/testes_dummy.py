@@ -25,4 +25,17 @@ def teste_nao_atualiza_dados():
         score.append(acerto / len(all_classes_order))
     a=2+2
 
+
+def dictionary_test():
+    #a = [3,3,3,3,3,4]
+    #my_dict = {0: a, 1: [26,36,13]}
+    #print(my_dict[0])
+
+    vector = [31,52,37]
+    my_dict = {}
+    for i in range(len(vector)):
+        my_dict[i] = vector[i]
+    print(my_dict)
+
 #teste_nao_atualiza_dados()
+dictionary_test()

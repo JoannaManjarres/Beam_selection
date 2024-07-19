@@ -369,20 +369,24 @@ def plot_powers_comparition(predicted_A,
                             label_A,
                             label_B,
                             label_C,
-                            input):#, path):
-    top_k =[1,5,10,20,30,40,50]
-    plt.plot(top_k, predicted_A, label=label_A)
-    plt.plot(top_k, predicted_B, label=label_B)
-    plt.plot (top_k, predicted_C, label=label_C)
+                            input,
+                            top_k,
+                            path,
+                            name_fig):
+    #top_k =[1,5,10,20,30,40,50]
+    plt.plot(top_k, predicted_A, label=label_A, color='red')
+    plt.plot(top_k, predicted_B, label=label_B, color='teal')
+    plt.plot (top_k, predicted_C, label=label_C, color='blue')
     plt.xlabel('top-k')
     plt.ylabel('Throughput Ratio')
-    plt.xticks(top_k)
+    #plt.xticks(top_k)
     plt.title('Throughput Ratio of '+ input)
     plt.legend()
     plt.grid()
-    plt.show()
-    #fig.savefig(path + 'true_predicted_power.png', transparent=True, bbox_inches='tight', pad_inches=0.1)
-    #plt.close(fig
+    #plt.show()
+
+    plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1) #transparent=True,
+    plt.close()
 
 
 '''
