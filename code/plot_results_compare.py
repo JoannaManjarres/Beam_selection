@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import csv
 import matplotlib.pyplot as plt
+import throughput as tp
 
 def plot_results_top_k_for_strategy(top_k, filename,
                                     accuracy_coord,
@@ -46,6 +47,34 @@ def plot_results_top_k_for_strategy(top_k, filename,
     plt.savefig (filename, dpi=300, bbox_inches='tight')
     plt.show ()
 
+
+
+def plot_score_rt_top_k(input, top_k, filename,
+                        score_1,
+                        rt_1,
+                        label_1,
+                        score_2,
+                        rt_2,
+                        label_2,
+                        score_3,
+                        rt_3,
+                        label_3):
+
+    plt.plot(top_k, score_1, color='blue', label=label_1, alpha=0.5)
+    plt.plot(top_k, score_2, color='red', label=label_2)
+    plt.plot(top_k, score_3, color='teal', label=label_3)
+
+    label_complement = ' RT'
+    plt.plot(top_k, rt_1, color='blue', label=label_1+label_complement, linestyle='dashed', alpha=0.5)
+    plt.plot(top_k, rt_2, color='red', label=label_2+label_complement, linestyle='dashed')
+    plt.plot(top_k, rt_3, color='teal', label=label_3+label_complement, linestyle='dashed')
+    plt.legend (loc='lower right')
+    plt.title('Score and RT Top-K of the data '+input, color='steelblue', size=14, fontweight='bold')
+    plt.xlabel('Top-k', color='steelblue', size=14, fontweight='bold')
+    plt.ylabel('Score and RT', color='steelblue', size=14, fontweight='bold')
+    plt.grid()
+    plt.savefig (filename, dpi=300, bbox_inches='tight')
+    plt.show()
 
 
 
@@ -689,5 +718,54 @@ def plot_compare_accuracy_top_k():
     a=0
     '''
 
+def plot_compare_score_and_rt_top_k():
+    input = 'lidar_coord'  # lidar' #'coord', 'lidar_coord'
+    path_to_save = '../results/'
 
-plot_compare_accuracy_top_k()
+    #READ SCORE'S FILES
+    reference = 'batool'
+    filename = 'score_' + reference + '_' + input + '_top_k.csv'
+    top_k, accuracy_batool = read_csv_file (input=input, filename=filename)
+
+    reference = 'ruseckas'
+    filename = 'score_' + reference + '_' + input + '_top_k.csv'
+    _, accuracy_ruseckas = read_csv_file (input=input, filename=filename)
+
+    reference = 'wisard'
+    filename = 'score_' + reference + '_' + input + '_top_k.csv'
+    _, accuracy_wisard = read_csv_file (input=input, filename=filename)
+
+    #RT RESULTS
+    ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas = tp.throughput_ratio_for_all_techniques(input)
+
+    figure_name = path_to_save + 'campare_score_RT_' + input + '.png'
+
+    if input == 'coord':
+        label_ruseckas = 'COORD: Ruseckas [CNN]'
+        label_batool = 'COORD: Batool [DNN]'
+        label_wisard = 'COORD: UFRJ [WiSARD]'
+    elif input == 'lidar':
+        label_ruseckas = 'COORD: Ruseckas [CNN]'
+        label_batool = 'COORD: Batool [DNN]'
+        label_wisard = 'COORD: UFRJ [WiSARD]'
+    elif input == 'lidar_coord':
+        label_ruseckas = 'COORD + LIDAR: Ruseckas [MLP+CNN]'
+        label_batool = 'COORD + LIDAR: Batool [DNN]'
+        label_wisard = 'COORD + LIDAR 2D: UFRJ [WiSARD]'
+
+
+    plot_score_rt_top_k(input=input, filename=figure_name,
+                        top_k=top_k,
+                        score_1=accuracy_ruseckas,
+                        rt_1=ratio_thr_ruseckas,
+                        label_1=label_ruseckas,
+                        score_2=accuracy_wisard,
+                        rt_2=ratio_thr_wisard,
+                        label_2=label_wisard,
+                        score_3=accuracy_batool,
+                        rt_3=ratio_thr_batool,
+                        label_3=label_batool)
+
+
+
+plot_compare_score_and_rt_top_k()

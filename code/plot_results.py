@@ -376,7 +376,7 @@ def plot_powers_comparition(predicted_A,
     #top_k =[1,5,10,20,30,40,50]
     plt.plot(top_k, predicted_A, label=label_A, color='red')
     plt.plot(top_k, predicted_B, label=label_B, color='teal')
-    plt.plot (top_k, predicted_C, label=label_C, color='blue')
+    plt.plot (top_k, predicted_C, label=label_C, color='blue', alpha=0.5)
     plt.xlabel('top-k')
     plt.ylabel('Throughput Ratio')
     #plt.xticks(top_k)

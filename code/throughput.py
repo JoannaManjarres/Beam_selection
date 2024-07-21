@@ -118,6 +118,21 @@ def read_estimated_index_into_dict(path):
 
     return dict
 
+def read_index_beams_estimated_novo(path, filename):
+    #path = '../results/index_beams_predict/Ruseckas/top_k/lidar/'
+    #filename = path + 'index_beams_predict_top_k.npz'
+    cache = np.load (path+filename, allow_pickle=True)
+    keys = list (cache.keys ())
+    all_index = cache [keys [0]]
+
+    top_k = np.arange (1, 51, 1)
+
+    estimate_index_top_k = {}
+    for sample in range(len(top_k)):
+        estimate_index_top_k[top_k[sample]] = all_index[:,:top_k[sample]].astype(int)
+
+    return estimate_index_top_k
+
 
 
 
@@ -226,8 +241,8 @@ def througput_ratio(true_power, estimated_power):
      numerator = np.log2(1+estimated_power)
      denominator = np.log2 (1 + true_power)
 
-     #rt = np.mean(numerator/denominator[:,0])
-     rt = np.isclose(numerator, denominator[:, 0]).mean()
+     rt = np.mean(numerator/denominator[:,0])
+     #rt = np.isclose(numerator, denominator[:, 0]).mean()
 
      return rt
 
@@ -268,9 +283,9 @@ def calculate_RT_top_k(index_top_1,
 
     return rt
 
-def throughput_ratio_for_all_techniques():
+def throughput_ratio_for_all_techniques(input):
 
-    input =  'coord'#, 'lidar_coord' 'coord' 'lidar'
+    #input =  'coord'#, 'lidar_coord' 'coord' 'lidar'
     old_version = False
     true_all_power_norm, all_possible_power_norm, true_beam_index = power_of_sinal_rx ()
 
@@ -288,8 +303,9 @@ def throughput_ratio_for_all_techniques():
 
 
     technique = 'Ruseckas'
-    path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
-    index_estimated_ruseckas = read_estimated_index_into_dict (path_index_beams_estimated)
+    path = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
+    filename = 'index_beams_predict_top_k.npz'
+    index_estimated_ruseckas = read_index_beams_estimated_novo(path, filename)
     througput_ratio_ruseckas = {}
 
 
@@ -300,7 +316,9 @@ def throughput_ratio_for_all_techniques():
 
     technique = 'Batool'
     path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
-    index_estimated_batool = read_estimated_index_into_dict (path_index_beams_estimated)
+    filename = 'index_beams_predict_top_k.npz'
+    #index_estimated_batool = read_estimated_index_into_dict (path_index_beams_estimated)
+    index_estimated_batool = read_index_beams_estimated_novo(filename=filename, path=path_index_beams_estimated)
     througput_ratio_batool = {}
 
     for i in range(len(index_estimated_batool)):
@@ -331,6 +349,8 @@ def throughput_ratio_for_all_techniques():
                                           top_k,
                                           path_save_comparision,
                                           name_figure)
+
+    return ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas
 
     # --------------
     # old version
@@ -414,7 +434,8 @@ def test_calculo_rt():
     rt_5_b = througput_ratio (true_all_power_norm, np.array (top_5_batool) [:, 0])
 
 
-throughput_ratio_for_all_techniques()
+#throughput_ratio_for_all_techniques()
+#throughput_ratio_for_all_techniques()
 #throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()
