@@ -1,10 +1,19 @@
 
 import numpy as np
 import pandas as pd
+import timeit
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras import layers, metrics, optimizers, losses, callbacks, regularizers
 
 from resnet import AddRelu
+
+def tic():
+    global tic_s
+    tic_s = timeit.default_timer()
+def toc():
+    global tic_s
+    toc_s = timeit.default_timer()
+    return (toc_s - tic_s)
 
 
 def get_beams_output(filename, threshold_below_max=6):
@@ -53,12 +62,14 @@ DATA_DIR = '../../data/'
 LIDAR_DATA_DIR = DATA_DIR +'lidar/s009/'
 COORDINATES_DATA_DIR = DATA_DIR + 'coord/ruseckas/'
 #IMAGES_DATA_DIR = DATA_DIR + 'image_input/'
-BEAMS_DATA_DIR = DATA_DIR + 'beams_output/beams_generate_by_me/'
+#BEAMS_DATA_DIR = DATA_DIR + 'beams_output/beams_generate_by_me/'
+BEAMS_DATA_DIR = DATA_DIR + 'beams_output/beam_output_baseline_raymobtime_s009/'
 
 
 LIDAR_TEST_FILE = LIDAR_DATA_DIR + 'lidar_test_raymobtime.npz'
 COORDINATES_TEST_FILE = COORDINATES_DATA_DIR + 'my_coord_test.npz'
-BEAMS_TEST_FILE = BEAMS_DATA_DIR + 'beams_output_8x32_test.npz'
+#BEAMS_TEST_FILE = BEAMS_DATA_DIR + 'beams_output_8x32_test.npz'
+BEAMS_TEST_FILE = BEAMS_DATA_DIR + 'beams_output_test.npz'
 print(BEAMS_TEST_FILE)
 
 
@@ -80,8 +91,8 @@ X_coord_test, _, _ = process_coordinates(X_coord_test, coord_means, coord_stds)
 index_true, _ = get_beams_output(BEAMS_TEST_FILE)
 
 only_lidar = False
-only_coord = True
-both = False
+only_coord = False
+both = True
 
 if (only_lidar):
     #test_generator = TestDataGeneratorLidar(X_lidar_test, index_true, BATCH_SIZE)
@@ -121,21 +132,25 @@ top_k = np.arange (1, 51, 1)
 
 
 all_score = []
+process_time=[]
 for i in range(len(top_k)):
     model_metrics = [metrics.CategoricalAccuracy(), metrics.TopKCategoricalAccuracy(k=top_k[i])]
     model_loss = losses.CategoricalCrossentropy()
     model.compile(loss=model_loss, optimizer = optim, metrics=model_metrics)
     model.load_weights(BEST_WEIGTHS)
 
+    tic ()
     out = model.evaluate(x=X_data, y=index_true, verbose=1)
+    delta_time = toc ()
     all_score.append(out[2])
+    process_time.append (delta_time)
 
 all_index_predict = model.predict(X_data, verbose=1)
 all_index_predict_order = np.zeros ((all_index_predict.shape[0], all_index_predict.shape [1]))
 for i in range (len (all_index_predict)):
     all_index_predict_order[i] = np.flip(np.argsort(all_index_predict[i]))
 
-path_index_predict = '../../results/index_beams_predict/Ruseckas/top_k/'+flag_file+'/'
+path_index_predict = '../../results/index_beams_predict/ruseckas/top_k/'+flag_file+'/'
 file_name = 'index_beams_predict_top_k.npz'
 npz_index_predict = path_index_predict + file_name
 np.savez (npz_index_predict, index_predict=all_index_predict_order)
@@ -158,9 +173,14 @@ for sample in range(len(index_true)):
 
 score= acerto / len(all_index_predict)
 
-path_score = '../../results/accuracy/8x32/accuracy_new_labels/'+flag_file+'/'
-file_name = 'score_ruseckas_'+flag_file+'_top_k.csv'
-df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": all_score})
-df_acuracia_wisard_top_k.to_csv(path_score+file_name, index=False)
+#path_score = '../../results/accuracy/8x32/accuracy_new_labels/'+flag_file+'/'
+path_score = '../../results/score/ruseckas/top_k/'+flag_file+'/'
+file_name = 'score_'+flag_file+'_top_k.csv'
+df_acuracia_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": all_score})
+df_acuracia_top_k.to_csv(path_score+file_name, index=False)
+
+path_to_save_process_time = '../../results/processingTime/ruseckas/'+flag_file+'/'
+df_test_time = pd.DataFrame({"test_time": process_time})
+df_test_time.to_csv(path_to_save_process_time + 'test_time_' + flag_file +'.csv', index=False)
 
 print(all_score)

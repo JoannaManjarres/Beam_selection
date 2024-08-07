@@ -363,6 +363,89 @@ def plot_of_bars(data_1, data_2, data_3, data_4, data_5, path):
     plt.savefig (path + 'Top_k_lidar_2D.png', dpi=300, bbox_inches='tight')
     plt.show ()
 
+def plot_lidar_powers_comparition(wisard,
+                                  batool,
+                                  ruseckas,
+                                  mashhadi,
+                                  label_wisard,
+                                  label_batool,
+                                  label_ruseckas,
+                                  label_mashhadi,
+                                  input,
+                                  top_k,
+                                  path,
+                                  name_fig):
+    #top_k =[1,5,10,20,30,40,50]
+
+    type_of_marker = 'o'
+    size_of_marker = 3
+    color_wisard = 'red'
+    color_batool = 'teal'
+    color_ruseckas = 'blue'
+    color_mashhadi = 'goldenrod'
+    size_font = 8
+
+    wisard = np.round(wisard, 3)
+    batool = np.round(batool, 3)
+    ruseckas = np.round(ruseckas, 3)
+    mashhadi = np.round(mashhadi, 3)
+
+    plt.plot(top_k, batool, label=label_batool, color=color_batool)
+    for i, v in enumerate (batool):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_batool)
+        if top_k[i] == 1:
+            plt.text (top_k[i]+1, v+0.009, str (v), color=color_batool, size=size_font)
+        if top_k[i] == 10:
+            plt.text (top_k[i]+1, v-0.02, str (v), color=color_batool, size=size_font)
+        if top_k[i] == 50:
+            plt.text (top_k[i]+1, v-0.01, str (v), color=color_batool, size=size_font)
+
+    plt.plot(top_k, ruseckas, label=label_ruseckas, color=color_ruseckas, alpha=0.5)
+    for i, v in enumerate (ruseckas):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_ruseckas, alpha=0.5)
+        if top_k [i] == 1:
+            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_ruseckas, size=size_font)
+        if top_k [i] == 10:
+            plt.text (top_k [i]+1, v+0.035, str (v), color=color_ruseckas, size=size_font)
+        if top_k [i] == 50:
+            plt.text (top_k [i]+1, v+0.01, str (v), color=color_ruseckas, size=size_font)
+
+    plt.plot(top_k, mashhadi, label=label_mashhadi, color=color_mashhadi)
+    for i, v in enumerate (mashhadi):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_mashhadi)
+        if top_k[i] == 1:
+            plt.text (top_k [i] + 1, v, str (v), color=color_mashhadi, size=size_font)
+        if top_k[i] == 10:
+            plt.text (top_k [i] + 1, v+0.025, str (v), color=color_mashhadi, size=size_font)
+        if top_k[i] == 50:
+            plt.text (top_k [i] + 1, v, str (v), color=color_mashhadi, size=size_font)
+
+    plt.plot(top_k, wisard, label=label_wisard, color=color_wisard)
+    for i, v in enumerate (wisard):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_wisard)
+        if top_k[i] == 1:
+            plt.text (top_k [i] + 1, v, str (v), color=color_wisard, size=size_font)
+        if top_k[i] == 10:
+            plt.text (top_k [i] + 1, v-0.01, str (v), color=color_wisard, size=size_font)
+        if top_k[i] == 50:
+            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_wisard, size=size_font)
+
+    plt.xlabel('top-k')
+    plt.ylabel('Throughput Ratio')
+    #plt.xticks(top_k)
+    plt.title('Throughput Ratio of '+ input)
+    plt.xlim([0, 55])
+    plt.legend()
+    plt.grid()
+    #plt.show()
+
+    plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
+    plt.close()
+
 def plot_powers_comparition(predicted_A,
                             predicted_B,
                             predicted_C,
@@ -374,9 +457,36 @@ def plot_powers_comparition(predicted_A,
                             path,
                             name_fig):
     #top_k =[1,5,10,20,30,40,50]
-    plt.plot(top_k, predicted_A, label=label_A, color='red')
-    plt.plot(top_k, predicted_B, label=label_B, color='teal')
-    plt.plot (top_k, predicted_C, label=label_C, color='blue', alpha=0.5)
+
+    type_of_marker ='o'
+    size_of_marker = 3
+    color_c = 'blue'
+    color_b = 'teal'
+    color_a = 'red'
+    size_font = 8
+
+    predicted_A = np.round(predicted_A, 3)
+    predicted_B = np.round(predicted_B, 3)
+    predicted_C = np.round(predicted_C, 3)
+
+
+    plt.plot(top_k, predicted_A, label=label_A, color=color_a)
+    for i, v in enumerate (predicted_A):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_a)
+            plt.text (top_k [i] + 1, v, str (v), color=color_a, size=size_font)
+
+    plt.plot(top_k, predicted_B, label=label_B, color=color_b)
+    for i, v in enumerate (predicted_B):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_b)
+            plt.text (top_k [i] + 1, v-0.01, str (v), color=color_b, size=size_font)
+
+    plt.plot (top_k, predicted_C, label=label_C, color=color_c, alpha=0.5)
+    for i, v in enumerate (predicted_C):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_c)
+            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_c, size=size_font)
     plt.xlabel('top-k')
     plt.ylabel('Throughput Ratio')
     #plt.xticks(top_k)
@@ -385,7 +495,7 @@ def plot_powers_comparition(predicted_A,
     plt.grid()
     #plt.show()
 
-    plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1) #transparent=True,
+    plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
     plt.close()
 
 

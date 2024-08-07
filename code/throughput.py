@@ -287,8 +287,18 @@ def throughput_ratio_for_all_techniques(input):
 
     #input =  'coord'#, 'lidar_coord' 'coord' 'lidar'
     old_version = False
-    true_all_power_norm, all_possible_power_norm, true_beam_index = power_of_sinal_rx ()
+    true_all_power_norm, all_possible_power_norm, true_beam_index = power_of_sinal_rx()
 
+    if input =='lidar':
+        technique = 'Mashhadi'
+        path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
+        filename = 'index_beams_predict_top_k.npz'
+        index_estimated_mashhadi = read_index_beams_estimated_novo(path_index_beams_estimated, filename)
+        througput_ratio_mashhadi = {}
+        for i in range(len(index_estimated_mashhadi)):
+            best_power_top_k, all_power_order_top_k = calculate_top_k_all_power (index_estimated_mashhadi [i + 1],
+                                                                                 all_possible_power_norm)
+            througput_ratio_mashhadi[i + 1] = througput_ratio(true_all_power_norm, best_power_top_k)
 
     technique = 'WiSARD'
     path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
@@ -339,18 +349,29 @@ def throughput_ratio_for_all_techniques(input):
     ratio_thr_ruseckas = [througput_ratio_ruseckas[key] for key in througput_ratio_ruseckas.keys()]
     ratio_thr_ruseckas = np.array(ratio_thr_ruseckas)
 
-    plot_results.plot_powers_comparition (ratio_thr_wisard,
-                                          ratio_thr_batool,
-                                          ratio_thr_ruseckas,
-                                          'WiSARD',
-                                          'Batool',
-                                          'Ruseckas',
-                                          input,
-                                          top_k,
-                                          path_save_comparision,
-                                          name_figure)
+    if input == 'lidar':
 
-    return ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas
+        ratio_thr_mashhadi = [througput_ratio_mashhadi [key] for key in througput_ratio_mashhadi.keys ()]
+        ratio_thr_mashhadi = np.array(ratio_thr_mashhadi)
+
+        plot_results.plot_lidar_powers_comparition (wisard=ratio_thr_wisard, batool=ratio_thr_batool,
+                                                    ruseckas=ratio_thr_ruseckas, mashhadi=ratio_thr_mashhadi,
+                                                    label_wisard='WiSARD', label_batool='Batool', label_ruseckas='Ruseckas', label_mashhadi='Mashhadi',
+                                                    input=input, top_k=top_k, path=path_save_comparision, name_fig=name_figure)
+        return ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas, ratio_thr_mashhadi
+    else:
+        plot_results.plot_powers_comparition(ratio_thr_wisard,
+                                             ratio_thr_batool,
+                                             ratio_thr_ruseckas,
+                                             'WiSARD',
+                                             'Batool',
+                                             'Ruseckas',
+                                             input,
+                                             top_k,
+                                             path_save_comparision,
+                                             name_figure)
+
+        return ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas
 
     # --------------
     # old version
@@ -434,8 +455,8 @@ def test_calculo_rt():
     rt_5_b = througput_ratio (true_all_power_norm, np.array (top_5_batool) [:, 0])
 
 
-#throughput_ratio_for_all_techniques()
-#throughput_ratio_for_all_techniques()
+
+throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
 #throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()

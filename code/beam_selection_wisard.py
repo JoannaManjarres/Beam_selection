@@ -205,6 +205,10 @@ def select_best_beam(input_train,
         writer_acuracy = csv.writer(f, delimiter='\t')
         writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
 
+    #with open(path_result + '/score/Wisard/'+type_of_input+'/'+user+'/score_' + figure_name + '.csv', 'w') as f:
+    #    writer_acuracy = csv.writer(f, delimiter='\t')
+    #    writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
+
     with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user + '/time_train_' + figure_name + '.csv', 'w') as f:
         writer_time_train = csv.writer(f, delimiter='\t')
         writer_time_train.writerows(zip(address_size, vector_time_train_media, vector_time_train_desvio_padrao))
@@ -327,8 +331,14 @@ def beam_selection_top_k_wisard(x_train, x_test,
         np.savez(npz_index_predict, output_classification=best_classes_int)
 
     df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
-    path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
-    df_score_wisard_top_k.to_csv (path_csv + 'score_wisard_' + name_of_conf_input + '_top_k.csv', index=False)
+    #path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
+    path_csv = '../results/score/Wisard/top_k/'+name_of_conf_input+'/'
+    df_score_wisard_top_k.to_csv (path_csv + 'score_' + name_of_conf_input + '_top_k.csv', index=False)
+
+    file_name = 'index_beams_predict_top_k.npz'
+    npz_index_predict = path_index_predict + file_name
+    np.savez (npz_index_predict, output_classification=all_classes_order)
+
 
 
 

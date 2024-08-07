@@ -47,9 +47,7 @@ def plot_results_top_k_for_strategy(top_k, filename,
     plt.savefig (filename, dpi=300, bbox_inches='tight')
     plt.show ()
 
-
-
-def plot_score_rt_top_k(input, top_k, filename,
+def plot_LiDAR_score_rt_top_k(input, top_k, filename,
                         score_1,
                         rt_1,
                         label_1,
@@ -58,7 +56,35 @@ def plot_score_rt_top_k(input, top_k, filename,
                         label_2,
                         score_3,
                         rt_3,
-                        label_3):
+                        label_3,
+                              score_4,
+                              rt_4,
+                              label_4
+                              ):
+
+    plt.plot(top_k, score_1, color='blue', label=label_1, alpha=0.5)
+    plt.plot(top_k, score_2, color='red', label=label_2)
+    plt.plot(top_k, score_3, color='teal', label=label_3)
+    plt.plot(top_k,  score_4, color='pink', label=label_4)
+
+    label_complement = ' RT'
+    plt.plot(top_k, rt_1, color='blue', label=label_1+label_complement, linestyle='dashed', alpha=0.5)
+    plt.plot(top_k, rt_2, color='red', label=label_2+label_complement, linestyle='dashed')
+    plt.plot(top_k, rt_3, color='teal', label=label_3+label_complement, linestyle='dashed')
+    plt.plot (top_k, rt_4, color='pink', label=label_4 + label_complement, linestyle='dashed')
+
+    plt.legend (loc='lower right')
+    plt.title('Score and RT Top-K of the data '+input, color='steelblue', size=14, fontweight='bold')
+    plt.xlabel('Top-k', color='steelblue', size=14, fontweight='bold')
+    plt.ylabel('Score and RT', color='steelblue', size=14, fontweight='bold')
+    plt.grid()
+    plt.savefig (filename, dpi=300, bbox_inches='tight')
+    plt.show()
+
+def plot_score_rt_top_k(input, top_k, filename,
+                        score_1, rt_1, label_1,
+                        score_2, rt_2, label_2,
+                        score_3, rt_3, label_3):
 
     plt.plot(top_k, score_1, color='blue', label=label_1, alpha=0.5)
     plt.plot(top_k, score_2, color='red', label=label_2)
@@ -77,119 +103,194 @@ def plot_score_rt_top_k(input, top_k, filename,
     plt.show()
 
 
+def plot_results_LiDAR_top_k(top_k, input, filename,
+                             accuracy_ruseckas, accuracy_wisard, accuracy_batool, accuracy_mashhadi,
+                             label_ruseckas, label_wisard, label_batool, label_mashhadi):
 
-def plot_results_top_k(top_k, input, filename,
-                       accuracy_ref_17,
-                       accuracy_wisard_s008_s009,
-                       accuracy_batool,
-                       label_ref_17,
-                       label_wisard_s008_s009,
-                       label_batool):
+    color_wisard = 'red'
+    color_batool = 'teal'
+    color_ruseckas = 'blue'
+    color_mashhadi ='goldenrod'
 
-    style_of_line_lidar = 'dashed'  # 'solid'#
-    style_of_line_s008_s009 = 'solid'
-    type_of_marker_s008_s009 = ""
-    type_of_marker_lidar = 'x'
-    size_of_marker_lidar = 3
-    width_of_line_lidar = 1
-
-    color_ref_17 = 'blue'
-    color_wisard_s008_s009 = 'red'#'seagreen'
-
-    color_ref_17_s008 = 'pink'
-    color_wisard_s008 = 'goldenrod'
-    color_wisard_s009 = 'blue'
-
+    style_of_line = 'solid'
+    size_of_marker = 3
+    type_of_marker = 'o'
+    width_of_line = 1
+    size_font = 8
 
     #sns.set()
     plt.figure()
-    plt.plot (top_k,
-              accuracy_wisard_s008_s009,
-              color=color_wisard_s008_s009,
-              marker=type_of_marker_s008_s009,
-              linestyle=style_of_line_s008_s009,
-              linewidth=width_of_line_lidar,
-              markersize=size_of_marker_lidar,
-              label=label_wisard_s008_s009)
-    for i, v in enumerate (accuracy_wisard_s008_s009):
-        if top_k[i] == 1 or top_k [i] == 10 or top_k[i]==50:
-            plt.plot (top_k [i], v, marker='o', markersize=3, color=color_wisard_s008_s009)
-            if input == 'coord':
-                plt.text (top_k [i]+0.8, v-0.03 , str (v), color=color_wisard_s008_s009, size=8)
-            #elif input == 'lidar':
 
-             #   plt.text (top_k[i], v-0.065, str (v), color=color_wisard_s008_s009, size=8)
+    plt.plot(top_k, accuracy_ruseckas, color=color_ruseckas,
+             linestyle=style_of_line, linewidth=width_of_line, label=label_ruseckas, alpha=0.5,)
+    for i, v in enumerate (accuracy_ruseckas):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_ruseckas)
+        if top_k[i] == 1:
+            plt.text(top_k[i]+1, v, str(v), color=color_ruseckas, size=size_font)
+        elif top_k[i] == 10:
+            plt.text(top_k[i], v+0.03, str(v), color=color_ruseckas, size=size_font)
+        elif top_k[i] == 50:
+            plt.text(top_k[i]+1, v+0.015, str(v), color=color_ruseckas, size=size_font)
+
+    plt.plot(top_k, accuracy_mashhadi, color=color_mashhadi,
+             linestyle=style_of_line, linewidth=width_of_line, label=label_mashhadi)
+    for i, v in enumerate(accuracy_mashhadi):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_mashhadi)
+        if top_k [i] == 1:
+            plt.text(top_k[i]+1, v-0.015, str(v), color=color_mashhadi, size=size_font)
+        if top_k [i] == 10:
+            plt.text(top_k[i], v-0.01, str(v), color=color_mashhadi, size=size_font)
+        if top_k [i] == 50:
+            plt.text(top_k[i]+1, v-0.01, str(v), color=color_mashhadi, size=size_font)
+
+    plt.plot (top_k, accuracy_batool, color=color_batool,
+              linestyle=style_of_line, linewidth=width_of_line, label=label_batool)
+    for i, v in enumerate (accuracy_batool):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_batool)
+        if top_k [i] == 1:
+            plt.text(top_k[i] + 1, v - 0.015, str(v), color=color_batool, size=size_font)
+        if top_k [i] == 10:
+            plt.text(top_k[i], v - 0.04, str(v), color=color_batool, size=size_font)
+        if top_k [i] == 50:
+            plt.text(top_k[i] + 1, v-0.022, str(v), color=color_batool, size=size_font)
+
+    plt.plot (top_k, accuracy_wisard, color=color_wisard,
+              linestyle=style_of_line, linewidth=width_of_line, label=label_wisard)
+    for i, v in enumerate (accuracy_wisard):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot(top_k [i], v, marker=type_of_marker, markersize=size_of_marker, color=color_wisard)
+        if top_k[i] == 1:
+            plt.text(top_k[i]+1, v, str(v), color=color_wisard, size=size_font)
+        elif top_k[i] == 10:
+            plt.text(top_k[i], v+0.02, str(v), color=color_wisard, size=size_font)
+        elif top_k[i] == 50:
+            plt.text(top_k[i] + 1, v-0.04, str(v), color=color_wisard, size=size_font)
+
+    plt.title('Comparacao entre as referencias e a WiSARD \n Acuracia Top-K dos dados '+ input , color='steelblue', size=14, fontweight='bold')
+    #plt.xticks(top_k)
+    plt.xlabel('Top-k', color='steelblue', size=14, fontweight='bold')
+    #plt.yscale('linear')
+    plt.ylim([0.4, 1.05])
+    plt.xlim ([0, 55])
+
+    plt.grid()
+    plt.ylabel('Accuracy', color='steelblue', size=14, fontweight='bold')
+    plt.legend(loc='lower right')
+
+    #plt.grid(False)
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+
+
+def plot_results_top_k(top_k, input, filename,
+                       ruseckas,
+                       wisard,
+                       batool,
+                       label_ruseckas,
+                       label_wisard,
+                       label_batool):
+
+
+    color_ruseckas = 'blue'
+    color_wisard = 'red'
+    color_batool = 'teal'
+
+    style_of_line = 'solid'
+    width_of_line = 1
+    marker_type = 'o'
+    marker_size = 3
+
+    #sns.set()
+    plt.figure()
+    plt.plot (top_k, wisard, color=color_wisard,
+              linestyle=style_of_line, linewidth=width_of_line, label=label_wisard)
+    for i, v in enumerate (wisard):
+        if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
+            plt.plot (top_k[i], v, marker=marker_type, markersize=3, color=color_wisard)
+            if input == 'coord':
+                if top_k [i] == 1:
+                    plt.text(top_k[i]+0.8, v , str (v), color=color_wisard, size=8)
+                if top_k [i] == 10:
+                    plt.text(top_k[i]+0.8, v-0.03 , str (v), color=color_wisard, size=8)
+                if top_k [i] == 50:
+                    plt.text(top_k[i]+0.8, v-0.03 , str (v), color=color_wisard, size=8)
+
         if input == 'lidar':
             if top_k [i] == 1:
-                plt.text (top_k[i]+1, v, str(v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i]+1, v, str(v), color=color_wisard, size=8)
             elif top_k [i] == 10:
-                plt.text (top_k[i], v-0.018, str (v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i], v-0.018, str (v), color=color_wisard, size=8)
             elif top_k [i] == 50:
-                plt.text (top_k[i]+1, v-0.018, str(v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i]+1, v-0.018, str(v), color=color_wisard, size=8)
         if input == 'lidar_coord':
             if top_k [i] == 1:
-                plt.text (top_k[i]+1, v, str(v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i]+1, v, str(v), color=color_wisard, size=8)
             elif top_k [i] == 10:
-                plt.text (top_k[i], v-0.018, str (v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i], v-0.018, str (v), color=color_wisard, size=8)
             elif top_k [i] == 50:
-                plt.text (top_k[i]+1, v, str (v), color=color_wisard_s008_s009, size=8)
+                plt.text (top_k[i]+1, v, str (v), color=color_wisard, size=8)
 
-    plt.plot(top_k,
-             accuracy_ref_17,
-             color=color_ref_17,
-             marker=type_of_marker_s008_s009,
-             linestyle=style_of_line_s008_s009,
-             linewidth=width_of_line_lidar, markersize=size_of_marker_lidar, label=label_ref_17, alpha=0.5,)
-    for i, v in enumerate (accuracy_ref_17):
-        if top_k[i] == 1 or top_k [i] == 10 or top_k[i]==50:
-            plt.plot (top_k [i], v, marker='o', markersize=3, color=color_ref_17)
+    plt.plot(top_k, ruseckas, color=color_ruseckas,
+             linestyle=style_of_line, linewidth=width_of_line, label=label_ruseckas, alpha=0.5)
+    for i, v in enumerate (ruseckas):
+        if top_k[i] == 1 or top_k [i] == 10 or top_k[i] == 50:
+            plt.plot (top_k[i], v, marker=marker_type, markersize=marker_size, color=color_ruseckas)
             if input == 'coord':
-                plt.text (top_k[i], v+0.03 , str (v), color=color_ref_17, size=8)
+                if top_k [i] == 1:
+                    plt.text (top_k[i]+0.8, v, str(v), color=color_ruseckas, size=8)
+                if top_k [i] == 10:
+                    plt.text (top_k[i]+0.8, v+0.03, str(v), color=color_ruseckas, size=8)
+                if top_k [i] == 50:
+                    plt.text (top_k[i]+1, v+0.02, str(v), color=color_ruseckas, size=8)
 
             if input == 'lidar':
-                if top_k [i] == 1:
-                    plt.text (top_k[i]+1, v, str(v), color=color_ref_17, size=8)
-                elif top_k [i] == 10:
-                    plt.text (top_k[i], v+0.022, str(v), color=color_ref_17, size=8)
-                elif top_k [i] == 50:
-                    plt.text (top_k[i]+1, v+0.022, str(v), color=color_ref_17, size=8)
+                if top_k[i] == 1:
+                    plt.text (top_k[i]+1, v, str(v), color=color_ruseckas, size=8)
+                elif top_k[i] == 10:
+                    plt.text (top_k[i], v+0.022, str(v), color=color_ruseckas, size=8)
+                elif top_k[i] == 50:
+                    plt.text(top_k[i]+1, v+0.022, str(v), color=color_ruseckas, size=8)
 
             if input == 'lidar_coord':
                 if top_k [i] == 1:
-                    plt.text (top_k[i]+1, v, str(v), color=color_ref_17, size=8)
+                    plt.text (top_k[i]+1, v, str(v), color=color_ruseckas, size=8)
                 elif top_k [i] == 10:
-                    plt.text (top_k[i], v+0.022, str(v), color=color_ref_17, size=8)
+                    plt.text (top_k[i], v+0.022, str(v), color=color_ruseckas, size=8)
                 elif top_k [i] == 50:
-                    plt.text (top_k[i]+1, v+0.022, str(v), color=color_ref_17, size=8)
+                    plt.text (top_k[i]+1, v+0.022, str(v), color=color_ruseckas, size=8)
 
-    plt.plot(top_k,
-             accuracy_batool,
-             color='teal',
-             marker=type_of_marker_s008_s009,
-             linestyle=style_of_line_s008_s009,
-             linewidth=width_of_line_lidar,
-             markersize=size_of_marker_lidar,
-             label=label_batool)
-    for i, v in enumerate (accuracy_batool):
+    plt.plot(top_k, batool, color=color_batool,
+             linestyle=style_of_line, linewidth=width_of_line, label=label_batool)
+    for i, v in enumerate (batool):
         if top_k [i] == 1 or top_k [i] == 10 or top_k[i]==50:
-            plt.plot (top_k [i], v, marker='o', markersize=2, color='teal')
+            plt.plot (top_k [i], v, marker=marker_type, markersize=marker_size, color=color_batool)
             if input == 'coord':
-                plt.text (top_k [i], v-0.0480, str (v), color='teal', size=8)
+                if top_k [i] == 1:
+                    plt.text (top_k [i]+0.8, v, str (v), color=color_batool, size=8)
+                if top_k [i] == 10:
+                    plt.text (top_k [i], v-0.0480, str (v), color=color_batool, size=8)
+                if top_k [i] == 50:
+                    plt.text (top_k [i]+0.8, v-0.0480, str (v), color=color_batool, size=8)
         if input == 'lidar':
             if top_k [i] == 1:
-                plt.text(top_k [i]+1, v-0.015, str(v), color='teal', size=8)
+                plt.text(top_k [i]+1, v-0.015, str(v), color=color_batool, size=8)
             if top_k [i] == 10:
-                plt.text(top_k [i], v-0.04, str(v), color='teal', size=8)
+                plt.text(top_k [i], v-0.04, str(v), color=color_batool, size=8)
             if top_k [i] == 50:
-                plt.text(top_k [i]+1, v-0.01, str(v), color='teal', size=8)
+                plt.text(top_k [i]+1, v-0.01, str(v), color=color_batool, size=8)
 
         if input == 'lidar_coord':
             if top_k [i] == 1:
-                plt.text(top_k [i]+1, v, str(v), color='teal', size=8)
+                plt.text(top_k [i]+1, v, str(v), color=color_batool, size=8)
             if top_k [i] == 10:
-                plt.text(top_k [i], v-0.035, str(v), color='teal', size=8)
+                plt.text(top_k [i], v-0.035, str(v), color=color_batool, size=8)
             if top_k [i] == 50:
-                plt.text(top_k [i]+1, v-0.035, str(v), color='teal', size=8)
+                plt.text(top_k [i]+1, v-0.035, str(v), color=color_batool, size=8)
 
 
 
@@ -199,7 +300,7 @@ def plot_results_top_k(top_k, input, filename,
     plt.xlabel('Top-k', color='steelblue', size=14, fontweight='bold')
     #plt.yscale('linear')
     if input == 'lidar_coord' or input == 'lidar':
-        plt.ylim([0.5, 1.1])
+        plt.ylim([0.4, 1.1])
     else:
         plt.ylim ([0, 1.1])
     plt.xlim ([0, 55])
@@ -211,6 +312,22 @@ def plot_results_top_k(top_k, input, filename,
     #plt.grid(False)
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
+
+def readCSVfile(input, reference):
+    path = '../results/score/' + reference + '/top_k/' + input + '/'
+    filename = 'score_'+ input + '_top_k.csv'
+    usecols = ["Top-k", "Acuracia"]
+    print(path + filename)
+    data = pd.read_csv (path + filename, header=None, usecols=usecols, names=["Top-k", "Acuracia"])
+    print(path + filename)
+    accuracy = data['Acuracia'].tolist()
+    accuracy = [float (i) for i in accuracy [1:]]
+    accuracy = [round (i, 2) for i in accuracy]
+
+    top_k = data ['Top-k'].tolist()
+    top_k = [float(i) for i in top_k[1:]]
+
+    return top_k, accuracy
 
 def read_csv_file(input, filename):
     #path = '../results/accuracy/8x32/' + input + '/'
@@ -607,44 +724,47 @@ def plot_compare_accuracy_top_k():
     '''Read and plot accuracy of 2 reference and wisard
     using the beams generated by  '''
     input = 'lidar' #lidar' #'coord', 'lidar_coord'
-    path_to_save = '../results/accuracy/8x32/accuracy_new_labels/'
+    #path_to_save = '../results/accuracy/8x32/accuracy_new_labels/'
+    path_to_save = '../results/score/'
 
     reference = 'batool'
-    filename = 'score_'+reference+'_'+input+'_top_k.csv'
-    top_k, accuracy_batool = read_csv_file (input=input, filename=filename)
+    top_k, accuracy_batool = readCSVfile(input=input, reference=reference)
 
     reference = 'ruseckas'
-    filename = 'score_' + reference + '_' + input + '_top_k.csv'
-    _, accuracy_ruseckas = read_csv_file (input=input, filename=filename)
+    _, accuracy_ruseckas = readCSVfile (input=input, reference=reference)
 
     reference = 'wisard'
     filename = 'score_' + reference + '_' + input + '_top_k.csv'
     _, accuracy_wisard = read_csv_file (input=input, filename=filename)
 
-    figure_name = path_to_save + 'campare_top_k_score_'+input+'.png'
+    if input =='lidar':
+        reference = 'Mashhadi'
+        _, accuracy_mashhadi = readCSVfile(input=input, reference=reference)
+
+    figure_name = path_to_save + 'score_top_k_compare_'+input+'.png'
 
     if input == 'coord':
         label_ruseckas = 'COORD: Ruseckas [CNN]'
         label_batool = 'COORD: Batool [DNN]'
         label_wisard = 'COORD: UFRJ [WiSARD]'
     elif input == 'lidar':
-        label_ruseckas = 'COORD: Ruseckas [CNN]'
-        label_batool = 'COORD: Batool [DNN]'
-        label_wisard = 'COORD: UFRJ [WiSARD]'
+        label_ruseckas = 'LiDAR: Ruseckas[CNN]'
+        label_batool = 'LiDAR: Batool[DNN]'
+        label_wisard = 'LiDAR: UFRJ[WiSARD]'
+        label_mashhadi = 'LiDAR: Mashhadi[CNN]'
     elif input == 'lidar_coord':
         label_ruseckas = 'COORD + LIDAR: Ruseckas [MLP+CNN]'
         label_batool = 'COORD + LIDAR: Batool [DNN]'
         label_wisard = 'COORD + LIDAR 2D: UFRJ [WiSARD]'
 
-    plot_results_top_k (top_k,
-                        input,
-                        figure_name,
-                        accuracy_ruseckas,
-                        accuracy_wisard,
-                        accuracy_batool,
-                        label_ruseckas,
-                        label_wisard,
-                        label_batool)
+    if input == 'lidar':
+        plot_results_LiDAR_top_k(top_k, input, figure_name,
+                                 accuracy_ruseckas, accuracy_wisard, accuracy_batool, accuracy_mashhadi,
+                                 label_ruseckas, label_wisard, label_batool, label_mashhadi)
+    else:
+        plot_results_top_k (top_k, input, figure_name,
+                            accuracy_ruseckas, accuracy_wisard, accuracy_batool,
+                            label_ruseckas, label_wisard, label_batool)
 
 
     '''
@@ -719,7 +839,7 @@ def plot_compare_accuracy_top_k():
     '''
 
 def plot_compare_score_and_rt_top_k():
-    input = 'lidar_coord'  # lidar' #'coord', 'lidar_coord'
+    input = 'lidar'  # lidar' #'coord', 'lidar_coord'
     path_to_save = '../results/'
 
     #READ SCORE'S FILES
@@ -736,36 +856,53 @@ def plot_compare_score_and_rt_top_k():
     _, accuracy_wisard = read_csv_file (input=input, filename=filename)
 
     #RT RESULTS
-    ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas = tp.throughput_ratio_for_all_techniques(input)
+    if input =='lidar':
+        reference = 'Mashhadi'
+        filename = 'score_' + reference + '_' + input + '_top_k.csv'
+        _, accuracy_mashhadi = read_csv_file (input=input, filename=filename)
+        ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas, ratio_thr_mashhadi = tp.throughput_ratio_for_all_techniques(input)
+    else:
+        ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas = tp.throughput_ratio_for_all_techniques(input)
 
     figure_name = path_to_save + 'campare_score_RT_' + input + '.png'
 
     if input == 'coord':
-        label_ruseckas = 'COORD: Ruseckas [CNN]'
-        label_batool = 'COORD: Batool [DNN]'
-        label_wisard = 'COORD: UFRJ [WiSARD]'
+        label_ruseckas = 'COORD: Ruseckas[CNN]'
+        label_batool = 'COORD: Batool[DNN]'
+        label_wisard = 'COORD: UFRJ[WiSARD]'
     elif input == 'lidar':
-        label_ruseckas = 'COORD: Ruseckas [CNN]'
-        label_batool = 'COORD: Batool [DNN]'
-        label_wisard = 'COORD: UFRJ [WiSARD]'
+        label_ruseckas = 'LiDAR: Ruseckas[CNN]'
+        label_batool = 'LiDAR: Batool[DNN]'
+        label_wisard = 'LiDAR: UFRJ[WiSARD]'
+        label_mashhadi = 'LiDAR: Mashhadi[CNN]'
     elif input == 'lidar_coord':
-        label_ruseckas = 'COORD + LIDAR: Ruseckas [MLP+CNN]'
-        label_batool = 'COORD + LIDAR: Batool [DNN]'
-        label_wisard = 'COORD + LIDAR 2D: UFRJ [WiSARD]'
+        label_ruseckas = 'COORD + LIDAR: Ruseckas[MLP+CNN]'
+        label_batool = 'COORD + LIDAR: Batool[DNN]'
+        label_wisard = 'COORD + LIDAR 2D: UFRJ[WiSARD]'
 
 
-    plot_score_rt_top_k(input=input, filename=figure_name,
-                        top_k=top_k,
-                        score_1=accuracy_ruseckas,
-                        rt_1=ratio_thr_ruseckas,
-                        label_1=label_ruseckas,
-                        score_2=accuracy_wisard,
-                        rt_2=ratio_thr_wisard,
-                        label_2=label_wisard,
-                        score_3=accuracy_batool,
-                        rt_3=ratio_thr_batool,
-                        label_3=label_batool)
+    if input =='lidar':
+        plot_LiDAR_score_rt_top_k(input=input, filename=figure_name,
+                                  top_k=top_k,
+                                  score_1=accuracy_ruseckas,
+                                  rt_1=ratio_thr_ruseckas,
+                                  label_1=label_ruseckas,
+                                  score_2=accuracy_wisard,
+                                  rt_2=ratio_thr_wisard,
+                                  label_2=label_wisard,
+                                  score_3=accuracy_batool,
+                                  rt_3=ratio_thr_batool,
+                                  label_3=label_batool,
+                                  score_4=accuracy_mashhadi,
+                                  rt_4=ratio_thr_mashhadi,
+                                  label_4=label_mashhadi)
 
+    else:
+        plot_compare_score_and_rt_top_k(input=input, filename=figure_name, top_k=top_k,
+                            score_1=accuracy_ruseckas, rt_1=ratio_thr_ruseckas, label_1=label_ruseckas,
+                            score_2=accuracy_wisard, rt_2=ratio_thr_wisard, label_2=label_wisard,
+                            score_3=accuracy_batool, rt_3=ratio_thr_batool, label_3=label_batool)
 
-
-plot_compare_score_and_rt_top_k()
+plot_compare_accuracy_top_k()
+#plot_compare_score_and_rt_top_k()
+#plot_compare_accuracy_top_k()
