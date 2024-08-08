@@ -52,16 +52,17 @@ parser.add_argument("--preds_csv_path", type=str, default="unnamed_preds.csv",
 args = parser.parse_args()
 '''
 input = 'lidar'
-lidar_test_data = 'lidar_test_raymobtime.npz'
-beam_test_data = 'beams_output_test.npz'
+#lidar_test_data = 'lidar_test_raymobtime.npz'
+#beam_test_data = 'beams_output_test.npz'
 
+lidar_test_data = '../../data/lidar/s009/lidar_test_raymobtime.npz'
 #test_data_folder = '../../data/beams_output/beams_generate_by_me/'
 #file_test = 'beams_output_8x32_test.npz'
 #beam_test_data = test_data_folder + file_test
 
-#test_data_folder = '../../data/beams_output/beam_output_baseline_raymobtime_s009/'
-#file_test = 'beams_output_test.npz'
-#beam_test_data = test_data_folder + file_test
+test_data_folder = '../../data/beams_output/beam_output_baseline_raymobtime_s009/'
+file_test = 'beams_output_test.npz'
+beam_test_data = test_data_folder + file_test
 
 model_path = 'model/'
 preds_npz_path = '../../results/index_beams_predict/Mashhadi/top_k/'+input+'/'
