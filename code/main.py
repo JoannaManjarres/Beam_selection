@@ -1000,7 +1000,8 @@ def beam_selection_wisard_with_lidar_and_coord(input_type_comb, top_k):
         print(" DADOS DE LIDAR 2D + RX EM FORMA DE TERMOMETRO")
 
         th = 0.15
-        label_input_type = 'LiDAR_2D_+_Rx_Term_SVar'
+        #label_input_type = 'LiDAR_2D_+_Rx_Term_SVar'
+        label_input_type = 'lidar'
         data_lidar_2D_with_rx_train, data_lidar_2D_with_rx_test = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer()
         print ("Datos de Train: ", data_lidar_2D_with_rx_train.shape)
         print ("Datos de Test: ", data_lidar_2D_with_rx_test.shape)
@@ -1026,7 +1027,8 @@ def beam_selection_wisard_with_lidar_and_coord(input_type_comb, top_k):
     elif combinations_of_input == 6: #lidar 2D with Rx as Thermometer using variance elimination and coordinates
         print (" COM DADOS DE LIDAR 2D + RX EM FORMA DE TERMOMETRO E ELIMINACAO DE VARIANCIA")
         print (" E COORDENADAS")
-        label_input_type = 'LiDAR_2D_+_Rx_Term_+_Coord_'+str(preprocess_resolution)+'_SVar'
+        #label_input_type = 'LiDAR_2D_+_Rx_Term_+_Coord_'+str(preprocess_resolution)+'_SVar'
+        label_input_type = 'lidar_coord'
         data_lidar_2D_with_rx_termomether_train, data_lidar_2D_with_rx_termomether_test = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
         th_variance = 0.1
         data_lidar_2D_without_variance_train, data_lidar_2D_without_variance_test = pre_process_lidar.data_lidar_2D_binary_without_variance (
@@ -1131,7 +1133,8 @@ def beam_selection_wisard_with_lidar_and_coord(input_type_comb, top_k):
                                      x_test=input_test,
                                      y_train=label_train,
                                      y_test=label_test,
-                                     data_input=input_type,
+                                     data_input=label_input_type,
+                                     #data_input=input_type,
                                      data_set=data_set,
                                      address_of_size=size_of_address,
                                      name_of_conf_input = label_input_type)

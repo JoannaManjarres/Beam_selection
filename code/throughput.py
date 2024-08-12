@@ -456,7 +456,7 @@ def test_calculo_rt():
 
 
 
-throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
+#throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
 #throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()

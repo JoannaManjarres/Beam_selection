@@ -109,14 +109,12 @@ def select_best_beam(input_train,
         address_size = [28]
         numero_experimentos = 2
     else:
-        #address_size = [28]
-
-        #address_size = [4, 8, 10]
+        #address_size = [60]
         #address_size = [4, 8, 12, 16, 20,24, 28,]
         #address_size = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48,]
-        #address_size = [ 8, 12, 16, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+        address_size = [4, 8, 12, 16, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
         #address_size = [6,  12, 18, 24, 28, 30, 36, 42, 48, 54, 60]
-        address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
+        #address_size = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64]
 
         numero_experimentos = 10
 
@@ -129,7 +127,7 @@ def select_best_beam(input_train,
     vector_time_test_desvio_padrao = []
 
     path_result = "../results"
-    print("Tamanho da \nMemoria\t\t|\tRodada\t|\tAcuracia")
+    #print("Tamanho da \nMemoria\t\t|\tRodada\t|\tAcuracia")
 
     for j in range(len(address_size)):  # For encargado de variar el tamano de la memoria
 
@@ -139,7 +137,7 @@ def select_best_beam(input_train,
         vector_matriz_confusion = []
         #matriz_confusion_sumatoria = np.zeros((numero_de_grupos, numero_de_grupos), dtype=float)
 
-        print('\t'+str(address_size[j]))
+        #print('\t'+str(address_size[j]))
 
         for i in range(numero_experimentos):  # For encargado de ejecutar el numero de rodadas (experimentos)
 
@@ -163,10 +161,12 @@ def select_best_beam(input_train,
 
             #print('\n Measuring output performance ...')
             acuracia = accuracy_score(label_validation, out_red)
-            npz_index_predict = path_result+'/'+type_of_input+'/index_beams_predict/' + f'index_beams_predict_{i}' + '.npz'
-            np.savez (npz_index_predict, output_classification=npz_index_predict)
+            #npz_index_predict = path_result+'/'+type_of_input+'/index_beams_predict/' + f'index_beams_predict_{i}' + '.npz'
+            #npz_index_predict = path_result + '/index_beams_predict/WiSARD/' + figure_name +'/' + f'index_beams_predict_{i}' + '.npz'
+
+            #np.savez (npz_index_predict, output_classification=npz_index_predict)
             vector_acuracia.append(acuracia)
-            print('\t\t\t\t\t' + str(i) + '\t|\t' + str(acuracia))
+            #print('\t\t\t\t\t' + str(i) + '\t|\t' + str(acuracia))
 
         # ----------------- CALCULA ESTADISTICAS -----------------------
         [acuracia_media, acuracia_desvio_padrao] = calculoDesvioPadrao(vector_acuracia)
@@ -197,11 +197,12 @@ def select_best_beam(input_train,
         #                                        nombreFigura=path_confusion_matriz)
 
     # ----------------- GUARDA EM CSV VECTORES DE ESTADISTICAS  -----------------------
-    print ("-------------------------------------------")
-    print('\n Saving results files ...')
-    print ("-------------------------------------------")
+    #print ("-------------------------------------------")
+    #print('\n Saving results files ...')
+    #print ("-------------------------------------------")
 
-    with open(path_result + '/accuracy/'+antenna_config+'/'+type_of_input+'/'+user+'/acuracia_' + figure_name + '.csv', 'w') as f:
+    #with open(path_result + '/accuracy/'+antenna_config+'/'+type_of_input+'/'+user+'/acuracia_' + figure_name + '.csv', 'w') as f:
+    with open (path_result + '/score/Wisard/' + figure_name + '/acuracia_' + figure_name + '.csv', 'w') as f:
         writer_acuracy = csv.writer(f, delimiter='\t')
         writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
 
@@ -209,11 +210,13 @@ def select_best_beam(input_train,
     #    writer_acuracy = csv.writer(f, delimiter='\t')
     #    writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
 
-    with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user + '/time_train_' + figure_name + '.csv', 'w') as f:
+    #with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user + '/time_train_' + figure_name + '.csv', 'w') as f:
+    with open(path_result + '/processingTime/Wisard/' + figure_name + '/time_train_' + figure_name + '.csv', 'w') as f:
         writer_time_train = csv.writer(f, delimiter='\t')
         writer_time_train.writerows(zip(address_size, vector_time_train_media, vector_time_train_desvio_padrao))
 
-    with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_' + figure_name + '.csv', 'w') as f:
+    #with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_' + figure_name + '.csv', 'w') as f:
+    with open(path_result + '/processingTime/Wisard/' + figure_name + '/time_test_' + figure_name + '.csv', 'w') as f:
         writer_time_test = csv.writer(f, delimiter='\t')
         writer_time_test.writerows(zip(address_size, vector_time_test_media, vector_time_test_desvio_padrao))
 
@@ -326,9 +329,9 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
         score.append(acerto / len(out))
 
-        file_name = 'index_beams_predict_top_' + str(top_k[i]) + '.npz'
-        npz_index_predict = path_index_predict + file_name
-        np.savez(npz_index_predict, output_classification=best_classes_int)
+        #file_name = 'index_beams_predict_top_' + str(top_k[i]) + '.npz'
+        #npz_index_predict = path_index_predict + file_name
+        #np.savez(npz_index_predict, output_classification=best_classes_int)
 
     df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
     #path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
