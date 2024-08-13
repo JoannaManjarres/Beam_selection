@@ -112,8 +112,8 @@ if __name__ == '__main__':
     all_data_predict_correct_shape = beam_output_correction(all_data_predict)
 
     all_index_predict_order = np.zeros ((all_data_predict_correct_shape.shape [0], all_data_predict_correct_shape.shape [1]))
-    for i in range (len (all_data_predict_correct_shape)):
-        all_index_predict_order[i] = np.flip (np.argsort (all_data_predict_correct_shape [i]))
+    for i in range(len(all_data_predict_correct_shape)):
+        all_index_predict_order[i] = np.flip(np.argsort(all_data_predict_correct_shape[i]))
 
     test_data_correct_shape = beam_output_correction(test_data.beam_output)
 
@@ -148,10 +148,10 @@ if __name__ == '__main__':
 
 
     df_score_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": accuracy_top_k})
-    df_score_top_k.to_csv (score_csv_path + 'score_' + input + '_top_k.csv', index=False)
+    df_score_top_k.to_csv(score_csv_path + 'score_' + input + '_top_k.csv', index=False)
 
     df_test_time = pd.DataFrame ({"test_time": process_time})
-    df_test_time.to_csv (path_to_save_process_time + 'test_time_' + input + '.csv', index=False)
+    df_test_time.to_csv(path_to_save_process_time + 'test_time_' + input + '.csv', index=False)
 
     file_name = 'index_beams_predict_top_k.npz'
     npz_index_predict = preds_npz_path + file_name

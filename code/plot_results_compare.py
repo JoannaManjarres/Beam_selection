@@ -49,19 +49,10 @@ def plot_results_top_k_for_strategy(top_k, filename,
     plt.show ()
 
 def plot_LiDAR_score_rt_top_k(input, top_k, filename,
-                        score_1,
-                        rt_1,
-                        label_1,
-                        score_2,
-                        rt_2,
-                        label_2,
-                        score_3,
-                        rt_3,
-                        label_3,
-                              score_4,
-                              rt_4,
-                              label_4
-                              ):
+                        score_1, rt_1, label_1,
+                        score_2, rt_2, label_2,
+                        score_3, rt_3, label_3,
+                        score_4, rt_4, label_4 ):
 
     plt.plot(top_k, score_1, color='blue', label=label_1, alpha=0.5)
     plt.plot(top_k, score_2, color='red', label=label_2)
@@ -184,9 +175,6 @@ def plot_results_LiDAR_top_k(top_k, input, filename,
     #plt.grid(False)
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
-
-
-
 
 def plot_results_top_k(top_k, input, filename,
                        ruseckas,

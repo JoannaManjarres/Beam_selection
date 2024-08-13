@@ -91,8 +91,8 @@ X_coord_test, _, _ = process_coordinates(X_coord_test, coord_means, coord_stds)
 index_true, _ = get_beams_output(BEAMS_TEST_FILE)
 
 only_lidar = False
-only_coord = False
-both = True
+only_coord = True
+both = False
 
 if (only_lidar):
     #test_generator = TestDataGeneratorLidar(X_lidar_test, index_true, BATCH_SIZE)

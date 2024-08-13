@@ -363,18 +363,9 @@ def plot_of_bars(data_1, data_2, data_3, data_4, data_5, path):
     plt.savefig (path + 'Top_k_lidar_2D.png', dpi=300, bbox_inches='tight')
     plt.show ()
 
-def plot_lidar_powers_comparition(wisard,
-                                  batool,
-                                  ruseckas,
-                                  mashhadi,
-                                  label_wisard,
-                                  label_batool,
-                                  label_ruseckas,
-                                  label_mashhadi,
-                                  input,
-                                  top_k,
-                                  path,
-                                  name_fig):
+def plot_lidar_powers_comparition(wisard, batool, ruseckas, mashhadi,
+                                  label_wisard, label_batool, label_ruseckas, label_mashhadi,
+                                  input, top_k, path, name_fig):
     #top_k =[1,5,10,20,30,40,50]
 
     type_of_marker = 'o'
@@ -446,16 +437,9 @@ def plot_lidar_powers_comparition(wisard,
     plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
     plt.close()
 
-def plot_powers_comparition(predicted_A,
-                            predicted_B,
-                            predicted_C,
-                            label_A,
-                            label_B,
-                            label_C,
-                            input,
-                            top_k,
-                            path,
-                            name_fig):
+def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
+                            label_A, label_B, label_C,
+                            input, top_k, path, name_fig):
     #top_k =[1,5,10,20,30,40,50]
 
     type_of_marker ='o'
