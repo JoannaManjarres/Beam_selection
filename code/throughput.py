@@ -302,7 +302,9 @@ def throughput_ratio_for_all_techniques(input):
 
     technique = 'WiSARD'
     path_index_beams_estimated = '../results/index_beams_predict/' + technique + '/top_k/' + input + '/'
-    index_estimated_wisard = read_estimated_index_into_dict(path_index_beams_estimated)
+    filename = 'index_beams_predict_top_k.npz'
+    #index_estimated_wisard = read_estimated_index_into_dict(path_index_beams_estimated)
+    index_estimated_wisard = read_index_beams_estimated_novo (path_index_beams_estimated, filename)
     througput_ratio_wisard = {}
 
     for i in range(len(index_estimated_wisard)):
@@ -456,7 +458,7 @@ def test_calculo_rt():
 
 
 
-#throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
+throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
 #throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()

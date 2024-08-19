@@ -458,19 +458,19 @@ def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
     for i, v in enumerate (predicted_A):
         if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
             plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_a)
-            plt.text (top_k [i] + 1, v, str (v), color=color_a, size=size_font)
+            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_a, size=size_font)
 
     plt.plot(top_k, predicted_B, label=label_B, color=color_b)
     for i, v in enumerate (predicted_B):
         if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
             plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_b)
-            plt.text (top_k [i] + 1, v-0.01, str (v), color=color_b, size=size_font)
+            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_b, size=size_font)
 
     plt.plot (top_k, predicted_C, label=label_C, color=color_c, alpha=0.5)
     for i, v in enumerate (predicted_C):
         if top_k[i] == 1 or top_k[i] == 10 or top_k[i] == 50:
             plt.plot(top_k[i], v, marker=type_of_marker, markersize=size_of_marker, color=color_c)
-            plt.text (top_k [i] + 1, v-0.02, str (v), color=color_c, size=size_font)
+            plt.text (top_k [i] + 1, v+0.02, str (v), color=color_c, size=size_font)
     plt.xlabel('top-k')
     plt.ylabel('Throughput Ratio')
     #plt.xticks(top_k)

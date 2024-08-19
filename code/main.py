@@ -974,7 +974,7 @@ def beam_selection_wisard_with_lidar_and_coord(input_type_comb, top_k):
         label_input_type = 'coord'
         input_train = encoding_coord_train
         input_test = encoding_coord_test
-        size_of_address = 44
+        size_of_address = 48
 
     elif combinations_of_input == 2: # only Coordinates using variance elimination
         print(" COM COORDENADAS E ELIMINACAO DE VARIANCIA")
