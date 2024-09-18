@@ -458,7 +458,7 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
     all_samples_test = []
 
     p = 0
-    window_size = 100
+    window_size = 3
     nro_episodes_s008 = 2085
     for i in range(len(episode_for_test)):
         if i in s009_data['Episode'].tolist ():
@@ -1471,7 +1471,7 @@ eposodies_for_test = 2000
 episodes_for_train = 2086
 input_type = 'coord'
 #fit_traditional(eposodies_for_test, input_type)
-#fit_sliding_window_with_size_var(eposodies_for_test, input_type)
+fit_sliding_window_with_size_var(eposodies_for_test, input_type)
 #rodada = 1
 #fit_fixed_window(eposodies_for_test, episodes_for_train, input_type, rodada)
 #rodada = 2
@@ -1482,7 +1482,7 @@ input_type = 'coord'
 #plot_score_comparation(input_type)
 #plot_time_comparition(input_type)
 
-fit_traditional_top_k(eposodies_for_test, input_type)
+#fit_traditional_top_k(eposodies_for_test, input_type)
 #comparition_between_two_measurements_time()
 # testar tempo de treinamento e teste com esta ferramenta: https://docs.python.org/3/library/time.html#time.perf_counter
 
