@@ -1466,7 +1466,7 @@ input_type = 'coord'
 #plot_score_comparation(input_type)
 #plot_time_comparition(input_type)
 
-fit_traditional_top_k(eposodies_for_test, input_type)
+asdfasdf fit_traditional_top_k(eposodies_for_test, input_type)
 #comparition_between_two_measurements_time()
 # testar tempo de treinamento e teste com esta ferramenta: https://docs.python.org/3/library/time.html#time.perf_counter
 
