@@ -470,27 +470,18 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
                     labels_for_next_train.append(label_test[k])
                     samples_for_next_train.append(input_test[k])
             else:
-                var = (nro_episodes_s008 - window_size)+i
-                if var <= nro_episodes_s008:
-                    initial_data_for_trainning = s008_data [s008_data ['Episode'] > var]
-                    label_train = initial_data_for_trainning['index_beams'].tolist()
-                    label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
-                    if label_input_type == 'coord':
-                        input_train = initial_data_for_trainning['encoding_coord'].tolist()
-                        input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
-                    elif label_input_type == 'lidar':
-                        input_train = initial_data_for_trainning['lidar'].tolist()
-                        input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
-                    elif label_input_type == 'lidar_coord':
-                        input_train = initial_data_for_trainning['lidar_coord'].tolist()
-                        input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
+                start_index_s008 = (nro_episodes_s008 - window_size)+i
+                if start_index_s008 <= nro_episodes_s008:
+                    input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
+                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+
                     for j in range(len(labels_for_next_train)):
                         label_train.append(labels_for_next_train[j])
                         input_train.append(samples_for_next_train[j])
                     for k in range(len(label_test)):
                         labels_for_next_train.append(label_test[k])
                         samples_for_next_train.append(input_test[k])
-                elif var > nro_episodes_s008:
+                elif start_index_s008 > nro_episodes_s008:
                     aux = s009_data[s009_data['Episode']==i]['Episode'].tolist()
                     if aux[0] < window_size+p:
                         data_for_trainnig_a = s009_data[s009_data['Episode'] <= window_size+p]
