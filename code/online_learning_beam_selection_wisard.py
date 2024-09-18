@@ -463,17 +463,14 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
     for i in range(len(episode_for_test)):
         if i in s009_data['Episode'].tolist ():
             if i == 0:
-                initial_data_for_trainning = s008_data[s008_data['Episode'] > (nro_episodes_s008-window_size)]
-                label_train = initial_data_for_trainning['index_beams'].tolist()
+                start_index_s008 = nro_episodes_s008 - window_size
+                input_train, label_train = extract_portion_from_s008 (s008_data, start_index_s008, label_input_type)
                 label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
                 if label_input_type == 'coord':
-                    input_train = initial_data_for_trainning['encoding_coord'].tolist()
                     input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
                 elif label_input_type == 'lidar':
-                    input_train = initial_data_for_trainning['lidar'].tolist()
                     input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
                 elif label_input_type == 'lidar_coord':
-                    input_train = initial_data_for_trainning['lidar_coord'].tolist()
                     input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
                 for k in range(len(label_test)):
                     labels_for_next_train.append(label_test[k])
@@ -658,6 +655,25 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
                                      all_score,
                                      all_trainning_time, all_test_time,
                                      all_samples_train, all_samples_test))
+
+
+def extract_portion_from_s008(s008_data, start_index, input_type):
+
+    initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
+    label_train = initial_data_for_trainning ['index_beams'].tolist ()
+    input_train = []
+
+    if input_type == 'coord':
+        input_train = initial_data_for_trainning ['encoding_coord'].tolist ()
+    elif input_type == 'lidar':
+        input_train = initial_data_for_trainning ['lidar'].tolist ()
+    elif input_type == 'lidar_coord':
+        input_train = initial_data_for_trainning ['lidar_coord'].tolist ()
+    else:
+        print('error: deve especificar o tipo de entrada')
+
+    return input_train, label_train
+
 
 def fit_sliding_window(nro_of_episodes, input_type):
     preprocess_resolution = 16
