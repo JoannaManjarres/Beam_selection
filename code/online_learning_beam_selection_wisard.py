@@ -464,7 +464,7 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
         if i in s009_data['Episode'].tolist ():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
-                input_train, label_train = extract_portion_from_s008 (s008_data, start_index_s008, label_input_type)
+                input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
                 label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
                 if label_input_type == 'coord':
                     input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
@@ -657,7 +657,7 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
                                      all_samples_train, all_samples_test))
 
 
-def extract_portion_from_s008(s008_data, start_index, input_type):
+def extract_training_data_from_s008(s008_data, start_index, input_type):
 
     initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
     label_train = initial_data_for_trainning ['index_beams'].tolist ()
