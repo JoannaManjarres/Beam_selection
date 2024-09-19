@@ -421,7 +421,7 @@ def fit_incremental(nro_of_episodes, input_type):
                                      all_trainning_time, all_test_time,
                                      all_samples_train, all_samples_test))
 
-def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
+def fit_sliding_window_with_size_var(nro_of_episodes, input_type, window_size):
     preprocess_resolution = 16
     th = 0.15
     all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data(preprocess_resolution)
@@ -458,7 +458,7 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
     all_samples_test = []
 
     start_index_s009 = 0
-    window_size = 3
+
     nro_episodes_s008 = 2085
     for i in range(len(episode_for_test)):
         if i in s009_data['Episode'].tolist ():
@@ -1373,7 +1373,10 @@ eposodies_for_test = 2000
 episodes_for_train = 2086
 input_type = 'coord'
 #fit_traditional(eposodies_for_test, input_type)
-fit_sliding_window_with_size_var(eposodies_for_test, input_type)
+#window_size = [300, 400, 500, 600, 700, 800, 900, 1000]
+window_size = np.arange(300, 1900, 100)
+for i in range(len(window_size)):
+    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
 #rodada = 1
 #fit_fixed_window(eposodies_for_test, episodes_for_train, input_type, rodada)
 #rodada = 2
