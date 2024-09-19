@@ -496,9 +496,6 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
 
 
 
-            #print('i = ',i, initial_data_for_trainning['Episode'].tolist(), len(label_train),
-            #      s009_data[s009_data['Episode'] == i]['Episode'].tolist(), len(label_test))
-            #print('i = ',i, '|',len(label_train),'|', len(label_test))
             index_predict, trainning_time, test_time = beam_selection_wisard (data_train=input_train,
                                                                               data_validation=input_test,
                                                                               label_train=label_train,
@@ -514,75 +511,6 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
         else:
             continue
 
-
-    '''
-    for i in range(len(episode_for_test)):
-        if i in s009_data['Episode'].tolist():
-
-            if i == 0:
-                label_train = s008_data_copy['index_beams'].tolist()
-                if label_input_type == 'coord':
-                    input_train = s008_data_copy['encoding_coord'].tolist()
-                elif label_input_type == 'lidar':
-                    input_train = s008_data_copy['lidar'].tolist()
-                elif label_input_type == 'lidar_coord':
-                    input_train = s008_data_copy['lidar_coord'].tolist()
-
-                label_test = s009_data[s009_data['Episode'] == i]['index_beams'].tolist()
-                if label_input_type == 'coord':
-                    input_test = s009_data[s009_data['Episode'] == i]['encoding_coord'].tolist()
-                elif label_input_type == 'lidar':
-                    input_test = s009_data[s009_data['Episode'] == i]['lidar'].tolist()
-                elif label_input_type == 'lidar_coord':
-                    input_test = s009_data[s009_data['Episode'] == i]['lidar_coord'].tolist()
-
-                for k in range(len(label_test)):
-                    labels_for_next_train.append(label_test[k])
-                    samples_for_next_train.append(input_test[k])
-
-                #print(i, len(label_train), len(label_test))
-            else:
-                s008_data_copy = s008_data_copy.drop(s008_data_copy[s008_data_copy['Episode'] == i-1].index)
-                label_train = s008_data_copy['index_beams'].tolist()
-                if label_input_type == 'coord':
-                    input_train = s008_data_copy['encoding_coord'].tolist()
-                elif label_input_type == 'lidar':
-                    input_train = s008_data_copy['lidar'].tolist()
-                elif label_input_type == 'lidar_coord':
-                    input_train = s008_data_copy['lidar_coord'].tolist()
-                for j in range(len(labels_for_next_train)):
-                    label_train.append(labels_for_next_train[j])
-                    input_train.append(samples_for_next_train[j])
-
-                label_test = s009_data[s009_data ['Episode'] == i]['index_beams'].tolist()
-                if label_input_type == 'coord':
-                    input_test = s009_data[s009_data ['Episode'] == i]['encoding_coord'].tolist()
-                elif label_input_type == 'lidar':
-                    input_test = s009_data[s009_data ['Episode'] == i]['lidar'].tolist()
-                elif label_input_type == 'lidar_coord':
-                    input_test = s009_data[s009_data ['Episode'] == i]['lidar_coord'].tolist()
-                for k in range(len(label_test)):
-                    labels_for_next_train.append(label_test[k])
-                    samples_for_next_train.append(input_test[k])
-
-                #print(i, len(label_train), len(label_test))
-    
-        index_predict, trainning_time, test_time = beam_selection_wisard(data_train=input_train,
-                                                                             data_validation=input_test,
-                                                                             label_train=label_train,
-                                                                             addressSize=44)
-
-            score = accuracy_score (label_test, index_predict)
-            all_score.append(score)
-            all_trainning_time.append(trainning_time)
-            all_test_time.append(test_time)
-            all_episodes.append(i)
-            all_samples_train.append(len(input_train))
-            all_samples_test.append(len(input_test))
-        else:
-            continue
-        '''
-
     average_score = []
     for i in range(len(all_score)):
         i = i+1
@@ -596,7 +524,6 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
     plt.legend(loc='lower right', bbox_to_anchor=(1.04, 0))
     plt.title('Beam selection using WiSARD with ' + label_input_type + ' in sliding window with variable size')
     plt.savefig(path_result + 'score_sliding_window_size_'+str(window_size)+'.png')
-    #plt.show ()
     plt.close ()
 
     plt.plot (all_episodes, all_trainning_time, 'o-', color='green')
@@ -1042,31 +969,6 @@ def fit_traditional_top_k(nro_of_episodes, label_input_type):
 
     ## SAVE RESULTS
     path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/traditional_fit/'
-
-    '''
-    plt.plot (all_episodes, all_score, 'o--', color='red', label='Accuracy per episode')
-    plt.plot (all_episodes, average_score, 'o-', color='blue', label='Cumulative average accuracy')
-    plt.xlabel ('Episode')
-    plt.ylabel ('Accuracy')
-    plt.legend (loc='lower right', bbox_to_anchor=(1.04, 0))
-    plt.title ('Beam selection using WiSARD with ' + label_input_type + ' in traditional fit')
-    plt.savefig (path_result + 'score_traditional_train.png')
-    plt.close ()
-
-    plt.plot (all_episodes, all_trainning_time, 'o-', color='green')
-    plt.xlabel ('Episode')
-    plt.ylabel ('Trainning Time')
-    plt.title ('Trainning Time using Traditional fit ')
-    plt.savefig (path_result + 'time_train_traditional_fit.png')
-    plt.close ()
-
-    plt.plot (all_episodes, all_test_time, 'o-', color='blue')
-    plt.xlabel ('Episode')
-    plt.ylabel ('Test Time')
-    plt.title ('Test Time using Traditional fit ')
-    plt.savefig (path_result + 'time_test_traditional_fit.png')
-    plt.close ()
-    '''
 
     headerList = ['Episode', 'score top-5',
                                 'score top-10',
