@@ -466,21 +466,24 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
                 start_index_s008 = nro_episodes_s008 - window_size
                 input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
                 input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
-                for k in range(len(label_test)):
-                    labels_for_next_train.append(label_test[k])
-                    samples_for_next_train.append(input_test[k])
             else:
                 start_index_s008 = (nro_episodes_s008 - window_size)+i
                 if start_index_s008 < nro_episodes_s008:
-                    input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
+                    start_index_s009 = 0
+                    end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
+
+                    input_train_s008, label_train_s008 = extract_training_data_from_s008(s008_data,
+                                                                               start_index_s008,
+                                                                               label_input_type)
+                    input_train_s009, label_train_s009 = extract_training_data_from_s009(s009_data,
+                                                                               start_index_s009,
+                                                                               end_index_s009,
+                                                                               label_input_type)
+                    input_train = input_train_s008 + input_train_s009
+                    label_train = label_train_s008 + label_train_s009
+
                     input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
 
-                    for j in range(len(labels_for_next_train)):
-                        label_train.append(labels_for_next_train[j])
-                        input_train.append(samples_for_next_train[j])
-                    for k in range(len(label_test)):
-                        labels_for_next_train.append(label_test[k])
-                        samples_for_next_train.append(input_test[k])
                 else:
                     end_index_s009 = start_index_s009 + window_size
                     input_train, label_train = extract_training_data_from_s009(s009_data,
