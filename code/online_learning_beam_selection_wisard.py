@@ -1165,64 +1165,53 @@ def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
                                        all_trainning_time,
                                        all_test_time,
                                        all_samples_train, all_samples_test))
+
+def read_csv_data(path, filename):
+    data = pd.read_csv(path + filename)
+    return data
+
+def calculate_mean_score(data):
+    all_score = data ['Score'].tolist ()
+    average_score = []
+    for i in range (len (all_score)):
+        i = i + 1
+        average_score.append (np.mean (all_score [0:i]))
+    return average_score
+
 def plot_score_comparation(input_type):
     path_result = '../results/score/Wisard/online/'
     path_result_traditional = path_result + input_type+'/traditional_fit/'
-    path_result_sliding_window = path_result + input_type+'/sliding_window/'
-    path_result_incremental_window = path_result + input_type+'/incremental_window/'
-    path_result_fixed_window = path_result + input_type+'/fixed_window/'
-
     all_results_traditional = pd.read_csv(path_result_traditional + 'all_results_traditional_fit.csv')
+    path_result_sliding_window = path_result + input_type+'/sliding_window/'
     all_results_sliding_window = pd.read_csv(path_result_sliding_window + 'all_results_sliding_window.csv')
+    path_result_incremental_window = path_result + input_type+'/incremental_window/'
     all_results_incremental_window = pd.read_csv(path_result_incremental_window + 'all_results_incremental_window.csv')
+    path_result_fixed_window = path_result + input_type+'/fixed_window/'
     #all_results_fixed_window = pd.read_csv(path_result_fixed_window + 'all_results_fixed_window.csv')
 
-    all_score_traditional = all_results_traditional['Score'].tolist()
-    average_score_traditional = []
-    for i in range (len (all_score_traditional)):
-        i = i + 1
-        average_score_traditional.append (np.mean (all_score_traditional[0:i]))
+    mean_cumulative_score_traditional = calculate_mean_score(all_results_traditional)
+    mean_cumulative_sliding_window = calculate_mean_score(all_results_sliding_window)
+    mean_cumulative_incremental_window = calculate_mean_score(all_results_incremental_window)
+    #mean_cumulative_score_fixed_window = calculate_mean_score(all_results_fixed_window)
 
-    all_score_sliding_window = all_results_sliding_window['Score'].tolist()
-    average_score_sliding_window = []
-    for i in range (len (all_score_sliding_window)):
-        i = i + 1
-        average_score_sliding_window.append (np.mean (all_score_sliding_window[0:i]))
-
-    all_score_incremental_window = all_results_incremental_window['Score'].tolist()
-    average_score_incremental_window = []
-    for i in range (len (all_score_incremental_window)):
-        i = i + 1
-        average_score_incremental_window.append (np.mean (all_score_incremental_window [0:i]))
-
-    #all_score_fixed_window = all_results_fixed_window['Score'].tolist()
-    #average_score_fixed_window = []
-    #for i in range (len (all_score_fixed_window)):
-    #    i = i + 1
-    #    average_score_fixed_window.append(np.mean (all_score_fixed_window [0:i]))
-
-
-    mean_sliding_window = np.round(np.mean(average_score_sliding_window),3)
-    mean_traditional = np.round(np.mean(average_score_traditional),3)
-    mean_incremental_window = np.round(np.mean(average_score_incremental_window),3)
-    #mean_fixed_window = np.round(np.mean(average_score_fixed_window),3)
+    mean_sliding_window = np.round(np.mean(mean_cumulative_sliding_window),3)
+    mean_traditional = np.round(np.mean(mean_cumulative_score_traditional),3)
+    mean_incremental_window = np.round(np.mean(mean_cumulative_incremental_window),3)
+    #mean_fixed_window = np.round(np.mean(mean_cumulative_score_fixed_window),3)
 
     text_sliding_window = 'Mean: '+str(mean_sliding_window)
     text_incremental_window = 'Mean: '+str(mean_incremental_window)
     #text_fixed_window = 'Mean: '+str(mean_fixed_window)
     text_traditional_window = 'Mean: '+str(mean_traditional)
 
-
-
-    plt.plot(all_results_traditional['Episode'], average_score_traditional, 'o-', color='purple', label='Fixed window')
+    plt.plot(all_results_traditional['Episode'], mean_cumulative_score_traditional, 'o-', color='purple', label='Fixed window')
     plt.text(1800, mean_traditional-0.01, text_traditional_window, fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.plot(all_results_sliding_window['Episode'], average_score_sliding_window, 'o-', color='red', label='Sliding window')
+    plt.plot(all_results_sliding_window['Episode'], mean_cumulative_sliding_window, 'o-', color='red', label='Sliding window')
     plt.text(1800, mean_sliding_window+0.03, text_sliding_window, fontsize=8, color='red', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.plot(all_results_incremental_window['Episode'], average_score_incremental_window, 'o-', color='green', label='Incremental window')
+    plt.plot(all_results_incremental_window['Episode'], mean_cumulative_incremental_window, 'o-', color='green', label='Incremental window')
     plt.text(1800, mean_incremental_window, text_incremental_window, fontsize=8, color='green', fontname='Myanmar Sangam MN', fontweight='bold')
-    #plt.plot(all_results_fixed_window['Episode'], average_score_fixed_window, 'o-', color='purple', label='Fixed window')
+    #plt.plot(all_results_fixed_window['Episode'], mean_cumulative_score_fixed_window, 'o-', color='purple', label='Fixed window')
     #plt.text (1800, mean_fixed_window-0.02, text_fixed_window, fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
-
     plt.xlabel('Episode')
     plt.ylabel('Accuracy')
     plt.legend(loc='lower right')#, bbox_to_anchor=(1.04, 0))
@@ -1374,9 +1363,9 @@ episodes_for_train = 2086
 input_type = 'coord'
 #fit_traditional(eposodies_for_test, input_type)
 #window_size = [300, 400, 500, 600, 700, 800, 900, 1000]
-window_size = np.arange(300, 1900, 100)
-for i in range(len(window_size)):
-    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+#window_size = np.arange(300, 1900, 100)
+#for i in range(len(window_size)):
+#    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
 #rodada = 1
 #fit_fixed_window(eposodies_for_test, episodes_for_train, input_type, rodada)
 #rodada = 2
@@ -1384,7 +1373,7 @@ for i in range(len(window_size)):
 #fit_sliding_window(eposodies_for_test, input_type)
 #fit_incremental(eposodies_for_test, input_type)
 
-#plot_score_comparation(input_type)
+plot_score_comparation(input_type)
 #plot_time_comparition(input_type)
 
 #fit_traditional_top_k(eposodies_for_test, input_type)
