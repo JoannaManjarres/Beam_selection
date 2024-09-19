@@ -471,7 +471,7 @@ def fit_sliding_window_with_size_var(nro_of_episodes, input_type):
                     samples_for_next_train.append(input_test[k])
             else:
                 start_index_s008 = (nro_episodes_s008 - window_size)+i
-                if start_index_s008 <= nro_episodes_s008:
+                if start_index_s008 < nro_episodes_s008:
                     input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
                     input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
 
