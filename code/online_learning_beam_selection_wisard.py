@@ -1178,30 +1178,31 @@ def calculate_mean_score(data):
         average_score.append (np.mean (all_score [0:i]))
     return average_score
 
-def plot_compare_windows_size_in_window_sliding():
-    input_name = 'coord'
+def plot_compare_windows_size_in_window_sliding(input_name):
     path_result = '../results/score/Wisard/online/'+input_name+'/sliding_window/window_size_var/'
-    window_size = np.arange(100, 1900, 400)
-    mean_cumulative_score_ws_1800 = calculate_mean_score(read_csv_data(path_result, 'all_results_sliding_window_size_1800.csv'))
-    color = ['blue', 'red', 'green', 'purple', 'orange']
+    window_size = [100,  500, 1000, 1500, 2000]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
 
+    text_pos_y = 1800
     for i in range(len(window_size)):
-        offset = 0.01
-        file_name = 'all_results_sliding_window_size_'+ str(window_size[i]) +'.csv'
+
+        file_name = 'all_results_sliding_window_size_' + str(window_size[i]) + '.csv'
         data = read_csv_data(path_result, file_name)
         mean_cumulative_score = calculate_mean_score(data)
-        plt.plot(data['Episode'], mean_cumulative_score, '.', label='Window size: '+str(window_size[i]), color=color[i])
-        plt.text(2000, np.mean(mean_cumulative_score)+offset, 'Mean: '+str(np.round(np.mean(mean_cumulative_score),3)),
-                 fontsize=8, color=color[i], fontname='Myanmar Sangam MN', fontweight='bold')
-        offset = offset + 0.03
+        window_size_label = 'Window size: ' + str(window_size[i])
+        mean_label = 'Mean: ' + str(np.round(np.mean(mean_cumulative_score),3))
+        plt.plot(data['Episode'], mean_cumulative_score, '.', label=window_size_label, color=color[i])
+        plt.text(text_pos_y, 0.4, mean_label,
+                 color=color[i], fontname='Myanmar Sangam MN', fontweight='bold',
+                 fontdict=dict(fontsize=6, fontweight='bold'), bbox=dict(facecolor='white', edgecolor='white'))
 
-    plt.plot (data ['Episode'], mean_cumulative_score_ws_1800, '.', label='Window size: 1800', color='teal')
-    plt.text(2000, np.mean (mean_cumulative_score_ws_1800) + 0.03, 'Mean: ' + str (np.round (np.mean (mean_cumulative_score_ws_1800), 3)),
-             fontsize=8, color = 'teal', fontname='Myanmar Sangam MN', fontweight='bold')
+        text_pos_y = text_pos_y - 300
+
     plt.xlabel('Episode')
     plt.ylabel('Accuracy')
-    plt.legend(loc='lower right', bbox_to_anchor=(1.04, 0))
-    plt.title('Beam selection using WiSARD with \ncoord in online learning')
+    plt.legend(loc='best', ncol=2, fontsize=6)
+    plt.title('Beam selection using WiSARD with '+ input_name + '\n in online learning with sliding window varying the window size')
+    plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
     plt.show()
 
 def plot_score_comparation(input_type):
@@ -1386,10 +1387,10 @@ def comparition_between_types_time_measurement():
 
 eposodies_for_test = 2000
 episodes_for_train = 2086
-input_type = 'coord'
+input_type = 'lidar_coord'
 #fit_traditional(eposodies_for_test, input_type)
-#window_size = [300, 400, 500, 600, 700, 800, 900, 1000]
-#window_size = np.arange(300, 1900, 100)
+#window_size = [1500, 2000]
+
 #for i in range(len(window_size)):
 #    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
 #rodada = 1
@@ -1399,7 +1400,8 @@ input_type = 'coord'
 #fit_sliding_window(eposodies_for_test, input_type)
 #fit_incremental(eposodies_for_test, input_type)
 
-plot_score_comparation(input_type)
+plot_compare_windows_size_in_window_sliding(input_type)
+#plot_score_comparation(input_type)
 #plot_time_comparition(input_type)
 
 #fit_traditional_top_k(eposodies_for_test, input_type)
