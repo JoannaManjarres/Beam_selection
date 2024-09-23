@@ -12,6 +12,7 @@ import pre_process_lidar
 import seaborn as sns
 import time
 from operator import itemgetter
+import argparse
 
 
 def beam_selection_top_k_wisard(x_train, x_test,
@@ -1387,18 +1388,23 @@ def comparition_between_types_time_measurement():
 
 eposodies_for_test = 2000
 episodes_for_train = 2086
-input_type = 'lidar_coord'
-#fit_traditional(eposodies_for_test, input_type)
-#window_size = [1500, 2000]
+#input_type = 'lidar_coord'
 
-#for i in range(len(window_size)):
-#    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
-#rodada = 1
-#fit_fixed_window(eposodies_for_test, episodes_for_train, input_type, rodada)
-#rodada = 2
+parser = argparse.ArgumentParser(description="define a type of input: coord, lidar or lidar_coord")
+parser.add_argument('--input_type', type=str, default='coord', help='type of input: coord, lidar or lidar_coord')
+args = parser.parse_args()
+
+input_type = args.input_type
+
+fit_traditional(eposodies_for_test, input_type)
 #fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
 #fit_sliding_window(eposodies_for_test, input_type)
 #fit_incremental(eposodies_for_test, input_type)
+
+#window_size = [1500, 2000]
+#for i in range(len(window_size)):
+#    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+
 
 plot_compare_windows_size_in_window_sliding(input_type)
 #plot_score_comparation(input_type)
