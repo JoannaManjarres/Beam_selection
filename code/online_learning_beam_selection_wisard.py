@@ -422,6 +422,138 @@ def fit_incremental(nro_of_episodes, input_type):
                                      all_trainning_time, all_test_time,
                                      all_samples_train, all_samples_test))
 
+def fit_incremental_window_top_k(nro_of_episodes, input_type):
+
+    preprocess_resolution = 16
+    th = 0.15
+    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
+    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
+    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
+    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (data_lidar_2D_with_rx_s008,
+                                                                                                data_lidar_2D_with_rx_s009,
+                                                                                                th)
+
+    s008_data = all_info_s008 [['Episode']].copy ()
+    s008_data ['index_beams'] = beams_s008.tolist ()
+    s008_data ['encoding_coord'] = encoding_coord_s008.tolist ()
+    s008_data ['lidar'] = data_lidar_s008.tolist ()
+    s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
+
+    # info_of_episode = s008_data[s008_data['Episode'] == 0]
+
+    s009_data = all_info_s009 [['Episode']].copy ()
+    s009_data ['index_beams'] = beams_s009
+    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
+    s009_data ['lidar'] = data_lidar_s009.tolist ()
+    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
+
+    # episode_for_test = np.arange(0, 2000, 1)
+    episode_for_test = np.arange (0, nro_of_episodes, 1)
+
+    label_input_type = input_type
+    s008_data_copy = s008_data.copy ()
+
+    # labels_for_next_train = []
+    # samples_for_next_train = []
+    all_score = []
+    all_trainning_time = []
+    all_test_time = []
+    all_episodes = []
+    all_samples_train = []
+    all_samples_test = []
+
+    all_score_top_5 = []
+    all_score_top_10 = []
+    all_score_top_15 = []
+    all_score_top_20 = []
+    all_score_top_25 = []
+    all_score_top_30 = []
+
+    for i in range (len (episode_for_test)):
+        if i in s009_data ['Episode'].tolist ():
+            if i == 0:
+                label_train = s008_data_copy ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_train = s008_data_copy ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_train = s008_data_copy ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_train = s008_data_copy ['lidar_coord'].tolist ()
+
+                label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
+
+                labels_for_next_train = label_test
+                samples_for_next_train = input_test
+            else:
+                for j in range (len (labels_for_next_train)):
+                    label_train.append (labels_for_next_train [j])
+                    input_train.append (samples_for_next_train [j])
+
+                label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
+
+                labels_for_next_train = label_test
+                samples_for_next_train = input_test
+            top_k, acuracia = beam_selection_top_k_wisard (x_train=input_train,
+                                                           x_test=input_test,
+                                                           y_train=label_train,
+                                                           y_test=label_test,
+                                                           address_of_size=44,
+                                                           name_of_conf_input=label_input_type)
+
+            # score = accuracy_score (label_test, acuracia)
+            all_score.append (np.array (acuracia ['Acuracia']))
+            all_score_top_5.append (acuracia ['Acuracia'] [0])
+            all_score_top_10.append (acuracia ['Acuracia'] [1])
+            all_score_top_15.append (acuracia ['Acuracia'] [2])
+            all_score_top_20.append (acuracia ['Acuracia'] [3])
+            all_score_top_25.append (acuracia ['Acuracia'] [4])
+            all_score_top_30.append (acuracia ['Acuracia'] [5])
+
+            # all_trainning_time.append (trainning_time)
+            # all_test_time.append (test_time)
+
+            all_episodes.append (i)
+            all_samples_train.append (len (input_train))
+            all_samples_test.append (len (input_test))
+        else:
+            continue
+
+            ## SAVE RESULTS
+        path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/incremental_window/'
+
+        headerList = ['Episode', 'score top-5',
+                      'score top-10',
+                      'score top-15',
+                      'score top-20',
+                      'score top-25',
+                      'score top-30',
+                      'Samples Train',
+                      'Samples Test']
+
+        with open (path_result + 'all_results_incremental_window.csv', 'w') as f:
+            writer_results = csv.writer (f, delimiter=',')
+            writer_results.writerow (headerList)
+            writer_results.writerows (zip (all_episodes, all_score_top_5,
+                                           all_score_top_10,
+                                           all_score_top_15,
+                                           all_score_top_20,
+                                           all_score_top_25,
+                                           all_score_top_30,
+                                           all_samples_train, all_samples_test))
+
+
 def fit_sliding_window_with_size_var(nro_of_episodes, input_type, window_size):
     preprocess_resolution = 16
     th = 0.15
@@ -567,8 +699,6 @@ def extract_test_data_from_s009(episode, label_input_type, s009_data):
         print ('error: deve especificar o tipo de entrada')
 
     return input_test, label_test
-
-
 def extract_training_data_from_s008(s008_data, start_index, input_type):
 
     initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
@@ -585,7 +715,6 @@ def extract_training_data_from_s008(s008_data, start_index, input_type):
         print('error: deve especificar o tipo de entrada')
 
     return input_train, label_train
-
 def extract_training_data_from_s009(s009_data, start_index, end_index, input_type):
 
 
@@ -754,6 +883,152 @@ def fit_sliding_window(nro_of_episodes, input_type):
     #    writer_time_test = csv.writer (f, delimiter=',')
     #    #writer_time_test.writerows(['Episode','Score','Trainning Time','Test Time','Samples Train','Samples Test'])
     #    writer_time_test.writerows (zip (all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
+def fit_sliding_window_top_k(nro_of_episodes, input_type):
+    preprocess_resolution = 16
+    th = 0.15
+    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
+    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
+    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
+    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (
+        data_lidar_2D_with_rx_s008,
+        data_lidar_2D_with_rx_s009,
+        th)
+
+    s008_data = all_info_s008 [['Episode']].copy ()
+    s008_data['index_beams'] = beams_s008.tolist ()
+    s008_data['encoding_coord'] = encoding_coord_s008.tolist ()
+    s008_data['lidar'] = data_lidar_s008.tolist ()
+    s008_data['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
+
+    # info_of_episode = s008_data[s008_data['Episode'] == 0]
+
+    s009_data = all_info_s009 [['Episode']].copy ()
+    s009_data ['index_beams'] = beams_s009
+    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
+    s009_data ['lidar'] = data_lidar_s009.tolist ()
+    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
+
+    # episode_for_test = np.arange(0, 2000, 1)
+    episode_for_test = np.arange (0, nro_of_episodes, 1)
+
+    label_input_type = input_type
+    s008_data_copy = s008_data.copy ()
+
+    labels_for_next_train = []
+    samples_for_next_train = []
+    all_score = []
+    all_trainning_time = []
+    all_test_time = []
+    all_episodes = []
+    all_samples_train = []
+    all_samples_test = []
+
+    all_score_top_5 = []
+    all_score_top_10 = []
+    all_score_top_15 = []
+    all_score_top_20 = []
+    all_score_top_25 = []
+    all_score_top_30 = []
+
+    for i in range (len (episode_for_test)):
+        if i in s009_data ['Episode'].tolist ():
+
+            if i == 0:
+                label_train = s008_data_copy ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_train = s008_data_copy ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_train = s008_data_copy ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_train = s008_data_copy ['lidar_coord'].tolist ()
+
+                label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
+
+                for k in range (len (label_test)):
+                    labels_for_next_train.append (label_test [k])
+                    samples_for_next_train.append (input_test [k])
+
+                # print(i, len(label_train), len(label_test))
+            else:
+                s008_data_copy = s008_data_copy.drop (s008_data_copy [s008_data_copy ['Episode'] == i - 1].index)
+                label_train = s008_data_copy ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_train = s008_data_copy ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_train = s008_data_copy ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_train = s008_data_copy ['lidar_coord'].tolist ()
+                for j in range (len (labels_for_next_train)):
+                    label_train.append (labels_for_next_train [j])
+                    input_train.append (samples_for_next_train [j])
+
+                label_test = s009_data [s009_data ['Episode'] == i] ['index_beams'].tolist ()
+                if label_input_type == 'coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
+                elif label_input_type == 'lidar':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
+                elif label_input_type == 'lidar_coord':
+                    input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
+                for k in range (len (label_test)):
+                    labels_for_next_train.append (label_test [k])
+                    samples_for_next_train.append (input_test [k])
+            top_k, acuracia = beam_selection_top_k_wisard (x_train=input_train,
+                                                           x_test=input_test,
+                                                           y_train=label_train,
+                                                           y_test=label_test,
+                                                           address_of_size=44,
+                                                           name_of_conf_input=label_input_type)
+
+            # score = accuracy_score (label_test, acuracia)
+            all_score.append (np.array (acuracia ['Acuracia']))
+            all_score_top_5.append (acuracia ['Acuracia'] [0])
+            all_score_top_10.append (acuracia ['Acuracia'] [1])
+            all_score_top_15.append (acuracia ['Acuracia'] [2])
+            all_score_top_20.append (acuracia ['Acuracia'] [3])
+            all_score_top_25.append (acuracia ['Acuracia'] [4])
+            all_score_top_30.append (acuracia ['Acuracia'] [5])
+
+            # all_trainning_time.append (trainning_time)
+            # all_test_time.append (test_time)
+
+            all_episodes.append (i)
+            all_samples_train.append (len (input_train))
+            all_samples_test.append (len (input_test))
+        else:
+            continue
+
+            ## SAVE RESULTS
+        path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/sliding_window/'
+
+        headerList = ['Episode', 'score top-5',
+                      'score top-10',
+                      'score top-15',
+                      'score top-20',
+                      'score top-25',
+                      'score top-30',
+                      'Samples Train',
+                      'Samples Test']
+
+        with open (path_result + 'all_results_sliding_window.csv', 'w') as f:
+            writer_results = csv.writer (f, delimiter=',')
+            writer_results.writerow (headerList)
+            writer_results.writerows (zip (all_episodes, all_score_top_5,
+                                           all_score_top_10,
+                                           all_score_top_15,
+                                           all_score_top_20,
+                                           all_score_top_25,
+                                           all_score_top_30,
+                                           all_samples_train, all_samples_test))
+
+
+
+
 def fit_traditional(nro_of_episodes, label_input_type):
 
     preprocess_resolution = 16
@@ -875,7 +1150,6 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results = csv.writer(f, delimiter=',')
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
-
 def fit_traditional_top_k(nro_of_episodes, label_input_type):
     preprocess_resolution = 16
     th = 0.15
@@ -942,11 +1216,11 @@ def fit_traditional_top_k(nro_of_episodes, label_input_type):
             #                                                                  label_train=label_train,
             #                                                                  addressSize=44)
             top_k, acuracia = beam_selection_top_k_wisard(x_train=input_train,
-                                        x_test=input_test,
-                                        y_train=label_train,
-                                        y_test=label_test,
-                                        address_of_size=44,
-                                        name_of_conf_input=label_input_type)
+                                                          x_test=input_test,
+                                                          y_train=label_train,
+                                                          y_test=label_test,
+                                                          address_of_size=44,
+                                                          name_of_conf_input=label_input_type)
 
 
 
@@ -990,7 +1264,6 @@ def fit_traditional_top_k(nro_of_episodes, label_input_type):
                                                     all_score_top_25,
                                                     all_score_top_30,
                                                     all_samples_train, all_samples_test))
-
 def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
     preprocess_resolution = 16
     th = 0.15
@@ -1172,11 +1445,11 @@ def read_csv_data(path, filename):
     return data
 
 def calculate_mean_score(data):
-    all_score = data ['Score'].tolist ()
+    #all_score = data ['Score'].tolist ()
     average_score = []
-    for i in range (len (all_score)):
+    for i in range (len (data)):
         i = i + 1
-        average_score.append (np.mean (all_score [0:i]))
+        average_score.append (np.mean (data [0:i]))
     return average_score
 
 def plot_compare_windows_size_in_window_sliding(input_name):
@@ -1189,7 +1462,7 @@ def plot_compare_windows_size_in_window_sliding(input_name):
 
         file_name = 'all_results_sliding_window_size_' + str(window_size[i]) + '.csv'
         data = read_csv_data(path_result, file_name)
-        mean_cumulative_score = calculate_mean_score(data)
+        mean_cumulative_score = calculate_mean_score(data['Score'].tolist())
         window_size_label = 'Window size: ' + str(window_size[i])
         mean_label = 'Mean: ' + str(np.round(np.mean(mean_cumulative_score),3))
         plt.plot(data['Episode'], mean_cumulative_score, '.', label=window_size_label, color=color[i])
@@ -1395,8 +1668,9 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
+input_type = 'coord'
 
-fit_traditional(eposodies_for_test, input_type)
+#fit_traditional(eposodies_for_test, input_type)
 #fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
 #fit_sliding_window(eposodies_for_test, input_type)
 #fit_incremental(eposodies_for_test, input_type)
@@ -1406,23 +1680,70 @@ fit_traditional(eposodies_for_test, input_type)
 #    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
 
 
-plot_compare_windows_size_in_window_sliding(input_type)
+#plot_compare_windows_size_in_window_sliding(input_type)
 #plot_score_comparation(input_type)
 #plot_time_comparition(input_type)
 
 #fit_traditional_top_k(eposodies_for_test, input_type)
+#fit_sliding_window_top_k(eposodies_for_test, input_type)
+#fit_incremental_window_top_k(eposodies_for_test, input_type)
 #comparition_between_two_measurements_time()
 # testar tempo de treinamento e teste com esta ferramenta: https://docs.python.org/3/library/time.html#time.perf_counter
 
 
-plot = False
+plot = True
 if plot:
-    path_result = '../results/score/Wisard/online/top_k/coord/traditional_fit/'
-    simulation_type = 'traditional_fit' #'sliding_window'#'incremental_window'
-    #path_result_fixed_window = path_result + input_type +'/'+ simulation_type+'/'
+    simulation_type = 'incremental_window' #'traditional_fit' #'sliding_window'#'incremental_window'
+    path_result = '../results/score/Wisard/online/top_k/'+input_type+'/'+simulation_type+'/'
 
-    a = pd.read_csv(path_result + 'all_results_traditional_fit.csv')
-    #b = pd.read_csv(path_result + 'all_results_'+simulation_type+'_ns.csv')
-    plt.plot(a['Episode'], a['score top-5'], 'o-', color='blue', label='Top-5')
-    plt.plot(a['Episode'], a['score top-10'], 'o-', color='red', label='Top-10')
-    plt.show()
+
+    data = pd.read_csv(path_result + 'all_results_'+simulation_type+'.csv')
+    mean_score_top_5 = calculate_mean_score(data['score top-5'])
+    mean_score_top_10 = calculate_mean_score(data['score top-10'])
+    mean_score_top_15 = calculate_mean_score(data['score top-15'])
+    mean_score_top_20 = calculate_mean_score(data['score top-20'])
+    mean_score_top_25 = calculate_mean_score(data['score top-25'])
+    mean_score_top_30 = calculate_mean_score(data['score top-30'])
+
+    mean_top_5 = np.round(np.mean(mean_score_top_5),3)
+    mean_top_10 = np.round(np.mean(mean_score_top_10),3)
+    mean_top_15 = np.round(np.mean(mean_score_top_15),3)
+    mean_top_20 = np.round(np.mean(mean_score_top_20),3)
+    mean_top_25 = np.round(np.mean(mean_score_top_25),3)
+    mean_top_30 = np.round(np.mean(mean_score_top_30),3)
+
+
+    sns.set_style ("darkgrid")#whitegrid")
+    plt.plot(data['Episode'], mean_score_top_5, '.', color='blue', label='Top-5')
+    plt.plot(data['Episode'], mean_score_top_10, '.', color='red', label='Top-10')
+    plt.plot(data['Episode'], mean_score_top_15, '.', color='green', label='Top-15')
+    plt.plot(data['Episode'], mean_score_top_20, '.', color='purple', label='Top-20')
+    plt.plot(data['Episode'], mean_score_top_25, '.', color='orange', label='Top-25')
+    plt.plot(data['Episode'], mean_score_top_30, '.', color='black', label='Top-30')
+
+    if input_type == 'coord':
+        pos_x = [1800,1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5+0.003, mean_top_10+0.001, mean_top_15+0.001, mean_top_30+0.001, mean_top_25+0.007, mean_top_30+0.013]
+
+    if input_type == 'lidar':
+        pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5-0.03, mean_top_10-0.03, mean_top_5-0.06, mean_top_5-0.09, mean_top_5-0.13, mean_top_5-0.16]
+
+    if input_type == 'lidar_coord':
+        pos_x = pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5-0.03, mean_top_10-0.03, mean_top_5-0.06, mean_top_5-0.09, mean_top_5-0.13, mean_top_5-0.16]
+
+    plt.text(pos_x[0], pos_y[0], 'Mean: '+str(mean_top_5), fontsize=8, color='blue', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text(pos_x[1], pos_y[1], 'Mean: '+str(mean_top_10), fontsize=8, color='red', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text(pos_x[2], pos_y[2], 'Mean: '+str(mean_top_15), fontsize=8, color='green', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text(pos_x[3], pos_y[3], 'Mean: '+str(mean_top_20), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text(pos_x[4], pos_y[4], 'Mean: '+str(mean_top_25), fontsize=8, color='orange', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text(pos_x[5], pos_y[5], 'Mean: '+str(mean_top_30), fontsize=8, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
+
+    plt.title('Beam selection WiSARD using '+input_type+' \n in online learning with '+simulation_type+' top-k', fontsize=12, color='black', fontweight='bold')
+    plt.xlabel('Episode', fontweight='bold')
+    plt.ylabel('Accuracy', fontweight='bold')
+    plt.legend(loc='best', ncol=3, fontsize=8) #bbox_to_anchor=(1, 1.15)
+
+    plt.savefig(path_result + 'score_comparation_top_k.png', dpi=300)
+    plt.show ()
