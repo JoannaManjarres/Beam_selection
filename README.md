@@ -31,7 +31,7 @@ Antes de realizar a selecao de Beam com a rede WiSARD verifique que os dados de 
 <h1> Para rodar o codigo </h1>
 
 <p> para simular os testes do paradigma aprendizado online  </p>
-<p> rodar o arquivo online_learning_selection_wisard.py --input='coord' --top_k=False </p>
+<p> rodar o arquivo online_learning_beam_selection_wisard.py --input='coord' --top_k=False </p>
 
 <p> Para simular os testes incluido top-k, apenas basta aticar a variavel top_k como True</p>
 
