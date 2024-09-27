@@ -291,7 +291,7 @@ def read_s008_data(preprocess_resolution):
 
     return info_s008, encoding_coord_train, beams_train
 
-def fit_incremental(nro_of_episodes, input_type):
+def fit_incremental_window(nro_of_episodes, input_type):
     preprocess_resolution = 16
     th = 0.15
     all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
@@ -1150,7 +1150,7 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results = csv.writer(f, delimiter=',')
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
-def fit_traditional_top_k(nro_of_episodes, label_input_type):
+def fit_fixed_window_top_k(nro_of_episodes, label_input_type):
     preprocess_resolution = 16
     th = 0.15
     # data of coordinates, episodes and beams from s009 and s008
@@ -1243,7 +1243,7 @@ def fit_traditional_top_k(nro_of_episodes, label_input_type):
             continue
 
     ## SAVE RESULTS
-    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/traditional_fit/'
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
 
     headerList = ['Episode', 'score top-5',
                                 'score top-10',
@@ -1254,7 +1254,7 @@ def fit_traditional_top_k(nro_of_episodes, label_input_type):
                                 'Samples Train',
                                 'Samples Test']
 
-    with open (path_result + 'all_results_traditional_fit.csv', 'w') as f:
+    with open (path_result + 'all_results_fixed_window.csv', 'w') as f:
         writer_results = csv.writer (f, delimiter=',')
         writer_results.writerow (headerList)
         writer_results.writerows(zip(all_episodes, all_score_top_5,
@@ -1440,6 +1440,69 @@ def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
                                        all_test_time,
                                        all_samples_train, all_samples_test))
 
+def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type):
+    path_result = '../results/score/Wisard/online/top_k/' + input_type + '/' + simulation_type + '/'
+    data = pd.read_csv (path_result + 'all_results_' + simulation_type + '.csv')
+    mean_score_top_5 = calculate_mean_score (data ['score top-5'])
+    mean_score_top_10 = calculate_mean_score (data ['score top-10'])
+    mean_score_top_15 = calculate_mean_score (data ['score top-15'])
+    mean_score_top_20 = calculate_mean_score (data ['score top-20'])
+    mean_score_top_25 = calculate_mean_score (data ['score top-25'])
+    mean_score_top_30 = calculate_mean_score (data ['score top-30'])
+
+    mean_top_5 = np.round (np.mean (mean_score_top_5), 3)
+    mean_top_10 = np.round (np.mean (mean_score_top_10), 3)
+    mean_top_15 = np.round (np.mean (mean_score_top_15), 3)
+    mean_top_20 = np.round (np.mean (mean_score_top_20), 3)
+    mean_top_25 = np.round (np.mean (mean_score_top_25), 3)
+    mean_top_30 = np.round (np.mean (mean_score_top_30), 3)
+
+    sns.set_style ("darkgrid")  # whitegrid")
+    plt.plot (data ['Episode'], mean_score_top_5, '.', color='blue', label='Top-5')
+    plt.plot (data ['Episode'], mean_score_top_10, '.', color='red', label='Top-10')
+    plt.plot (data ['Episode'], mean_score_top_15, '.', color='green', label='Top-15')
+    plt.plot (data ['Episode'], mean_score_top_20, '.', color='purple', label='Top-20')
+    plt.plot (data ['Episode'], mean_score_top_25, '.', color='orange', label='Top-25')
+    plt.plot (data ['Episode'], mean_score_top_30, '.', color='black', label='Top-30')
+
+    if input_type == 'coord':
+        pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5 + 0.003, mean_top_10 + 0.001, mean_top_15 + 0.001, mean_top_30 + 0.001, mean_top_25 + 0.007,
+                 mean_top_30 + 0.013]
+
+    if input_type == 'lidar':
+        pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5 - 0.03, mean_top_10 - 0.03, mean_top_5 - 0.06, mean_top_5 - 0.09, mean_top_5 - 0.13,
+                 mean_top_5 - 0.16]
+
+    if input_type == 'lidar_coord':
+        pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
+        pos_y = [mean_top_5 - 0.03, mean_top_10 - 0.03, mean_top_5 - 0.06, mean_top_5 - 0.09, mean_top_5 - 0.13,
+                 mean_top_5 - 0.16]
+
+    plt.text (pos_x [0], pos_y [0], 'Mean: ' + str (mean_top_5), fontsize=8, color='blue', fontname='Myanmar Sangam MN',
+              fontweight='bold')
+    plt.text (pos_x [1], pos_y [1], 'Mean: ' + str (mean_top_10), fontsize=8, color='red', fontname='Myanmar Sangam MN',
+              fontweight='bold')
+    plt.text (pos_x [2], pos_y [2], 'Mean: ' + str (mean_top_15), fontsize=8, color='green',
+              fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text (pos_x [3], pos_y [3], 'Mean: ' + str (mean_top_20), fontsize=8, color='purple',
+              fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text (pos_x [4], pos_y [4], 'Mean: ' + str (mean_top_25), fontsize=8, color='orange',
+              fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.text (pos_x [5], pos_y [5], 'Mean: ' + str (mean_top_30), fontsize=8, color='black',
+              fontname='Myanmar Sangam MN', fontweight='bold')
+
+    plt.title (
+        'Beam selection WiSARD using ' + input_type + ' \n in online learning with ' + simulation_type + ' top-k',
+        fontsize=12, color='black', fontweight='bold')
+    plt.xlabel ('Episode', fontweight='bold')
+    plt.ylabel ('Accuracy', fontweight='bold')
+    plt.legend (loc='best', ncol=3, fontsize=8)  # bbox_to_anchor=(1, 1.15)
+
+    plt.savefig (path_result + 'score_comparation_top_k.png', dpi=300)
+    plt.show ()
+
 def read_csv_data(path, filename):
     data = pd.read_csv(path + filename)
     return data
@@ -1479,64 +1542,63 @@ def plot_compare_windows_size_in_window_sliding(input_name):
     plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
     plt.show()
 
-def plot_score_comparation(input_type):
+def plot_score_comparation_between_sliding_incremental_fixed_window(input_type):
     path_result = '../results/score/Wisard/online/'
-    path_result_traditional = path_result + input_type+'/traditional_fit/'
-    all_results_traditional = pd.read_csv(path_result_traditional + 'all_results_traditional_fit.csv')
+    #path_result_traditional = path_result + input_type+'/traditional_fit/'
+    #all_results_traditional = pd.read_csv(path_result_traditional + 'all_results_traditional_fit.csv')
     path_result_sliding_window = path_result + input_type+'/sliding_window/'
     all_results_sliding_window = pd.read_csv(path_result_sliding_window + 'all_results_sliding_window.csv')
     path_result_incremental_window = path_result + input_type+'/incremental_window/'
     all_results_incremental_window = pd.read_csv(path_result_incremental_window + 'all_results_incremental_window.csv')
     path_result_fixed_window = path_result + input_type+'/fixed_window/'
-    #all_results_fixed_window = pd.read_csv(path_result_fixed_window + 'all_results_fixed_window.csv')
+    all_results_fixed_window = pd.read_csv(path_result_fixed_window + 'all_results_fixed_window.csv')
 
-    mean_cumulative_score_traditional = calculate_mean_score(all_results_traditional)
+    #mean_cumulative_score_traditional = calculate_mean_score(all_results_traditional)
     mean_cumulative_sliding_window = calculate_mean_score(all_results_sliding_window)
     mean_cumulative_incremental_window = calculate_mean_score(all_results_incremental_window)
-    #mean_cumulative_score_fixed_window = calculate_mean_score(all_results_fixed_window)
+    mean_cumulative_score_fixed_window = calculate_mean_score(all_results_fixed_window)
 
     mean_sliding_window = np.round(np.mean(mean_cumulative_sliding_window),3)
-    mean_traditional = np.round(np.mean(mean_cumulative_score_traditional),3)
+    #mean_traditional = np.round(np.mean(mean_cumulative_score_traditional),3)
     mean_incremental_window = np.round(np.mean(mean_cumulative_incremental_window),3)
-    #mean_fixed_window = np.round(np.mean(mean_cumulative_score_fixed_window),3)
+    mean_fixed_window = np.round(np.mean(mean_cumulative_score_fixed_window),3)
 
     text_sliding_window = 'Mean: '+str(mean_sliding_window)
     text_incremental_window = 'Mean: '+str(mean_incremental_window)
-    #text_fixed_window = 'Mean: '+str(mean_fixed_window)
-    text_traditional_window = 'Mean: '+str(mean_traditional)
+    text_fixed_window = 'Mean: '+str(mean_fixed_window)
+    #text_traditional_window = 'Mean: '+str(mean_traditional)
 
-    plt.plot(all_results_traditional['Episode'], mean_cumulative_score_traditional, 'o-', color='purple', label='Fixed window')
-    plt.text(1800, mean_traditional-0.01, text_traditional_window, fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.plot(all_results_fixed_window['Episode'], mean_cumulative_score_fixed_window, 'o-', color='purple', label='Fixed window')
+    plt.text(1800, mean_fixed_window-0.01, text_fixed_window, fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
     plt.plot(all_results_sliding_window['Episode'], mean_cumulative_sliding_window, 'o-', color='red', label='Sliding window')
     plt.text(1800, mean_sliding_window+0.03, text_sliding_window, fontsize=8, color='red', fontname='Myanmar Sangam MN', fontweight='bold')
     plt.plot(all_results_incremental_window['Episode'], mean_cumulative_incremental_window, 'o-', color='green', label='Incremental window')
     plt.text(1800, mean_incremental_window, text_incremental_window, fontsize=8, color='green', fontname='Myanmar Sangam MN', fontweight='bold')
-    #plt.plot(all_results_fixed_window['Episode'], mean_cumulative_score_fixed_window, 'o-', color='purple', label='Fixed window')
-    #plt.text (1800, mean_fixed_window-0.02, text_fixed_window, fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
+
     plt.xlabel('Episode')
     plt.ylabel('Accuracy')
-    plt.legend(loc='lower right')#, bbox_to_anchor=(1.04, 0))
+    plt.legend(loc='lower right')
     plt.title('Beam selection using WiSARD with \n'+input_type+' in online learning')
     plt.savefig(path_result + input_type + '/score_comparation.png', dpi=300)
     plt.close()
 
-def plot_time_comparition(input_type):
+def plot_time_and_score_comparition_sliding_incremental_fixed_window(input_type):
     path_result = '../results/score/Wisard/online/'
-    path_result_traditional = path_result + input_type+'/traditional_fit/'
+    #path_result_traditional = path_result + input_type+'/traditional_fit/'
     path_result_sliding_window = path_result + input_type+'/sliding_window/'
     path_result_incremental_window = path_result + input_type+'/incremental_window/'
-    #path_result_fixed_window = path_result + input_type+'/fixed_window/'
+    path_result_fixed_window = path_result + input_type+'/fixed_window/'
 
-    all_results_traditional = pd.read_csv(path_result_traditional + 'all_results_traditional_fit.csv')
+    #all_results_traditional = pd.read_csv(path_result_traditional + 'all_results_traditional_fit.csv')
     all_results_sliding_window = pd.read_csv(path_result_sliding_window + 'all_results_sliding_window.csv')
     all_results_incremental_window = pd.read_csv(path_result_incremental_window + 'all_results_incremental_window.csv')
-    #all_results_fixed_window = pd.read_csv(path_result_fixed_window + 'all_results_fixed_window.csv')
+    all_results_fixed_window = pd.read_csv(path_result_fixed_window + 'all_results_fixed_window.csv')
 
     flag = 'training'
-    sns.set_theme (style="darkgrid")
+    sns.set_theme(style="darkgrid")
     fig, ax1 = plt.subplots (figsize=(15, 7))
-    plt.plot(all_results_traditional['Episode'],
-             all_results_traditional['Trainning Time']*1e-9,
+    plt.plot(all_results_fixed_window['Episode'],
+             all_results_fixed_window['Trainning Time']*1e-9,
              color='purple')
     plt.plot(all_results_sliding_window['Episode'],
                 all_results_sliding_window['Trainning Time']*1e-9,
@@ -1544,9 +1606,6 @@ def plot_time_comparition(input_type):
     plt.plot(all_results_incremental_window['Episode'],
                 all_results_incremental_window['Trainning Time']*1e-9,
                 color='green')
-    #plt.plot(all_results_fixed_window['Episode'],
-    #            all_results_fixed_window['Trainning Time']*1e-9,
-    #            color='purple')
 
 
     ax1.set_ylabel(flag + ' time [s]' , fontsize=12, color='black', labelpad=10, fontweight='bold', fontname = 'Myanmar Sangam MN')
@@ -1555,8 +1614,8 @@ def plot_time_comparition(input_type):
 
     # Criando um segundo eixo
     ax2 = ax1.twinx ()
-    plt.plot (all_results_traditional['Episode'],
-             all_results_traditional['Samples Train'],
+    plt.plot (all_results_fixed_window['Episode'],
+             all_results_fixed_window['Samples Train'],
               marker=',', color='purple', alpha=0.3, label='fixed window')
     plt.plot (all_results_sliding_window['Episode'],
                 all_results_sliding_window['Samples Train'],
@@ -1564,10 +1623,6 @@ def plot_time_comparition(input_type):
     plt.plot (all_results_incremental_window['Episode'],
                 all_results_incremental_window['Samples Train'],
                 marker=',', color='green',  alpha=0.3,label='incremental window')
-    #plt.plot (all_results_fixed_window['Episode'],
-    #            all_results_fixed_window['Samples Train'],
-    #            marker=',', color='purple', alpha=0.3, label='fixed window')
-
 
     ax2.set_ylabel ('training samples', fontsize=12, color='black', labelpad=12, fontweight='bold', fontname = 'Myanmar Sangam MN')#, color='red')
 
@@ -1581,10 +1636,9 @@ def plot_time_comparition(input_type):
     plt.close()
 
 
-    plt.plot(all_results_traditional['Episode'], all_results_traditional['Trainning Time']/1e9, '.', color='purple', label='Fixed window')
+    plt.plot(all_results_fixed_window['Episode'], all_results_fixed_window['Trainning Time']/1e9, '.', color='purple', label='Fixed window')
     plt.plot(all_results_sliding_window['Episode'], all_results_sliding_window['Trainning Time']/1e9, '.', color='red', label='Sliding window')
     plt.plot(all_results_incremental_window['Episode'], all_results_incremental_window['Trainning Time']/1e9, '.', color='green', label='Incremental window')
-    #plt.plot(all_results_fixed_window['Episode'], all_results_fixed_window['Trainning Time']/1e9, '.', color='purple', label='Fixed window')
     plt.xlabel('Episode', fontsize=12, color='black',  fontname = 'Myanmar Sangam MN', fontweight='bold')
     plt.ylabel('Trainning Time', fontsize=12, color='black', fontname = 'Myanmar Sangam MN', fontweight='bold')
     plt.legend(loc='best')#, bbox_to_anchor=(1.04, 0))
@@ -1592,10 +1646,9 @@ def plot_time_comparition(input_type):
     plt.savefig(path_result + input_type + '/time_train_comparation.png', dpi=300)
     plt.close()
 
-    plt.plot(all_results_traditional['Episode'], all_results_traditional['Test Time']/1e9, '.', color='purple', label='Fixed window')
+    plt.plot(all_results_fixed_window['Episode'], all_results_fixed_window['Test Time']/1e9, '.', color='purple', label='Fixed window')
     plt.plot(all_results_sliding_window['Episode'], all_results_sliding_window['Test Time']/1e9, '.', color='red', label='Sliding window')
     plt.plot(all_results_incremental_window['Episode'], all_results_incremental_window['Test Time']/1e9, '.', color='green', label='Incremental window')
-    #plt.plot(all_results_fixed_window['Episode'], all_results_fixed_window['Test Time']/1e9, '.', color='purple', label='Fixed window')
     plt.xlabel('Episode', fontsize=12, color='black', fontname = 'Myanmar Sangam MN', fontweight='bold')
     plt.ylabel('Test Time', fontsize=12, color='black', fontname = 'Myanmar Sangam MN', fontweight='bold')
     plt.legend(loc='best')#, bbox_to_anchor=(1.04, 0))
@@ -1658,92 +1711,47 @@ def comparition_between_types_time_measurement():
     plt.show ()
 
 
-
 eposodies_for_test = 2000
 episodes_for_train = 2086
-#input_type = 'lidar_coord'
 
 parser = argparse.ArgumentParser(description="define a type of input: coord, lidar or lidar_coord")
 parser.add_argument('--input_type', type=str, default='coord', help='type of input: coord, lidar or lidar_coord')
+parser.add_argument('--top_k', type=str, default='False', help='type of input: True or False')
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'coord'
+top_k = args.top_k
+#input_type = 'coord'
 
 #fit_traditional(eposodies_for_test, input_type)
-#fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
-#fit_sliding_window(eposodies_for_test, input_type)
-#fit_incremental(eposodies_for_test, input_type)
+fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
+fit_sliding_window(eposodies_for_test, input_type)
+fit_incremental_window(eposodies_for_test, input_type)
 
-#window_size = [1500, 2000]
-#for i in range(len(window_size)):
-#    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+plot_score_comparation_between_sliding_incremental_fixed_window(input_type)
+plot_time_and_score_comparition_sliding_incremental_fixed_window(input_type)
+
+window_size = [100, 500, 1000, 1500, 2000]
+for i in range(len(window_size)):
+    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+
+plot_compare_windows_size_in_window_sliding(input_type)
+
+if top_k:
+    fit_fixed_window_top_k(eposodies_for_test, input_type)
+    fit_sliding_window_top_k(eposodies_for_test, input_type)
+    fit_incremental_window_top_k(eposodies_for_test, input_type)
+
+    simulation_type = 'incremental_window'  # 'traditional_fit' #'sliding_window'#'incremental_window'
+    plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type)
+    simulation_type = 'sliding_window'  # 'traditional_fit' #'sliding_window'#'incremental_window'
+    plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type)
+    simulation_type = 'fixed_window'  # 'traditional_fit' #'sliding_window'#'incremental_window'
+    plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type)
 
 
-#plot_compare_windows_size_in_window_sliding(input_type)
-#plot_score_comparation(input_type)
-#plot_time_comparition(input_type)
-
-#fit_traditional_top_k(eposodies_for_test, input_type)
-#fit_sliding_window_top_k(eposodies_for_test, input_type)
-#fit_incremental_window_top_k(eposodies_for_test, input_type)
 #comparition_between_two_measurements_time()
 # testar tempo de treinamento e teste com esta ferramenta: https://docs.python.org/3/library/time.html#time.perf_counter
 
 
-plot = True
-if plot:
-    simulation_type = 'incremental_window' #'traditional_fit' #'sliding_window'#'incremental_window'
-    path_result = '../results/score/Wisard/online/top_k/'+input_type+'/'+simulation_type+'/'
 
-
-    data = pd.read_csv(path_result + 'all_results_'+simulation_type+'.csv')
-    mean_score_top_5 = calculate_mean_score(data['score top-5'])
-    mean_score_top_10 = calculate_mean_score(data['score top-10'])
-    mean_score_top_15 = calculate_mean_score(data['score top-15'])
-    mean_score_top_20 = calculate_mean_score(data['score top-20'])
-    mean_score_top_25 = calculate_mean_score(data['score top-25'])
-    mean_score_top_30 = calculate_mean_score(data['score top-30'])
-
-    mean_top_5 = np.round(np.mean(mean_score_top_5),3)
-    mean_top_10 = np.round(np.mean(mean_score_top_10),3)
-    mean_top_15 = np.round(np.mean(mean_score_top_15),3)
-    mean_top_20 = np.round(np.mean(mean_score_top_20),3)
-    mean_top_25 = np.round(np.mean(mean_score_top_25),3)
-    mean_top_30 = np.round(np.mean(mean_score_top_30),3)
-
-
-    sns.set_style ("darkgrid")#whitegrid")
-    plt.plot(data['Episode'], mean_score_top_5, '.', color='blue', label='Top-5')
-    plt.plot(data['Episode'], mean_score_top_10, '.', color='red', label='Top-10')
-    plt.plot(data['Episode'], mean_score_top_15, '.', color='green', label='Top-15')
-    plt.plot(data['Episode'], mean_score_top_20, '.', color='purple', label='Top-20')
-    plt.plot(data['Episode'], mean_score_top_25, '.', color='orange', label='Top-25')
-    plt.plot(data['Episode'], mean_score_top_30, '.', color='black', label='Top-30')
-
-    if input_type == 'coord':
-        pos_x = [1800,1800, 1800, 1800, 1800, 1800]
-        pos_y = [mean_top_5+0.003, mean_top_10+0.001, mean_top_15+0.001, mean_top_30+0.001, mean_top_25+0.007, mean_top_30+0.013]
-
-    if input_type == 'lidar':
-        pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
-        pos_y = [mean_top_5-0.03, mean_top_10-0.03, mean_top_5-0.06, mean_top_5-0.09, mean_top_5-0.13, mean_top_5-0.16]
-
-    if input_type == 'lidar_coord':
-        pos_x = pos_x = [1800, 1800, 1800, 1800, 1800, 1800]
-        pos_y = [mean_top_5-0.03, mean_top_10-0.03, mean_top_5-0.06, mean_top_5-0.09, mean_top_5-0.13, mean_top_5-0.16]
-
-    plt.text(pos_x[0], pos_y[0], 'Mean: '+str(mean_top_5), fontsize=8, color='blue', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.text(pos_x[1], pos_y[1], 'Mean: '+str(mean_top_10), fontsize=8, color='red', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.text(pos_x[2], pos_y[2], 'Mean: '+str(mean_top_15), fontsize=8, color='green', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.text(pos_x[3], pos_y[3], 'Mean: '+str(mean_top_20), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.text(pos_x[4], pos_y[4], 'Mean: '+str(mean_top_25), fontsize=8, color='orange', fontname='Myanmar Sangam MN', fontweight='bold')
-    plt.text(pos_x[5], pos_y[5], 'Mean: '+str(mean_top_30), fontsize=8, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
-
-    plt.title('Beam selection WiSARD using '+input_type+' \n in online learning with '+simulation_type+' top-k', fontsize=12, color='black', fontweight='bold')
-    plt.xlabel('Episode', fontweight='bold')
-    plt.ylabel('Accuracy', fontweight='bold')
-    plt.legend(loc='best', ncol=3, fontsize=8) #bbox_to_anchor=(1, 1.15)
-
-    plt.savefig(path_result + 'score_comparation_top_k.png', dpi=300)
-    plt.show ()
