@@ -1784,7 +1784,89 @@ def plot_score_comparation_between_sliding_incremental_fixed_window(input_type):
     plt.savefig(path_result + input_type + '/score_comparation.png', dpi=300)
     plt.close()
 
-def plot_time_and_score_comparition_sliding_incremental_fixed_window(input_type):
+def plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type):
+    path_result = '../results/score/Wisard/online/top_k/'
+
+    path_result_sliding_window = path_result + input_type + '/sliding_window/window_size_var/'
+    path_result_incremental_window = path_result + input_type + '/incremental_window/'
+    #path_result_fixed_window = path_result + input_type + '/fixed_window/'
+
+    all_results_sliding_window = pd.read_csv (path_result_sliding_window + 'all_results_sliding_window_100_top_k.csv')
+    path_result_1 = '../results/score/Wisard/online/'+input_type+'/incremental_window/'
+    all_results_incremental_window = pd.read_csv (path_result_1 + 'all_results_incremental_window.csv')
+    #all_results_fixed_window = pd.read_csv (path_result_fixed_window + 'all_results_fixed_window.csv')
+
+    window_size = [500, 1000, 1500, 2000]
+    color = ['blue', 'red', 'green', 'purple', 'orange']#, 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+    flag = 'training'
+    sns.set_theme (style="darkgrid")
+    fig, ax1 = plt.subplots (figsize=(15, 7))
+    for i in range(len(window_size)):
+        all_results_sliding_window = pd.read_csv(path_result_sliding_window +
+                                                 'all_results_sliding_window_' +
+                                                 str(window_size[i])+'_top_k.csv')
+
+        plt.plot(all_results_sliding_window['Episode'],
+                 all_results_sliding_window['Trainning Time top-1']*1e-9,
+                 color=color[i], marker=',', alpha=0.3,
+                 label='Sliding window top-1 ' + str(window_size[i]))
+
+
+
+    #plt.plot (all_results_fixed_window ['Episode'],
+    #          all_results_fixed_window ['Trainning Time'] * 1e-9,
+    #          color='teal', marker=',', alpha=0.3, label='Fixed window top-1')
+    plt.plot (all_results_incremental_window ['Episode'],
+              all_results_incremental_window ['Trainning Time'] * 1e-9,
+              color='magenta', marker=',', alpha=0.3)
+
+    ax1.set_ylabel (flag + ' time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold',
+                    fontname='Myanmar Sangam MN')
+    ax1.set_xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold', fontname='Myanmar Sangam MN')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx()
+    for i in range(len(window_size)):
+        all_results_sliding_window = pd.read_csv(path_result_sliding_window +
+                                                 'all_results_sliding_window_' +
+                                                 str(window_size[i])+'_top_k.csv')
+        mean_cumulative_sliding_window = calculate_mean_score(all_results_sliding_window['score top-1'])
+        mean = (np.mean(mean_cumulative_sliding_window))
+
+        plt.plot(all_results_sliding_window['Episode'],
+                  mean_cumulative_sliding_window,
+                  marker=',', color=color[i], label='sliding window - '+str(window_size[i]))
+        plt.text(2000, mean+0.03,
+                 'Mean: ' + str(np.round(mean, 3)),
+                 fontsize=8, color=color[i], fontname='Myanmar Sangam MN', fontweight='bold')
+
+    #plt.plot (all_results_fixed_window ['Episode'],
+    #          all_results_fixed_window ['Samples Train'],
+    #          marker=',', color='purple', alpha=0.3, label='fixed window')
+
+    mean_cumulative_incremental_window = calculate_mean_score(all_results_incremental_window['Score'])
+    mean_incremental_window = (np.mean(mean_cumulative_incremental_window))
+    plt.plot(all_results_incremental_window['Episode'],
+              mean_cumulative_incremental_window,
+              marker=',', color='magenta',  label='incremental window')
+    plt.text(2000, mean_incremental_window + 0.03,
+              'Mean: ' + str(np.round(mean_incremental_window, 3)),
+              fontsize=8, color='magenta', fontname='Myanmar Sangam MN', fontweight='bold')
+
+    ax2.set_ylabel('Score', fontsize=12, color='black', labelpad=12, fontweight='bold',
+                    fontname='Myanmar Sangam MN')  # , color='red')
+
+    # Adicionando título e legendas
+    title = "Relationship between  training time snd score \n usign data: " + input_type
+    plt.title (title, fontsize=15, color='black', fontweight='bold')
+    # plt.xticks(all_results_traditional['Episode'])
+    plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
+    #plt.savefig (path_result + input_type + '/time_and_samples_train_comparation.png', dpi=300)
+    #plt.close ()
+    plt.show()
+    a=0
+def plot_time_and_samples_comparition_sliding_incremental_fixed_window(input_type):
     path_result = '../results/score/Wisard/online/'
     #path_result_traditional = path_result + input_type+'/traditional_fit/'
     path_result_sliding_window = path_result + input_type+'/sliding_window/'
@@ -1923,19 +2005,24 @@ args = parser.parse_args()
 
 input_type = args.input_type
 top_k = args.top_k
-#input_type = 'coord'
+input_type = 'coord'
+
 
 #fit_traditional(eposodies_for_test, input_type)
-fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
-fit_sliding_window(eposodies_for_test, input_type)
-fit_incremental_window(eposodies_for_test, input_type)
+#fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
+#fit_sliding_window(eposodies_for_test, input_type)
+#fit_incremental_window(eposodies_for_test, input_type)
 
-plot_score_comparation_between_sliding_incremental_fixed_window(input_type)
-plot_time_and_score_comparition_sliding_incremental_fixed_window(input_type)
+#plot_score_comparation_between_sliding_incremental_fixed_window(input_type)
+plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type)
 
 window_size = [100, 500, 1000, 1500, 2000]
+
 for i in range(len(window_size)):
-    fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+    #fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
+    fit_sliding_window_with_size_variation_top_k (nro_of_episodes=eposodies_for_test,
+                                                  input_type=input_type,
+                                                  window_size=window_size[i])
 
 plot_compare_windows_size_in_window_sliding(input_type)
 
