@@ -579,38 +579,19 @@ def save_in_csv_all_metrics_top_k(path_result, file_name, episodes, score, time,
 
 
 
-def fit_sliding_window_with_size_variation_top_k(nro_of_episodes, input_type, window_size):
-    preprocess_resolution = 16
-    th = 0.15
-    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data(preprocess_resolution)
-    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data(preprocess_resolution)
-    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer()
-    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance(data_lidar_2D_with_rx_s008,
-                                                                                               data_lidar_2D_with_rx_s009,
-                                                                                               th)
-
-    s008_data = all_info_s008[['Episode']].copy()
-    s008_data['index_beams'] = beams_s008.tolist()
-    s008_data['encoding_coord'] = encoding_coord_s008.tolist()
-    s008_data['lidar'] = data_lidar_s008.tolist()
-    s008_data['lidar_coord'] = np.concatenate((encoding_coord_s008, data_lidar_s008), axis=1).tolist()
-
-    s009_data = all_info_s009[['Episode']].copy()
-    s009_data['index_beams'] = beams_s009
-    s009_data['encoding_coord'] = encoding_coord_s009.tolist()
-    s009_data['lidar'] = data_lidar_s009.tolist()
-    s009_data['lidar_coord'] = np.concatenate((encoding_coord_s009, data_lidar_s009), axis=1).tolist()
-
-    episode_for_test = np.arange (0, nro_of_episodes, 1)
+def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
+                                                 input_type,
+                                                 window_size,
+                                                 s008_data,
+                                                 s009_data):
+    print(" _____________________________________________")
+    print('/ \t Fit a WiSARD with: SLIDING window top-k /')
+    print(" --------------------------------------------")
+    episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     label_input_type = input_type
-    s008_data_copy = s008_data.copy()
 
-    labels_for_next_train = []
-    samples_for_next_train = []
     all_score = []
-    all_trainning_time = []
-    all_test_time = []
     all_episodes = []
     all_samples_train = []
     all_samples_test = []
@@ -635,7 +616,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes, input_type, wi
 
     nro_episodes_s008 = 2085
     for i in range(len(episode_for_test)):
-        if i in s009_data['Episode'].tolist ():
+        if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
                 input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
@@ -647,12 +628,12 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes, input_type, wi
                     end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
 
                     input_train_s008, label_train_s008 = extract_training_data_from_s008(s008_data,
-                                                                               start_index_s008,
-                                                                               label_input_type)
+                                                                                         start_index_s008,
+                                                                                         label_input_type)
                     input_train_s009, label_train_s009 = extract_training_data_from_s009(s009_data,
-                                                                               start_index_s009,
-                                                                               end_index_s009,
-                                                                               label_input_type)
+                                                                                         start_index_s009,
+                                                                                         end_index_s009,
+                                                                                         label_input_type)
                     input_train = input_train_s008 + input_train_s009
                     label_train = label_train_s008 + label_train_s009
 
@@ -675,7 +656,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes, input_type, wi
                                                               address_of_size=44,
                                                               name_of_conf_input=label_input_type)
 
-            all_score.append (np.array (all_metrics ['Acuracia']))
+            all_score.append(np.array(all_metrics['Acuracia']))
             all_score_top_1.append (all_metrics ['Acuracia'] [0])
             all_score_top_5.append (all_metrics ['Acuracia'] [1])
             all_score_top_10.append (all_metrics ['Acuracia'] [2])
@@ -1986,15 +1967,16 @@ def simulation_of_online_learning_top_k(input_type):
 
     #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
-    fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
-    plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
+    #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
 
     window_size = [100, 500, 1000, 1500, 2000]
     for i in range(len(window_size)):
-        #fit_sliding_window_with_size_var(eposodies_for_test, input_type, window_size[i])
         fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
                                                      input_type=input_type,
-                                                     window_size=window_size[i])
+                                                     window_size=window_size[i],
+                                                     s008_data=s008_data,
+                                                     s009_data=s009_data)
 
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
