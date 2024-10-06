@@ -1243,6 +1243,31 @@ def fit_sliding_window_top_k(nro_of_episodes, input_type):
 
 
 
+def prepare_data_for_simulation():
+    preprocess_resolution = 16
+    th = 0.15
+    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
+    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
+
+    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer()
+    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance(
+        data_lidar_2D_with_rx_s008,
+        data_lidar_2D_with_rx_s009,
+        th)
+
+    s008_data = all_info_s008 [['Episode']].copy ()
+    s008_data ['index_beams'] = beams_s008.tolist ()
+    s008_data ['encoding_coord'] = encoding_coord_s008.tolist ()
+    s008_data ['lidar'] = data_lidar_s008.tolist ()
+    s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
+
+    s009_data = all_info_s009 [['Episode']].copy ()
+    s009_data ['index_beams'] = beams_s009
+    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
+    s009_data ['lidar'] = data_lidar_s009.tolist ()
+    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
+
+    return s008_data, s009_data
 
 def fit_traditional(nro_of_episodes, label_input_type):
 
@@ -1365,38 +1390,13 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results = csv.writer(f, delimiter=',')
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
-def fit_fixed_window_top_k(nro_of_episodes, label_input_type):
-    print('fit_fixed_window_top_k')
-    preprocess_resolution = 16
-    th = 0.15
-    # data of coordinates, episodes and beams from s009 and s008
-    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
-    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
+def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_data):
+    print("----------------------------------------")
+    print(' Fit a WiSARD with: fixed window top-k')
 
-    # data of lidar 2D with rx from s009 and s008
-    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
-    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (
-        data_lidar_2D_with_rx_s008,
-        data_lidar_2D_with_rx_s009,
-        th)
-
-    s008_data = all_info_s008 [['Episode']].copy ()
-    s008_data ['index_beams'] = beams_s008.tolist ()
-    s008_data ['encoding_coord'] = encoding_coord_s008.tolist ()
-    s008_data ['lidar'] = data_lidar_s008.tolist ()
-    s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
-
-    s009_data = all_info_s009 [['Episode']].copy ()
-    s009_data ['index_beams'] = beams_s009
-    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
-    s009_data ['lidar'] = data_lidar_s009.tolist ()
-    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
-
-    episode_for_test = np.arange (0, nro_of_episodes, 1)
+    episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     all_score = []
-    all_trainning_time = []
-    all_test_time = []
     all_episodes = []
     all_samples_train = []
     all_samples_test = []
@@ -1420,15 +1420,15 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type):
 
     label_train = s008_data['index_beams'].tolist ()
     if label_input_type == 'coord':
-        input_train = s008_data ['encoding_coord'].tolist ()
+        input_train = s008_data['encoding_coord'].tolist()
     elif label_input_type == 'lidar':
-        input_train = s008_data ['lidar'].tolist ()
+        input_train = s008_data['lidar'].tolist()
     elif label_input_type == 'lidar_coord':
-        input_train = s008_data ['lidar_coord'].tolist ()
+        input_train = s008_data['lidar_coord'].tolist()
 
-    for i in range (len (episode_for_test)):
-        if i in s009_data ['Episode'].tolist ():
-            label_test = s009_data [s009_data ['Episode'] == i]['index_beams'].tolist()
+    for i in range(len(episode_for_test)):
+        if i in s009_data['Episode'].tolist():
+            label_test = s009_data[s009_data['Episode'] == i]['index_beams'].tolist()
             if label_input_type == 'coord':
                 input_test = s009_data[s009_data['Episode'] == i]['encoding_coord'].tolist()
             elif label_input_type == 'lidar':
@@ -1446,12 +1446,7 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type):
                                                               y_test=label_test,
                                                               address_of_size=44,
                                                               name_of_conf_input=label_input_type)
-            '''
-            ({"Top-K": top_k,
-                                           "Acuracia": score,
-                                           "Trainning Time": trainning_process_time,
-                                           "Test Time": test_process_time})
-            '''
+
 
             # score = accuracy_score (label_test, acuracia)
             all_score.append (np.array (all_metrics ['Acuracia']))
@@ -1671,7 +1666,7 @@ def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
 
 def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type):
     path_result = '../results/score/Wisard/online/top_k/' + input_type + '/' + simulation_type + '/'
-    data = pd.read_csv (path_result + 'all_results_' + simulation_type + '_top_k.csv')
+    data = pd.read_csv(path_result + 'all_results_' + simulation_type + '_top_k.csv')
 
     mean_score_top_1 = calculate_mean_score (data ['score top-1'])
     mean_score_top_5 = calculate_mean_score (data ['score top-5'])
@@ -1740,7 +1735,6 @@ def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_
 
     plt.savefig (path_result + 'score_comparation_top_k.png', dpi=300)
     plt.show ()
-
 def read_csv_data(path, filename):
     data = pd.read_csv(path + filename)
     return data
@@ -2042,7 +2036,10 @@ def simulation_of_online_learning_top_k(input_type):
     eposodies_for_test = 2000
     episodes_for_train = 2086
 
-    fit_fixed_window_top_k(eposodies_for_test, input_type)
+    s008_data, s009_data = prepare_data_for_simulation()
+
+
+    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     fit_incremental_window_top_k(eposodies_for_test, input_type)
     plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
@@ -2070,6 +2067,12 @@ args = parser.parse_args()
 input_type = args.input_type
 top_k = args.top_k
 input_type = 'lidar'
+
+
+#path = '../data/coord/'
+#filename = 'CoordVehiclesRxPerScene_s009.csv'
+#dados = pd.read_csv(path+filename)
+#dados_validos = dados[dados['Val'] == 'V']
 
 simulation_of_online_learning_top_k(input_type)
 
