@@ -434,42 +434,16 @@ def fit_incremental_window(nro_of_episodes, input_type):
                                      all_trainning_time, all_test_time,
                                      all_samples_train, all_samples_test))
 
-def fit_incremental_window_top_k(nro_of_episodes, input_type):
-
-    preprocess_resolution = 16
-    th = 0.15
-    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
-    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
-    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer()
-    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (data_lidar_2D_with_rx_s008,
-                                                                                                data_lidar_2D_with_rx_s009,
-                                                                                                th)
-
-    s008_data = all_info_s008[['Episode']].copy()
-    s008_data['index_beams'] = beams_s008.tolist()
-    s008_data['encoding_coord'] = encoding_coord_s008.tolist()
-    s008_data['lidar'] = data_lidar_s008.tolist()
-    s008_data['lidar_coord'] = np.concatenate((encoding_coord_s008, data_lidar_s008), axis=1).tolist()
-
-    # info_of_episode = s008_data[s008_data['Episode'] == 0]
-
-    s009_data = all_info_s009[['Episode']].copy()
-    s009_data['index_beams'] = beams_s009
-    s009_data['encoding_coord'] = encoding_coord_s009.tolist()
-    s009_data['lidar'] = data_lidar_s009.tolist()
-    s009_data['lidar_coord'] = np.concatenate((encoding_coord_s009, data_lidar_s009), axis=1).tolist()
-
-    # episode_for_test = np.arange(0, 2000, 1)
+def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_data):
+    print("  __________________________________________________")
+    print('/ \t Fit a WiSARD with: INCREMENTAL window top-k /')
+    print("  __________________________________________________")
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     label_input_type = input_type
     s008_data_copy = s008_data.copy()
 
-    # labels_for_next_train = []
-    # samples_for_next_train = []
     all_score = []
-    all_trainning_time = []
-    all_test_time = []
     all_episodes = []
     all_samples_train = []
     all_samples_test = []
@@ -534,14 +508,7 @@ def fit_incremental_window_top_k(nro_of_episodes, input_type):
                                                            y_test=label_test,
                                                            address_of_size=44,
                                                            name_of_conf_input=label_input_type)
-            '''
-            ({"Top-K": top_k,
-                                           "Acuracia": score,
-                                           "Trainning Time": trainning_process_time,
-                                           "Test Time": test_process_time})
-            '''
 
-            # score = accuracy_score (label_test, acuracia)
             all_score.append(np.array(all_metrics['Acuracia']))
             all_score_top_1.append(all_metrics['Acuracia'][0])
             all_score_top_5.append(all_metrics['Acuracia'][1])
@@ -580,31 +547,6 @@ def fit_incremental_window_top_k(nro_of_episodes, input_type):
                                        trainning_time_results,
                                        all_samples_train, all_samples_test)
 
-        '''
-        headerList = ['Episode',
-                      'score top-1',
-                      'score top-5',
-                      'score top-10',
-                      'score top-15',
-                      'score top-20',
-                      'score top-25',
-                      'score top-30',
-                      'Samples Train',
-                      'Samples Test']
-
-        with open(path_result + 'all_results_incremental_window.csv', 'w') as f:
-            writer_results = csv.writer(f, delimiter=',')
-            writer_results.writerow(headerList)
-            writer_results.writerows(zip(all_episodes,
-                                         all_score_top_1,
-                                         all_score_top_5,
-                                         all_score_top_10,
-                                         all_score_top_15,
-                                         all_score_top_20,
-                                         all_score_top_25,
-                                         all_score_top_30,
-                                         all_samples_train, all_samples_test))
-            '''
 
 def save_in_csv_all_metrics_top_k(path_result, file_name, episodes, score, time, samples_train, samples_test):
     headerList = ['episode',
@@ -1391,8 +1333,9 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
 def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_data):
-    print("----------------------------------------")
-    print(' Fit a WiSARD with: fixed window top-k')
+    print("  __________________________________________________")
+    print('/ \t Fit a WiSARD with: FIXED window top-k /')
+    print("  __________________________________________________")
 
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
@@ -2039,9 +1982,9 @@ def simulation_of_online_learning_top_k(input_type):
     s008_data, s009_data = prepare_data_for_simulation()
 
 
-    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
-    plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
-    fit_incremental_window_top_k(eposodies_for_test, input_type)
+    #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
+    fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
 
     window_size = [100, 500, 1000, 1500, 2000]
