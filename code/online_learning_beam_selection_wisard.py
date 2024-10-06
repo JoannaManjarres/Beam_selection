@@ -1666,8 +1666,10 @@ def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_
 
 
     for i in range(len(pos_y)):
-        plt.text (pos_x[0], pos_y[i], 'Mean: ' + str (key_text[i]), fontsize=8, color=key_color[i],
-                  fontname='Myanmar Sangam MN', fontweight='bold')
+        plt.text(pos_x[0], pos_y[i],
+                 'Mean: ' + str(key_text[i]),
+                 fontsize=8, fontweight='bold',
+                 color=key_color[i]) #fontname='Myanmar Sangam MN',
 
     plt.title('Beam selection WiSARD using ' + input_type +
               ' \n in online learning with ' + simulation_type + ' top-k',
