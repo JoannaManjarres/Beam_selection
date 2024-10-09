@@ -2425,24 +2425,24 @@ def simulation_of_online_learning_top_k(input_type):
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
     print('|  Deslizante   |\t', input_type, '\t |')
-    window_size = [100, 500, 1000, 1500, 2000]
+    window_size = [2000]
     for i in range(len(window_size)):
         print('|\t\t -  ', window_size[i], ' \t\t\t |')
-        '''
+
         fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
                                                      input_type=input_type,
                                                      window_size=window_size[i],
                                                      s008_data=s008_data,
                                                      s009_data=s009_data)
-                                                     '''
+                                                     
 
     print('+----------------------------+')
 
 
-    top_k = [1, 5, 10, 15, 20, 25, 30]
-    for i in range(len(top_k)):
+    #top_k = [1, 5, 10, 15, 20, 25, 30]
+    #for i in range(len(top_k)):
         #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
-        plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
+    #    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
 eposodies_for_test = 2000
 episodes_for_train = 2086
@@ -2452,15 +2452,15 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'lidar'
+#input_type = 'lidar'
 
-top_k = [1, 5, 10, 15, 20, 25, 30]
-for i in range(len(top_k)):
+#top_k = [1, 5, 10, 15, 20, 25, 30]
+#for i in range(len(top_k)):
         #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
-    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
+#    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
 #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
-plot_comparition_top_k_with_standar_desviation(input_type, 10)
+#plot_comparition_top_k_with_standar_desviation(input_type, 10)
 simulation_of_online_learning_top_k(input_type)
 
 
