@@ -2327,7 +2327,7 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     # std_score = np.std(all_results_fixed_window['Score'])
     mean_score_incremental_window = calculate_mean_score (all_scores_incremental_window ['score_mean_top_'+ str(top_k)])
 
-    window_size = [500, 1500, 2000]
+    window_size = [500, 1000, 1500, 2000]
 
     color = ['blue', 'red', 'green', 'purple', 'orange']
     # , 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
@@ -2419,10 +2419,10 @@ def simulation_of_online_learning_top_k(input_type):
     print('|     Fixa      |\t', input_type, '\t |')
 
 
-    #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     print('|  Incremental  |\t', input_type, '\t |')
-    #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
     print('|  Deslizante   |\t', input_type, '\t |')
     window_size = [2000]
@@ -2434,15 +2434,15 @@ def simulation_of_online_learning_top_k(input_type):
                                                      window_size=window_size[i],
                                                      s008_data=s008_data,
                                                      s009_data=s009_data)
-                                                     
+
 
     print('+----------------------------+')
 
 
-    #top_k = [1, 5, 10, 15, 20, 25, 30]
-    #for i in range(len(top_k)):
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    for i in range(len(top_k)):
         #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
-    #    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
+        plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
 eposodies_for_test = 2000
 episodes_for_train = 2086
@@ -2452,16 +2452,20 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-#input_type = 'lidar'
+#input_type = 'lidar_coord'
 
-#top_k = [1, 5, 10, 15, 20, 25, 30]
-#for i in range(len(top_k)):
-        #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
-#    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
+simulation_of_online_learning_top_k(input_type)
+
+plot_std = False
+if plot_std:
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    for i in range(len(top_k)):
+            #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
+        plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
 #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
 #plot_comparition_top_k_with_standar_desviation(input_type, 10)
-simulation_of_online_learning_top_k(input_type)
+
 
 
 
