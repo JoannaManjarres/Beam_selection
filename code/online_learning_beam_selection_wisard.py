@@ -620,9 +620,9 @@ def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_da
 
 
         path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/incremental_window/results_with_std/'
-        df_results_score.to_csv(path_result + 'scores_with_std_fixed_window_top_k.csv',
+        df_results_score.to_csv(path_result + 'scores_with_std_incremental_window_top_k.csv',
                                  index=False)
-        df_results_trainning_time.to_csv(path_result + 'trainning_time_with_std_fixed_window_top_k.csv', index=False)
+        df_results_trainning_time.to_csv(path_result + 'trainning_time_with_std_incremental_window_top_k.csv', index=False)
 
 
 
@@ -2293,6 +2293,106 @@ def comparition_between_types_time_measurement():
         'Test Time using fixed window \n comparition between time measurement: \n perf_counter, process_time and time it')
     plt.show ()
 
+def plot_comparition_with_standar_desviation(input_type, top_k):
+    path_result = '../results/score/Wisard/online/top_k/'
+
+    folder_std_results = 'results_with_std/'
+    type_of_window = ['fixed_window', 'incremental_window', 'sliding_window']
+    path_result_fixed_window = path_result + input_type + '/' + type_of_window[0] + '/' + folder_std_results
+    path_result_incremental_window = path_result + input_type + '/' + type_of_window[1] +'/' + folder_std_results
+    path_result_sliding_window = path_result + input_type + '/' + type_of_window[2]+'/window_size_var/' + folder_std_results
+
+    name_of_file_score = 'scores_with_std_'
+    name_of_file_time = 'trainning_time_with_std_'
+    type_of_file = '_top_k.csv'
+
+    all_scores_fixed_window = pd.read_csv(path_result_fixed_window + name_of_file_score + type_of_window[0] + type_of_file)
+    all_times_fixed_window = pd.read_csv(path_result_fixed_window + name_of_file_time + type_of_window[0] + type_of_file)
+
+    all_scores_incremental_window = pd.read_csv(path_result_incremental_window + name_of_file_score + type_of_window[1] + type_of_file)
+    all_times_incremental_window = pd.read_csv(path_result_incremental_window + name_of_file_time + type_of_window[1] + type_of_file)
+
+
+
+    mean_score_fixed_window = calculate_mean_score (all_scores_fixed_window ['score_mean_top_'+str(top_k)])
+    # std_score = np.std(all_results_fixed_window['Score'])
+    mean_score_incremental_window = calculate_mean_score (all_scores_incremental_window ['score_mean_top_'+ str(top_k)])
+
+    #window_size = [500, 1000, 1500, 2000]
+    window_size = [100]
+    color = ['blue', 'red', 'green', 'purple', 'orange']
+    # , 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+    flag = 'training'
+    sns.set_theme (style="darkgrid")
+    fig, ax1 = plt.subplots (figsize=(15, 7))
+
+    for i in range(len(window_size)):
+        all_times_sliding_window = pd.read_csv(path_result_sliding_window +
+                                                name_of_file_time + type_of_window[2] + '_' +
+                                                str(window_size[i]) + type_of_file)
+        plt.plot (all_times_sliding_window['episode'],
+                  all_times_sliding_window['tranning_time_mean_top_' + str(top_k)] * 1e-9,
+                  #all_times_sliding_window['tranning_time_mean_top_1'],
+                  color=color[i], marker=',',
+                  label='Sliding window top-' + str(top_k) + '_' + str(window_size[i]))
+        plt.fill_between (all_times_sliding_window ['episode'],
+                          all_times_sliding_window ['tranning_time_mean_top_1'] * 1e-9 +
+                          all_times_fixed_window ['tranning_time_std_top_1'] * 1e-9,
+                          all_times_sliding_window ['tranning_time_mean_top_1'] * 1e-9 -
+                          all_times_fixed_window ['tranning_time_std_top_1'] * 1e-9,
+                          color=color[i], alpha=0.3)
+
+    plt.plot(all_times_fixed_window['episode'],
+              all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9,
+              marker=',', color='olive', label='Trainning Time')
+    plt.fill_between(all_times_fixed_window['episode'],
+                      all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9 + all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
+                      all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9 - all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
+                        color='olive', alpha=0.3)
+    plt.plot(all_times_incremental_window['episode'],
+              all_times_incremental_window['tranning_time_mean_top_1'] * 1e-9,
+              marker=',', color='magenta', label='Trainning Time')
+    plt.fill_between (all_times_incremental_window ['episode'],
+                      all_times_incremental_window ['tranning_time_mean_top_1'] * 1e-9 + all_times_fixed_window [
+                          'tranning_time_std_top_1'] * 1e-9,
+                      all_times_incremental_window ['tranning_time_mean_top_1'] * 1e-9 - all_times_fixed_window [
+                          'tranning_time_std_top_1'] * 1e-9,
+                      color='magenta', alpha=0.3)
+
+
+    ax1.set_ylabel('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    ax1.set_xlabel('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx()
+    plt.plot(all_scores_fixed_window['episode'], mean_score_fixed_window,
+              '-', color='olive',  label='fixed window')
+    #plt.fill_between (all_scores_fixed_window ['episode'],
+    #                  mean_score_fixed_window + all_scores_fixed_window ['score_std_top_1'],
+    #                  mean_score_fixed_window - all_scores_fixed_window ['score_std_top_1'],
+    #                  color='grey', alpha=0.3)
+    plt.plot (all_scores_incremental_window ['episode'], mean_score_incremental_window,
+              '-', color='magenta', label='incremental window')
+
+    for i in range (len (window_size)):
+        all_score_sliding_window = pd.read_csv(path_result_sliding_window +
+                                                name_of_file_score + type_of_window[2] + '_' +
+                                                str(window_size[i]) + type_of_file)
+        mean_score_sliding_window = calculate_mean_score (all_score_sliding_window ['score_mean_top_' + str(top_k)])
+        plt.plot (all_score_sliding_window ['episode'],
+                  mean_score_sliding_window,
+                  color=color[i], marker=',',
+                  label='Sliding window ' + str(window_size[i]))
+
+
+    ax2.set_ylabel ('Accuracy', fontsize=12, color='black', labelpad=12, fontweight='bold')  # , color='red')
+
+    plt.text(1800, 0.5, 'Mean: '+str(np.round(np.mean(mean_score_fixed_window),3)), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.title('Beam selection using WiSARD with '+input_type+' in online learning Top-'+str(top_k),  fontsize=14, color='black',  fontweight='bold')
+    plt.legend(loc='best')
+    plt.savefig(path_result + input_type + '/comparition_score_time_episode_std_top_'+str(top_k)+'.png', dpi=300)
+    plt.show()
+    #plt.close()
 def simulation_of_online_learning_top_k(input_type):
     eposodies_for_test = 2000
     episodes_for_train = 2086
@@ -2332,7 +2432,7 @@ input_type = args.input_type
 top_k = args.top_k
 input_type = 'lidar'
 
-
+plot_comparition_with_standar_desviation(input_type, '1')
 #path = '../data/coord/'
 #filename = 'CoordVehiclesRxPerScene_s009.csv'
 #dados = pd.read_csv(path+filename)
