@@ -435,9 +435,9 @@ def fit_incremental_window(nro_of_episodes, input_type):
                                      all_samples_train, all_samples_test))
 
 def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_data):
-    print("  __________________________________________________")
-    print('/ \t Fit a WiSARD with: INCREMENTAL window top-k /')
-    print("  __________________________________________________")
+    print(" ____________________________________________")
+    print('/ Fit a WiSARD with: INCREMENTAL window top-k /')
+    print(" _____________________________________________")
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     label_input_type = input_type
@@ -680,8 +680,8 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                  s008_data,
                                                  s009_data):
     print(" _____________________________________________")
-    print('/ \t Fit a WiSARD with: SLIDING window top-k \t/')
-    print(" --------------------------------------------")
+    print('/  Fit a WiSARD with: SLIDING window top-k   /')
+    print(" _____________________________________________")
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     label_input_type = input_type
@@ -1549,9 +1549,9 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
 def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_data):
-    print("  __________________________________________________")
+    print("__________________________________________")
     print('/ Fit a WiSARD with: FIXED window top-k /')
-    print("  __________________________________________________")
+    print("________________________________________")
     print(label_input_type)
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
@@ -2293,7 +2293,7 @@ def comparition_between_types_time_measurement():
         'Test Time using fixed window \n comparition between time measurement: \n perf_counter, process_time and time it')
     plt.show ()
 
-def plot_comparition_with_standar_desviation(input_type, top_k):
+def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     path_result = '../results/score/Wisard/online/top_k/'
 
     folder_std_results = 'results_with_std/'
@@ -2400,7 +2400,7 @@ def simulation_of_online_learning_top_k(input_type):
     s008_data, s009_data = prepare_data_for_simulation()
 
 
-    #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
@@ -2413,41 +2413,29 @@ def simulation_of_online_learning_top_k(input_type):
                                                      window_size=window_size[i],
                                                      s008_data=s008_data,
                                                      s009_data=s009_data)
-        a=0
 
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
     for i in range(len(top_k)):
-        plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
+        #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
+        plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
 eposodies_for_test = 2000
 episodes_for_train = 2086
 
 parser = argparse.ArgumentParser(description="define a type of input: coord, lidar or lidar_coord")
 parser.add_argument('--input_type', type=str, default='coord', help='type of input: coord, lidar or lidar_coord')
-parser.add_argument('--top_k', type=str, default='False', help='type of input: True or False')
 args = parser.parse_args()
 
 input_type = args.input_type
-top_k = args.top_k
-input_type = 'lidar'
+#input_type = 'lidar'
 
-plot_comparition_with_standar_desviation(input_type, '1')
-#path = '../data/coord/'
-#filename = 'CoordVehiclesRxPerScene_s009.csv'
-#dados = pd.read_csv(path+filename)
-#dados_validos = dados[dados['Val'] == 'V']
+#plot_comparition_with_standar_desviation(input_type, '1')
+
 
 simulation_of_online_learning_top_k(input_type)
 
-#fit_traditional(eposodies_for_test, input_type)
-#fit_fixed_window(eposodies_for_test, episodes_for_train, input_type)
-#fit_sliding_window(eposodies_for_test, input_type)
-#fit_incremental_window(eposodies_for_test, input_type)
 
-#plot_score_comparation_between_sliding_incremental_fixed_window(input_type)
-
-#plot_compare_windows_size_in_window_sliding(input_type)
 
 
 
