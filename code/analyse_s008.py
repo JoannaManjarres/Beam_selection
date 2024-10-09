@@ -43,8 +43,8 @@ def read_beams_output_from_baseline():
     beam_output_validation = beam_output_validation[key_index_beam_validation[0]]
 
     #print("\t\tBeams generation from Baseline")
-    print("------------------------------------------------------------")
-    print ("\t\tGerando Beams do Baseline...")
+    #print("------------------------------------------------------------")
+    #print ("\t\tGerando Beams do Baseline...")
     index_beams_train = calculate_index_beams(beam_output_train)
     index_beam_train_str = [str (i) for i in index_beams_train]
     index_beams_test = calculate_index_beams(beam_output_validation)

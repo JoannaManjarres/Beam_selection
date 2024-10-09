@@ -1324,16 +1324,22 @@ def fit_sliding_window_top_k(nro_of_episodes, input_type):
 
 
 def prepare_data_for_simulation():
+    print('+------------------------------------------------+')
+    print('|\t\t\tPRE PROCESSING DATA \t\t\t     |')
+    print('+------------------------------------------------+')
+    print('|\t\t  COORD  | LIDAR  | LIDAR_COORD | BEAMS  |')
+    print('+------------------------------------------------+')
     preprocess_resolution = 16
     th = 0.15
     all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
     all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
 
     data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer()
-    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance(
-        data_lidar_2D_with_rx_s008,
-        data_lidar_2D_with_rx_s009,
-        th)
+    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance(data_lidar_2D_with_rx_s008,
+                                                                                               data_lidar_2D_with_rx_s009,
+                                                                                               th)
+
+
 
     s008_data = all_info_s008 [['Episode']].copy ()
     s008_data ['index_beams'] = beams_s008.tolist ()
@@ -1342,11 +1348,14 @@ def prepare_data_for_simulation():
     s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
 
     s009_data = all_info_s009 [['Episode']].copy ()
-    s009_data ['index_beams'] = beams_s009
-    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
-    s009_data ['lidar'] = data_lidar_s009.tolist ()
-    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
+    s009_data['index_beams'] = beams_s009
+    s009_data['encoding_coord'] = encoding_coord_s009.tolist ()
+    s009_data['lidar'] = data_lidar_s009.tolist ()
+    s009_data['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
 
+    print('| TRAIN | ', len(s008_data['encoding_coord'][0]), ' |  ', len(s008_data['lidar'][0]), '|\t', len(s008_data['lidar_coord'][0]), '\t\t|', len(s008_data['index_beams']), ' |')
+    print('| TEST  | ', len(s009_data['encoding_coord'][0]), ' |  ', len(s009_data['lidar'][0]), '|\t', len(s009_data['lidar_coord'][0]), '\t\t|', len(s009_data['index_beams']), '  |')
+    print ('+------------------------------------------------+')
     return s008_data, s009_data
 
 def beam_selection_with_confidence_interval(input_train, input_test,
@@ -2294,7 +2303,7 @@ def comparition_between_types_time_measurement():
     plt.show ()
 
 def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
-    path_result = '../results/score/Wisard/online/top_k/'
+    path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
 
     folder_std_results = 'results_with_std/'
     type_of_window = ['fixed_window', 'incremental_window', 'sliding_window']
@@ -2318,8 +2327,8 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     # std_score = np.std(all_results_fixed_window['Score'])
     mean_score_incremental_window = calculate_mean_score (all_scores_incremental_window ['score_mean_top_'+ str(top_k)])
 
-    #window_size = [500, 1000, 1500, 2000]
-    window_size = [100]
+    window_size = [500, 1500, 2000]
+
     color = ['blue', 'red', 'green', 'purple', 'orange']
     # , 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
     flag = 'training'
@@ -2336,27 +2345,27 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
                   color=color[i], marker=',',
                   label='Sliding window top-' + str(top_k) + '_' + str(window_size[i]))
         plt.fill_between (all_times_sliding_window ['episode'],
-                          all_times_sliding_window ['tranning_time_mean_top_1'] * 1e-9 +
-                          all_times_fixed_window ['tranning_time_std_top_1'] * 1e-9,
-                          all_times_sliding_window ['tranning_time_mean_top_1'] * 1e-9 -
-                          all_times_fixed_window ['tranning_time_std_top_1'] * 1e-9,
+                          all_times_sliding_window ['tranning_time_mean_top_' + str(top_k)] * 1e-9 +
+                          all_times_sliding_window ['tranning_time_std_top_' + str(top_k)] * 1e-9,
+                          all_times_sliding_window ['tranning_time_mean_top_' + str(top_k)] * 1e-9 -
+                          all_times_sliding_window ['tranning_time_std_top_' + str(top_k)] * 1e-9,
                           color=color[i], alpha=0.3)
 
     plt.plot(all_times_fixed_window['episode'],
-              all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9,
+              all_times_fixed_window['tranning_time_mean_top_' + str(top_k)] * 1e-9,
               marker=',', color='olive', label='Trainning Time')
     plt.fill_between(all_times_fixed_window['episode'],
-                      all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9 + all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
-                      all_times_fixed_window['tranning_time_mean_top_1'] * 1e-9 - all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
+                      all_times_fixed_window['tranning_time_mean_top_' + str(top_k)] * 1e-9 + all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
+                      all_times_fixed_window['tranning_time_mean_top_' + str(top_k)] * 1e-9 - all_times_fixed_window['tranning_time_std_top_1'] * 1e-9,
                         color='olive', alpha=0.3)
     plt.plot(all_times_incremental_window['episode'],
-              all_times_incremental_window['tranning_time_mean_top_1'] * 1e-9,
+              all_times_incremental_window['tranning_time_mean_top_' + str(top_k)] * 1e-9,
               marker=',', color='magenta', label='Trainning Time')
     plt.fill_between (all_times_incremental_window ['episode'],
-                      all_times_incremental_window ['tranning_time_mean_top_1'] * 1e-9 + all_times_fixed_window [
-                          'tranning_time_std_top_1'] * 1e-9,
-                      all_times_incremental_window ['tranning_time_mean_top_1'] * 1e-9 - all_times_fixed_window [
-                          'tranning_time_std_top_1'] * 1e-9,
+                      all_times_incremental_window ['tranning_time_mean_top_' + str(top_k)] * 1e-9 +
+                      all_times_incremental_window ['tranning_time_std_top_' + str(top_k)] * 1e-9,
+                      all_times_incremental_window ['tranning_time_mean_top_' + str(top_k)] * 1e-9 -
+                      all_times_incremental_window ['tranning_time_std_top_' + str(top_k)] * 1e-9,
                       color='magenta', alpha=0.3)
 
 
@@ -2391,28 +2400,43 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     plt.title('Beam selection using WiSARD with '+input_type+' in online learning Top-'+str(top_k),  fontsize=14, color='black',  fontweight='bold')
     plt.legend(loc='best')
     plt.savefig(path_result + input_type + '/comparition_score_time_episode_std_top_'+str(top_k)+'.png', dpi=300)
-    plt.show()
-    #plt.close()
+    #plt.show()
+    plt.close()
 def simulation_of_online_learning_top_k(input_type):
     eposodies_for_test = 2000
     episodes_for_train = 2086
 
     s008_data, s009_data = prepare_data_for_simulation()
 
+    print()
+    print()
+    print('+----------------------------+')
+    print('| SELECAO DE BEAM COM WiSARD |')
+    print('|      ONLINE LEARNING       |')
+    print('|----------------------------|')
+    print('|    JANELA     |  ENTRADA   |')
+    print('|----------------------------|')
+    print('|     Fixa      |\t', input_type, '\t |')
 
-    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+
+    #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
-    fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    print('|  Incremental  |\t', input_type, '\t |')
+    #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
-
+    print('|  Deslizante   |\t', input_type, '\t |')
     window_size = [100, 500, 1000, 1500, 2000]
     for i in range(len(window_size)):
-        print('Window size: ', window_size[i])
+        print('|\t\t -  ', window_size[i], ' \t\t\t |')
+        '''
         fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
                                                      input_type=input_type,
                                                      window_size=window_size[i],
                                                      s008_data=s008_data,
                                                      s009_data=s009_data)
+                                                     '''
+
+    print('+----------------------------+')
 
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -2428,11 +2452,15 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-#input_type = 'lidar'
+input_type = 'lidar'
 
-#plot_comparition_with_standar_desviation(input_type, '1')
+top_k = [1, 5, 10, 15, 20, 25, 30]
+for i in range(len(top_k)):
+        #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
+    plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
-
+#plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
+plot_comparition_top_k_with_standar_desviation(input_type, 10)
 simulation_of_online_learning_top_k(input_type)
 
 

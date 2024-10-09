@@ -52,6 +52,7 @@ def read_valid_coordinates_s009():
         return (all_info_coord)
 
 def  Thermomether_coord_x_y_unbalanced_for_s008(escala):
+    #print ("******** PRE PROCESSING COORD DATA ********")
     #int(row['EpisodeID']), float(row['x']), float(row['y']), float(row['z']), row['LOS'], row['Val']
     all_info_coord_val, coord_train, coord_test = read_valid_coordinates_s008()
 
@@ -111,6 +112,7 @@ def  Thermomether_coord_x_y_unbalanced_for_s008(escala):
 
     #print ("Tamanho do vetor de entrada Train: ", encondign_coord_train.shape)
     #print ("Tamanho do vetor de entrada Validation: ", encondign_coord_validation.shape)
+    #print("\t\t input size coordinates: ", encondig_coord.shape)
 
     return encondign_coord_train, encondign_coord_validation, encondig_coord
 def  Thermomether_coord_x_y_unbalanced_for_s009(escala):

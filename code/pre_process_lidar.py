@@ -526,20 +526,20 @@ def data_lidar_2D_binary_without_variance(data_train, data_test, threshold):
     data_lidar_2D_vector_test = data_test
     th = threshold
     selector = VarianceThreshold (threshold=th)
-    print ("******** PRE PROCESSING DATA ********")
-    print ('Eliminando variâncias menores que ', th)
-    print ('\tMax variancias')
-    print ('\tTrain\t\tTest')
-    print ('\t', round (np.max (np.var (data_lidar_2D_vector_train, axis=0)), 2), '\t',
-           np.max (np.var (data_lidar_2D_vector_test, axis=0)))
+    #print ("******** PRE PROCESSING LIDAR DATA ********")
+    #print ('Eliminando variâncias menores que ', th)
+    #print ('\tMax variancias')
+    #print ('\tTrain\t\tTest')
+    #print ('\t', round (np.max (np.var (data_lidar_2D_vector_train, axis=0)), 2),
+    #       '\t', round (np.max (np.var (data_lidar_2D_vector_test, axis=0))), 2)
 
     variance_threshold = selector.fit (data_lidar_2D_vector_train)
     # vt_test = selector.fit(data_lidar_3D_test_as_vector)
     data_lidar_2D_train_without_var = data_lidar_2D_vector_train [:, variance_threshold.variances_ > th]
     data_lidar_2D_test_without_var = data_lidar_2D_vector_test [:, variance_threshold.variances_ > th]
 
-    print ('\tNew size of Dataset')
-    print ('\tTrain', data_lidar_2D_train_without_var.shape, '\tTest', data_lidar_2D_test_without_var.shape)
+    #print ('\tNew size of Dataset')
+    #print ('\tTrain', data_lidar_2D_train_without_var.shape, '\tTest', data_lidar_2D_test_without_var.shape)
 
     return data_lidar_2D_train_without_var, data_lidar_2D_test_without_var
 
