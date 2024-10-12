@@ -1561,12 +1561,9 @@ def fit_traditional(nro_of_episodes, label_input_type):
         writer_results.writerow(headerList)
         writer_results.writerows(zip(all_episodes, all_score, all_trainning_time, all_test_time, all_samples_train, all_samples_test))
 def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_data):
-    #print("__________________________________________")
-    #print('/ Fit a WiSARD with: FIXED window top-k /')
-    #print("________________________________________")
 
-    print ('|     Fixa      |', input_type, '\t |')
-    p#rint(label_input_type)
+    print('|     Fixa      |', input_type, '\t |')
+
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     all_score = []
@@ -1626,38 +1623,6 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
                 input_test = s009_data[s009_data['Episode'] == i]['lidar'].tolist()
             elif label_input_type == 'lidar_coord':
                 input_test = s009_data[s009_data['Episode'] == i]['lidar_coord'].tolist()
-
-            #index_predict, trainning_time, test_time = beam_selection_wisard (data_train=input_train,
-            #                                                                  data_validation=input_test,
-            #                                                                  label_train=label_train,
-            #                                                                  addressSize=44)
-            '''
-            top_k, all_metrics = beam_selection_top_k_wisard (x_train=input_train,
-                                                              x_test=input_test,
-                                                              y_train=label_train,
-                                                              y_test=label_test,
-                                                              address_of_size=44,
-                                                              name_of_conf_input=label_input_type)
-
-
-            # score = accuracy_score (label_test, acuracia)
-            all_score.append (np.array (all_metrics ['Acuracia']))
-            all_score_top_1.append (all_metrics ['Acuracia'] [0])
-            all_score_top_5.append (all_metrics ['Acuracia'] [1])
-            all_score_top_10.append (all_metrics ['Acuracia'] [2])
-            all_score_top_15.append (all_metrics ['Acuracia'] [3])
-            all_score_top_20.append (all_metrics ['Acuracia'] [4])
-            all_score_top_25.append (all_metrics ['Acuracia'] [5])
-            all_score_top_30.append (all_metrics ['Acuracia'] [6])
-
-            trainning_time_top_1.append (all_metrics ['Trainning Time'] [0])
-            trainning_time_top_5.append (all_metrics ['Trainning Time'] [1])
-            trainning_time_top_10.append (all_metrics ['Trainning Time'] [2])
-            trainning_time_top_15.append (all_metrics ['Trainning Time'] [3])
-            trainning_time_top_20.append (all_metrics ['Trainning Time'] [4])
-            trainning_time_top_25.append (all_metrics ['Trainning Time'] [5])
-            trainning_time_top_30.append (all_metrics ['Trainning Time'] [6])
-            '''
 
             df_results_wisard_top_k_with_std = beam_selection_with_confidence_interval (input_train,
                                                                                         input_test,
@@ -1733,7 +1698,6 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
                                                "tranning_time_std_top_30": std_trainning_time_top_30,
                                                "samples_train": all_samples_train, "samples_test": all_samples_test})
 
-    print ('save results')
     path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/results_with_std/'
     df_results_score.to_csv(path_result + 'scores_with_std_fixed_window_top_k.csv',
                              index=False)
@@ -1741,26 +1705,6 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
         path_result + 'trainning_time_with_std_fixed_window_top_k.csv', index=False)
 
 
-    '''
-    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
-
-    score_results = [all_score_top_1, all_score_top_5, all_score_top_10,
-                     all_score_top_15, all_score_top_20, all_score_top_25, all_score_top_30]
-    trainning_time_results = [trainning_time_top_1, trainning_time_top_5, trainning_time_top_10,
-                              trainning_time_top_15, trainning_time_top_20, trainning_time_top_25,
-                              trainning_time_top_30]
-    
-
-    save_results = False
-    if save_results:
-        save_in_csv_all_metrics_top_k (path_result,
-                                       'all_results_fixed_window_top_k.csv',
-                                       all_episodes,
-                                       score_results,
-                                       trainning_time_results,
-                                       all_samples_train, all_samples_test)
-    return score_results, trainning_time_results
-    '''
 def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
     preprocess_resolution = 16
     th = 0.15
@@ -2313,8 +2257,8 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     folder_std_results = 'results_with_std/'
     type_of_window = ['fixed_window', 'incremental_window', 'sliding_window']
     path_result_fixed_window = path_result + input_type + '/' + type_of_window[0] + '/' + folder_std_results
-    path_result_incremental_window = path_result + input_type + '/' + type_of_window[1] +'/' + folder_std_results
-    path_result_sliding_window = path_result + input_type + '/' + type_of_window[2]+'/window_size_var/' + folder_std_results
+    path_result_incremental_window = path_result + input_type + '/' + type_of_window[1] + '/' + folder_std_results
+    path_result_sliding_window = path_result + input_type + '/' + type_of_window[2]+ '/window_size_var/' + folder_std_results
 
     name_of_file_score = 'scores_with_std_'
     name_of_file_time = 'trainning_time_with_std_'
@@ -2334,6 +2278,17 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
 
 
     window_size = [500, 1000, 1500, 2000]
+    pos_x = [250, 500, 750, 1000, 1250, 1500]
+
+
+    if top_k == 1:
+        pos_y = 0.64
+    elif top_k == 5:
+        pos_y = 0.9
+    elif top_k == 10:
+        pos_y = 0.96
+    else :
+        pos_y = 1.0
 
     color = ['blue', 'red', 'green', 'purple', 'orange']
     # , 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
@@ -2347,7 +2302,6 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
                                                 str(window_size[i]) + type_of_file)
         plt.plot (all_times_sliding_window['episode'],
                   all_times_sliding_window['tranning_time_mean_top_' + str(top_k)] * 1e-9,
-                  #all_times_sliding_window['tranning_time_mean_top_1'],
                   color=color[i], marker=',',
                   label='Sliding window top-' + str(top_k) + '_' + str(window_size[i]))
         plt.fill_between (all_times_sliding_window ['episode'],
@@ -2378,14 +2332,7 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     ax1.set_ylabel('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
     ax1.set_xlabel('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
 
-    pos_x = [250, 500, 750, 1000, 1250, 1500]
 
-    if top_k == 1:
-        pos_y = 0.64
-    if top_k == 5:
-        pos_y = 0.78
-    else:
-        pos_y = 1.0
 
     # Criando um segundo eixo
     ax2 = ax1.twinx()
@@ -2424,9 +2371,10 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
 
     ax2.set_ylabel ('Accuracy', fontsize=12, color='black', labelpad=12, fontweight='bold')  # , color='red')
 
-    plt.text(1800, 0.5, 'Mean: '+str(np.round(np.mean(mean_score_fixed_window),3)), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
+    #plt.text(1800, 0.5, 'Mean: '+str(np.round(np.mean(mean_score_fixed_window),3)), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
     plt.title('Beam selection using WiSARD with '+input_type+' in online learning Top-'+str(top_k),  fontsize=14, color='black',  fontweight='bold')
-    plt.legend(loc='best')
+    #plt.ylim(0, 1)
+    plt.legend(loc='best', ncol=3)
     plt.savefig(path_result + input_type + '/comparition_score_time_episode_std_top_'+str(top_k)+'.png', dpi=300)
     #plt.show()
     plt.close()
@@ -2482,12 +2430,13 @@ def simulation_of_online_learning_top_k(input_type):
 
 
 
-    #fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
-    print('|  Deslizante   |', input_type, '\t |')
+    #print('|  Deslizante   |', input_type, '\t |')
+    '''
     window_size = [100, 500, 1000, 1500, 2000]
     for i in range(len(window_size)):
         print('|\t -  ', window_size[i], ' \t |')
@@ -2497,6 +2446,7 @@ def simulation_of_online_learning_top_k(input_type):
                                                      window_size=window_size[i],
                                                      s008_data=s008_data,
                                                      s009_data=s009_data)
+   '''
 
 
     print('+----------------------------+')
@@ -2516,14 +2466,14 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'lidar'
+input_type = 'lidar_coord'
 
 simulation_of_online_learning_top_k(input_type)
 
 plot_std = False
 if plot_std:
-    #top_k = [1, 5, 10, 15, 20, 25, 30]
-    top_k =[1, 5, 10]
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    #top_k =[1, 5, 10]
     for i in range(len(top_k)):
             #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
         plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
