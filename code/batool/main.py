@@ -15,6 +15,7 @@ from tensorflow.keras import metrics
 from tensorflow.keras.models import model_from_json,Model, load_model
 from custom_metrics import *
 import timeit
+import time
 import argparse
 import random
 
@@ -334,12 +335,20 @@ else:
     if input == 'coord':
         if strategy == 'reg':
             model = coord_model
-            model.compile(loss="mse",optimizer=opt,metrics=[top_1_accuracy,top_2_accuracy,top_10_accuracy,top_50_accuracy,R2_metric])
+            model.compile(loss="mse",
+                          optimizer=opt,
+                          metrics=[top_1_accuracy,
+                                   top_2_accuracy,
+                                   top_10_accuracy,
+                                   top_50_accuracy,
+                                   R2_metric])
             model.summary()
             if train_or_test=='train':
                 print('***************Training************')
-                hist = model.fit(X_coord_train,y_train,validation_data=(X_coord_validation, y_validation),
-                epochs=epochs, batch_size=bs, shuffle=shuffle)
+                hist = model.fit(X_coord_train,
+                                 y_train,
+                                 validation_data=(X_coord_validation, y_validation),
+                                 epochs=epochs, batch_size=bs, shuffle=shuffle)
                 print('losses in train:', hist.history['loss'])
             elif train_or_test=='test':
                 print('*****************Testing***********************')
@@ -366,7 +375,7 @@ else:
             if train_or_test == 'train':
                 print('***************Training************')
                 tic()
-
+                star_trainning = time.process_time_ns()
                 hist = model.fit(X_coord_train, y_train,
                                  validation_data=(X_coord_validation, y_validation),
                                  epochs=epochs, batch_size=bs, shuffle=shuffle,
@@ -377,6 +386,8 @@ else:
                                                                              patience=15, verbose=2, mode='auto')])
 
                 delta_train = toc()
+                end_trainning = time.process_time_ns()
+                trainning_process_time = (end_trainning - star_trainning)
                 print("trainning Time: ", delta_train)
                 print(hist.history.keys())
                 print('val_loss',hist.history['val_loss'])
@@ -491,6 +502,7 @@ else:
             if train_or_test == 'train':
                 print('***************Training************')
                 tic()
+                star_trainning = time.process_time_ns ()
                 hist = model.fit(X_lidar_train,
                                  y_train,
                                  validation_data=(X_lidar_validation, y_validation),
@@ -505,7 +517,8 @@ else:
                                                                              patience=15,
                                                                              verbose=2,
                                                                              mode='auto')])
-
+                end_trainning = time.process_time_ns()
+                trainning_process_time = (end_trainning - star_trainning)
                 delta_train = toc()
                 print ("trainning Time: ", delta_train)
                 print(hist.history.keys())
