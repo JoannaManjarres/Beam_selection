@@ -158,6 +158,8 @@ def model_configuration(input, data_train, data_validation, data_test, num_class
         y_validation = data_validation[1]
         X_lidar_test = data_test[0]
         y_test = data_test[1]
+
+
     elif input == 'lidar_coord':
         X_coord_train = data_train[0]
         X_lidar_train = data_train[1]
@@ -220,14 +222,20 @@ def model_configuration(input, data_train, data_validation, data_test, num_class
     bs = 32  # default
     shuffle = False  # default
 
-    lidar_train = X_lidar_train
-    lidar_validation = X_lidar_validation
-    lidar_test = X_lidar_test
-    coord_train = X_coord_train
-    coord_validation = X_coord_validation
-    coord_test = X_coord_test
+    #lidar_train = X_lidar_train
+    #lidar_validation = X_lidar_validation
+    #lidar_test = X_lidar_test
+    #coord_train = X_coord_train
+    #coord_validation = X_coord_validation
+    #coord_test = X_coord_test
 
     if multimodal == 2:
+        lidar_train = X_lidar_train
+        lidar_validation = X_lidar_validation
+        lidar_test = X_lidar_test
+        coord_train = X_coord_train
+        coord_validation = X_coord_validation
+        coord_test = X_coord_test
         # if input_1 == 'coord' and input_1 == 'lidar':
         if input == 'lidar_coord':
             x_train = [lidar_train, coord_train]
@@ -474,15 +482,19 @@ def train_model(input, model, data_train, data_validation):
     print("trainning Time: ", trainning_process_time)
 
 def test_model(input, model, data_test):
-    x_test = [data_test[1], data_test[0]]
-    y_test = data_test[2]
+    #    x_test = [data_test[1], data_test[0]]
+    #    y_test = data_test[2]
+
 
     lr = 0.0001  # default learning rate
     opt = Adam(learning_rate=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+    strategy = 'one_hot'  # default
 
     model_folder = 'models/'
 
     if input == 'lidar_coord':
+        x_test = [data_test [1], data_test [0]]
+        y_test = data_test [2]
         print ('***************Testing************')
         model.load_weights (model_folder + 'best_weights.coord_lidar.h5', by_name=True)
         scores = model.evaluate (x_test, y_test)
@@ -541,123 +553,152 @@ def test_model(input, model, data_test):
         X_lidar_test = data_test[0]
         y_test = data_test[1]
 
-        print ('***************Testing************')
-        model.load_weights (model_folder + 'best_weights.lidar.h5', by_name=True)  # to be added
-        scores = model.evaluate (X_lidar_test, y_test)
-        print ("############ ----------------------------- ")
+        if strategy == 'one_hot':
+            model.compile(loss=categorical_crossentropy,
+                          optimizer=opt,
+                          metrics=[metrics.categorical_accuracy,
+                                   top_2_accuracy,
+                                   top_5_accuracy,
+                                   top_10_accuracy,
+                                   top_25_accuracy,
+                                   top_50_accuracy,
+                                   precision_m, recall_m, f1_m])
+            model.summary()
 
-        print ("Test results", model.metrics_names, scores)
 
-        top_k = [1, 5, 10]
-        # top_k = np.arange (1, 51, 1)
-        accuracy_top_k = []
-        process_time = []
-        index_predict = []
-        for i in range (len (top_k)):
-            model_metrics = [metrics.CategoricalAccuracy (), metrics.TopKCategoricalAccuracy (k=top_k [i])]
-            model.compile (loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
-            # model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
+            print ('***************Testing************')
+            model.load_weights (model_folder + 'best_weights.lidar.h5', by_name=True)  # to be added
+            scores = model.evaluate (X_lidar_test, y_test)
+            print ("############ ----------------------------- ")
 
-            ### Testing
-            star_test = time.process_time_ns ()
-            out = model.evaluate (X_lidar_test, y_test)
-            end_test = time.process_time_ns ()
-            delta = end_test - star_test
-            accuracy_top_k.append (out [2])
-            process_time.append (delta)
-            print ("top-k: ", top_k [i])
+            print ("Test results", model.metrics_names, scores)
 
-        print ('top-k = ', top_k)
-        print ("Acuracy =", accuracy_top_k)
-        print ("process time: ", process_time)
+            top_k = [1, 5, 10]
+            # top_k = np.arange (1, 51, 1)
+            accuracy_top_k = []
+            process_time = []
+            index_predict = []
+            for i in range (len (top_k)):
+                model_metrics = [metrics.CategoricalAccuracy (), metrics.TopKCategoricalAccuracy (k=top_k [i])]
+                model.compile (loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
+                # model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
 
-        all_index_predict = (model.predict (X_lidar_test, verbose=1))
-        all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
-        for i in range (len (all_index_predict)):
-            all_index_predict_order [i] = np.flip (np.argsort (all_index_predict [i]))
+                ### Testing
+                star_test = time.process_time_ns ()
+                out = model.evaluate (X_lidar_test, y_test)
+                end_test = time.process_time_ns ()
+                delta = end_test - star_test
+                accuracy_top_k.append (out [2])
+                process_time.append (delta)
+                print ("top-k: ", top_k [i])
 
-        ## Testanto  a acuracia calculada pelo metodo de avaliacao do keras (evaluate)
-        top_1_predict = all_index_predict_order [:, 0].astype (int)
-        true_label = []
-        for i in range (len (y_test)):
-            true_label.append (y_test [i, :].argmax ())
+            print ('top-k = ', top_k)
+            print ("Acuracy =", accuracy_top_k)
+            print ("process time: ", process_time)
 
-        acerto = 0
-        nao_acerto = 0
+            all_index_predict = (model.predict (X_lidar_test, verbose=1))
+            all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
+            for i in range (len (all_index_predict)):
+                all_index_predict_order [i] = np.flip (np.argsort (all_index_predict [i]))
 
-        for sample in range (len (y_test)):
-            if (true_label [sample] == top_1_predict [sample]):
-                acerto = acerto + 1
-            else:
-                nao_acerto = nao_acerto + 1
+            ## Testanto  a acuracia calculada pelo metodo de avaliacao do keras (evaluate)
+            top_1_predict = all_index_predict_order [:, 0].astype (int)
+            true_label = []
+            for i in range (len (y_test)):
+                true_label.append (y_test [i, :].argmax ())
 
-        score = acerto / len (all_index_predict)
-        print ('score top-1: ', score)
+            acerto = 0
+            nao_acerto = 0
+
+            for sample in range (len (y_test)):
+                if (true_label [sample] == top_1_predict [sample]):
+                    acerto = acerto + 1
+                else:
+                    nao_acerto = nao_acerto + 1
+
+            score = acerto / len (all_index_predict)
+            print ('score top-1: ', score)
 
     elif input == 'coord':
         X_coord_test = data_test[0]
         y_test = data_test[1]
 
-        print ('***************Testing************')
-        model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
-        print ('***************Testing************')
-        model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)  # to be added
-        scores = model.evaluate (X_coord_test, y_test)
-        print ("############ ----------------------------- ")
+        if strategy == 'one_hot':
+            #print ('All shapes', X_coord_train.shape, y_train.shape, X_coord_validation.shape, y_validation.shape)
+            #       X_coord_test.shape, y_test.shape)
+            #model = coord_model
+            model.compile(loss=categorical_crossentropy,
+                          optimizer=opt,
+                          metrics=[metrics.categorical_accuracy,
+                                   top_2_accuracy,
+                                   top_5_accuracy,
+                                   top_10_accuracy,
+                                   top_25_accuracy,
+                                   top_50_accuracy,
+                                   precision_m,
+                                   recall_m,
+                                   f1_m])
+            model.summary()
+            call_backs = []
 
-        print ("Test results", model.metrics_names, scores)
+            print ('***************Testing************')
+            model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)  # to be added
+            scores = model.evaluate (X_coord_test, y_test)
+            print ("############ ----------------------------- ")
 
-        # top_k = [1, 5, 10]
-        top_k = np.arange (1, 51, 1)
-        accuracy_top_k = []
-        process_time = []
-        index_predict = []
-        for i in range (len (top_k)):
-            model_metrics = [metrics.CategoricalAccuracy (), metrics.TopKCategoricalAccuracy (k=top_k [i])]
-            model.compile (loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
-            # model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
+            print ("Test results", model.metrics_names, scores)
 
-            ### Testing
-            star_test = time.process_time_ns ()
-            out = model.evaluate (X_coord_test, y_test)
-            end_test = time.process_time_ns ()
-            delta = end_test - star_test
-            accuracy_top_k.append (out [2])
-            process_time.append (delta)
-            print ("top-k: ", top_k [i])
+            # top_k = [1, 5, 10]
+            top_k = np.arange (1, 51, 1)
+            accuracy_top_k = []
+            process_time = []
+            index_predict = []
+            for i in range (len (top_k)):
+                model_metrics = [metrics.CategoricalAccuracy (), metrics.TopKCategoricalAccuracy (k=top_k [i])]
+                model.compile (loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
+                # model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
 
-        print ('top-k = ', top_k)
-        print ("Acuracy =", accuracy_top_k)
-        print ("process time: ", process_time)
+                ### Testing
+                star_test = time.process_time_ns ()
+                out = model.evaluate (X_coord_test, y_test)
+                end_test = time.process_time_ns ()
+                delta = end_test - star_test
+                accuracy_top_k.append (out [2])
+                process_time.append (delta)
+                print ("top-k: ", top_k [i])
 
-        print ('usando o metodo predict: ')
-        all_index_predict = (model.predict (X_coord_test, verbose=1))
-        all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
-        print (' ordenando as predicoes: ')
-        for i in range (len (all_index_predict)):
-            all_index_predict_order [i] = np.flip (np.argsort (all_index_predict [i]))
+            print ('top-k = ', top_k)
+            print ("Acuracy =", accuracy_top_k)
+            print ("process time: ", process_time)
 
-        ## Testanto  a acuracia calculada pelo metodo de avaliacao do keras (evaluate)
-        top_1_predict = all_index_predict_order [:, 0].astype (int)
-        true_label = []
-        for i in range (len (y_test)):
-            true_label.append (y_test [i, :].argmax ())
+            print ('usando o metodo predict: ')
+            all_index_predict = (model.predict (X_coord_test, verbose=1))
+            all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
+            print (' ordenando as predicoes: ')
+            for i in range (len (all_index_predict)):
+                all_index_predict_order [i] = np.flip (np.argsort (all_index_predict [i]))
 
-        acerto = 0
-        nao_acerto = 0
+            ## Testanto  a acuracia calculada pelo metodo de avaliacao do keras (evaluate)
+            top_1_predict = all_index_predict_order [:, 0].astype (int)
+            true_label = []
+            for i in range (len (y_test)):
+                true_label.append (y_test [i, :].argmax ())
 
-        for sample in range (len (y_test)):
-            if (true_label [sample] == top_1_predict [sample]):
-                acerto = acerto + 1
-            else:
-                nao_acerto = nao_acerto + 1
+            acerto = 0
+            nao_acerto = 0
 
-        score = acerto / len (all_index_predict)
-        print ('score top-1: ', score)
+            for sample in range (len (y_test)):
+                if (true_label [sample] == top_1_predict [sample]):
+                    acerto = acerto + 1
+                else:
+                    nao_acerto = nao_acerto + 1
+
+            score = acerto / len (all_index_predict)
+            print ('score top-1: ', score)
 
 
 print("online learning Batool...")
-input = 'lidar_coord'
+input = 'lidar'
 data_train, data_validation, data_test, num_classes = prepare_data(input)
 model = model_configuration(input, data_train, data_validation, data_test, num_classes)
 test_model(input, model, data_test)
