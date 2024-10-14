@@ -7,3 +7,4 @@
 /code/__pycache__/
 /code/__pycache__/pre_process_lidar.cpython-310.pyc
 venv/
+/code/batool/models/best_weights.coord_lidar.h5
