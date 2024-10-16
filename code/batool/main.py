@@ -76,7 +76,7 @@ random.seed(seed)
 ###############################################################################
 # DEFINE INPUTS
 ###############################################################################
-input = 'lidar' #'lidar' or 'lidar_coord' or 'coord'
+input = 'lidar_coord' #'lidar' or 'lidar_coord' or 'coord'
 
 multimodal = 2 if input == 'lidar_coord' else 1
 fusion = False if multimodal == 1 else True
@@ -484,8 +484,6 @@ else:
                 print('*****************Testing***********************')
                 scores = model.evaluate(X_lidar_test, y_test)
                 print('scores while testing:', model.metrics_names,scores)
-
-
         if strategy == 'one_hot':
             print('All shapes',X_lidar_train.shape,y_train.shape,X_lidar_validation.shape,y_validation.shape,X_lidar_test.shape,y_test.shape)
             model = lidar_model

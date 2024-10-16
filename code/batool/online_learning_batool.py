@@ -1,6 +1,8 @@
 import os
 import time
 import random
+import pandas as pd
+
 import numpy as np
 from sklearn.preprocessing import normalize
 from ModelHandler import add_model,load_model_structure, ModelHandler
@@ -62,6 +64,13 @@ def open_npz(path):
     data = cache[keys[0]]
 
     return data
+
+
+
+
+
+
+
 
 def prepare_data(input):
     ###############################################################################
@@ -480,8 +489,9 @@ def train_model(input, model, data_train, data_validation):
                       'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
     print("trainning Time: ", trainning_process_time)
+    return trainning_process_time, data_train[0].shape
 
-def test_model(input, model, data_test):
+def test_model(input, model, data_test, top_k):
     #    x_test = [data_test[1], data_test[0]]
     #    y_test = data_test[2]
 
@@ -504,7 +514,7 @@ def test_model(input, model, data_test):
         print ("----------------------------------")
 
         # top_k = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50]
-        top_k = np.arange (1, 51, 1)
+        #top_k = np.arange (1, 51, 1)
         accuracy_top_k = []
         process_time = []
         for i in range(len(top_k)):
@@ -526,6 +536,7 @@ def test_model(input, model, data_test):
         print ("Process test time =", process_time)
         print ("----------------------------------")
 
+        '''
         all_index_predict = (model.predict (x_test, verbose=1))
         all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
         for i in range (len (all_index_predict)):
@@ -548,6 +559,7 @@ def test_model(input, model, data_test):
 
         score = acerto / len (all_index_predict)
         print ('score top-1: ', score)
+        '''
 
     elif input == 'lidar':
         X_lidar_test = data_test[0]
@@ -573,7 +585,7 @@ def test_model(input, model, data_test):
 
             print ("Test results", model.metrics_names, scores)
 
-            top_k = [1, 5, 10]
+            #top_k = [1, 5, 10]
             # top_k = np.arange (1, 51, 1)
             accuracy_top_k = []
             process_time = []
@@ -596,6 +608,7 @@ def test_model(input, model, data_test):
             print ("Acuracy =", accuracy_top_k)
             print ("process time: ", process_time)
 
+            '''
             all_index_predict = (model.predict (X_lidar_test, verbose=1))
             all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
             for i in range (len (all_index_predict)):
@@ -618,6 +631,7 @@ def test_model(input, model, data_test):
 
             score = acerto / len (all_index_predict)
             print ('score top-1: ', score)
+            '''
 
     elif input == 'coord':
         X_coord_test = data_test[0]
@@ -649,7 +663,7 @@ def test_model(input, model, data_test):
             print ("Test results", model.metrics_names, scores)
 
             # top_k = [1, 5, 10]
-            top_k = np.arange (1, 51, 1)
+            #top_k = np.arange (1, 51, 1)
             accuracy_top_k = []
             process_time = []
             index_predict = []
@@ -671,6 +685,7 @@ def test_model(input, model, data_test):
             print ("Acuracy =", accuracy_top_k)
             print ("process time: ", process_time)
 
+            '''
             print ('usando o metodo predict: ')
             all_index_predict = (model.predict (X_coord_test, verbose=1))
             all_index_predict_order = np.zeros ((all_index_predict.shape [0], all_index_predict.shape [1]))
@@ -695,11 +710,207 @@ def test_model(input, model, data_test):
 
             score = acerto / len (all_index_predict)
             print ('score top-1: ', score)
+            '''
+
+    df_results_top_k = pd.DataFrame({"Top-K": top_k,
+                                     "Acuracia": accuracy_top_k,
+                                     "Test Time": process_time})
+    return df_results_top_k
+
+def beam_selection_Batool(input,
+                          data_train,
+                          data_validation,
+                          data_test,
+                          num_classes):
+
+    model = model_configuration(input, data_train, data_validation, data_test, num_classes)
+    trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation)
+    df_results_top_k = test_model(input, model, data_test, top_k)
+
+def read_all_data():
+
+    filename = '../../data/coord/CoordVehiclesRxPerScene_s008.csv'
+    all_csv_data = pd.read_csv (filename)
+    valid_data = all_csv_data[all_csv_data['Val'] == 'V']
+    limit_ep_train = 1564
+
+    train_data = valid_data[valid_data['EpisodeID'] <= limit_ep_train]
+
+    coord_for_train = np.zeros((len(train_data), 2))
+    coord_for_train[:, 0] = train_data['x']
+    coord_for_train[:, 1] = train_data['y']
+    coord_train = normalize(coord_for_train, axis=1, norm='l1')
+
+    validation_data = valid_data[valid_data['EpisodeID'] > limit_ep_train]
+    coord_for_validation = np.zeros((len(validation_data), 2))
+    coord_for_validation[:, 0] = validation_data['x']
+    coord_for_validation[:, 1] = validation_data['y']
+    coord_validation = normalize(coord_for_validation, axis=1, norm='l1')
+
+    y_train, y_validation, y_test, num_classes = get_index_beams ()
+
+    data_folder = '../../data/'
+    lidar_train = open_npz(data_folder + 'lidar/s008/lidar_train_raymobtime.npz') / 2
+    lidar_validation = open_npz (data_folder + 'lidar/s008/lidar_validation_raymobtime.npz') / 2
+    lidar_test = open_npz (data_folder + 'lidar/s009/lidar_test_raymobtime.npz') / 2
+
+    lidar_train_reshaped = lidar_train.reshape(9234, -1)
+    lidar_validation_reshaped = lidar_validation.reshape(1960, -1)
+    lidar_test_reshaped = lidar_test.reshape(9638, -1)
+
+
+
+    data_for_train = pd.DataFrame({"EpisodeID": train_data['EpisodeID'],
+                                   "x": coord_train[:, 0],
+                                   "y": coord_train[:, 1],
+                                   "beam": y_train.tolist(),
+                                   "lidar": lidar_train_reshaped.tolist()})
+
+    #para recuperar a matriz original do lidar
+    #lidar = np.array(data_for_train ["lidar"].tolist()).reshape(9234,20,200,10)
+    #a = np.array_equal (lidar_train, lidar)
+    #data_for_train["lidar"] = lidar_train.tolist ()
+
+
+    data_for_validation = pd.DataFrame({"EpisodeID": validation_data['EpisodeID'],
+                                        "x": coord_validation[:, 0],
+                                        "y": coord_validation[:, 1]})
+    data_for_validation["lidar"] = lidar_validation_reshaped.tolist()
+    data_for_validation["beam"] = y_validation.tolist()
+
+    filename = '../../data/coord/CoordVehiclesRxPerScene_s009.csv'
+    all_csv_data = pd.read_csv(filename)
+    valid_data = all_csv_data[all_csv_data['Val'] == 'V']
+
+    coord_for_test = np.zeros((len(valid_data), 2))
+    coord_for_test[:, 0] = valid_data['x']
+    coord_for_test[:, 1] = valid_data['y']
+    coord_test = normalize(coord_for_test, axis=1, norm='l1')
+
+    data_for_test = pd.DataFrame({"EpisodeID": valid_data['EpisodeID'],
+                                    "x": coord_test[:, 0],
+                                    "y": coord_test[:, 1]})
+    data_for_test["lidar"] = lidar_test_reshaped.tolist()
+    data_for_test["beam"] = y_test.tolist()
+
+    '''
+    input = 'coord'
+    data_train, data_validation, data_test, num_classes = prepare_data (input='coord')
+    if input == 'coord':
+        dataTrain = data_train[0]
+        indexTrain = data_train[1]
+
+        TrainData = pd.DataFrame({"EpisodeID": train_data['EpisodeID'],
+                                  "coord": dataTrain})
+    '''
+    return data_for_train, data_for_validation, data_for_test
+
+
+def get_index_beams():
+    data_folder = '../../data/'
+    train_data_folder = 'beams_output/beam_output_baseline_raymobtime_s008/'
+    file_train = 'beams_output_train.npz'
+    file_val = 'beams_output_validation.npz'
+
+    output_train_file = data_folder + train_data_folder + file_train
+    output_validation_file = data_folder + train_data_folder + file_val
+    y_train, num_classes = getBeamOutput (output_train_file)
+    y_validation, _ = getBeamOutput (output_validation_file)
+
+    test_data_folder = 'beams_output/beam_output_baseline_raymobtime_s009/'
+    file_test = 'beams_output_test.npz'
+    output_test_file = data_folder + test_data_folder + file_test
+    y_test, _ = getBeamOutput (output_test_file)
+
+    return y_train, y_validation, y_test, num_classes
+
+def prepare_coord_for_trainning(data, samples):
+    coord_x = np.vstack(data['x'].tolist())
+    coord_y = np.vstack(data['y'].tolist())
+    coord = np.concatenate((coord_x, coord_y), axis=1).reshape(samples,2,1)
+
+    return coord
+
+def prepare_coord_test_for_simulation(data, episodio_for_test):
+    coord_x = np.vstack(data[data['EpisodeID'] == episodio_for_test]['x'].tolist())
+    coord_y = np.vstack(data[data['EpisodeID'] == episodio_for_test]['y'].tolist())
+    coord = np.concatenate((coord_x, coord_y), axis=1).reshape(len(coord_x),2,1)
+    return coord
+
+def prepare_data_for_simulation(label_input_type):
+    #data_train, data_validation, data_test, num_classes = prepare_data(input)
+    #y_train, y_validation, y_test, num_classes = get_index_beams()
+
+    nro_of_episodes = 2000
+    episodes_for_train = 2086
+
+    data_for_train, data_for_validation, s009_data = read_all_data()
+
+    episode_for_test = np.arange(0, nro_of_episodes, 1)
+
+    label_train = np.array(data_for_train['beam'].tolist())
+    label_validation = np.array(data_for_validation['beam'].tolist())
+    if label_input_type == 'coord':
+        input_train = prepare_coord_for_trainning(data_for_train, 9234)
+        input_validation = prepare_coord_for_trainning(data_for_validation, 1960)
+
+    elif label_input_type == 'lidar':
+        print('Beam selection using ' + input)
+        input_train = np.array(data_for_train["lidar"].tolist()).reshape(9234, 20, 200, 10)
+        input_validation = np.array(data_for_validation["lidar"].tolist()).reshape(1960, 20, 200, 10)
+
+    elif label_input_type == 'lidar_coord':
+
+        coord_train = prepare_coord_for_trainning(data_for_train, 9234)
+        coord_validation = prepare_coord_for_trainning(data_for_validation, 1960)
+
+        lidar_train = np.array(data_for_train["lidar"].tolist()).reshape(9234, 20, 200, 10)
+        lidar_validation = np.array(data_for_validation["lidar"].tolist()).reshape(1960, 20, 200, 10)
+
+        input_train = [lidar_train, coord_train]
+        input_validation = [lidar_validation, coord_validation]
+
+
+    for i in range(len(episode_for_test)):
+        if i in s009_data['EpisodeID'].tolist():
+            label_test = s009_data[s009_data['EpisodeID'] == i]['beam'].tolist()
+            if label_input_type == 'coord':
+                input_test = prepare_coord_test_for_simulation(data=s009_data, episodio_for_test=i)
+
+            elif label_input_type == 'lidar':
+                input_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
+                                                                                                        20, 200, 10)
+            elif label_input_type == 'lidar_coord':
+                coord_test = prepare_coord_test_for_simulation(data=s009_data, episodio_for_test=i)
+                lidar_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
+                                                                                                        20, 200, 10)
+                input_test = [lidar_test, coord_test]
+
+
+                a =0
+
+
+
+
+
+
+
+    a=0
 
 
 print("online learning Batool...")
-input = 'lidar'
+input = 'lidar_coord'
+top_k = [1, 5, 10]
+
+
+#prepare_data(input)
+
+
+
+prepare_data_for_simulation(input)
 data_train, data_validation, data_test, num_classes = prepare_data(input)
-model = model_configuration(input, data_train, data_validation, data_test, num_classes)
-test_model(input, model, data_test)
+
+beam_selection_Batool(input, data_train, data_validation, data_test, num_classes)
+
+
 a=0
