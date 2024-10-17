@@ -7,3 +7,5 @@
 /code/__pycache__/
 /code/__pycache__/pre_process_lidar.cpython-310.pyc
 venv/
+/venv_beam_selection/
+/data.tgz
