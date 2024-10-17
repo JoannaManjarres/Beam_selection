@@ -9,3 +9,7 @@
 venv/
 /venv_beam_selection/
 /data.tgz
+/code/batool/models/best_weights.coord.h5
+/code/batool/models/best_weights.lidar.h5
+/code/batool/models/best_weights.coord_lidar.h5
+

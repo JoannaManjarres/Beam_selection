@@ -2282,9 +2282,15 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
 
 
     if top_k == 1:
-        pos_y = 0.64
+        if input_type == 'lidar_coord':
+            pos_y = 0.73
+        else:
+            pos_y = 0.64
     elif top_k == 5:
-        pos_y = 0.9
+        if input_type == 'lidar_coord':
+            pos_y = 0.92
+        else:
+            pos_y = 0.9
     elif top_k == 10:
         pos_y = 0.96
     else :
@@ -2371,10 +2377,8 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
 
     ax2.set_ylabel ('Accuracy', fontsize=12, color='black', labelpad=12, fontweight='bold')  # , color='red')
 
-    #plt.text(1800, 0.5, 'Mean: '+str(np.round(np.mean(mean_score_fixed_window),3)), fontsize=8, color='purple', fontname='Myanmar Sangam MN', fontweight='bold')
     plt.title('Beam selection using WiSARD with '+input_type+' in online learning Top-'+str(top_k),  fontsize=14, color='black',  fontweight='bold')
-    #plt.ylim(0, 1)
-    plt.legend(loc='best', ncol=3)
+    plt.legend(loc='lower right', ncol=3)
     plt.savefig(path_result + input_type + '/comparition_score_time_episode_std_top_'+str(top_k)+'.png', dpi=300)
     #plt.show()
     plt.close()
@@ -2466,11 +2470,11 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'lidar_coord'
+input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 
-simulation_of_online_learning_top_k(input_type)
+#simulation_of_online_learning_top_k(input_type)
 
-plot_std = False
+plot_std = True
 if plot_std:
     top_k = [1, 5, 10, 15, 20, 25, 30]
     #top_k =[1, 5, 10]
