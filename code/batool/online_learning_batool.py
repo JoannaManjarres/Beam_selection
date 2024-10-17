@@ -170,15 +170,20 @@ def model_configuration(input, data_train, data_validation, data_test, num_class
 
 
     elif input == 'lidar_coord':
-        X_coord_train = data_train[0]
-        X_lidar_train = data_train[1]
-        y_train = data_train[2]
-        X_coord_validation = data_validation[0]
-        X_lidar_validation = data_validation[1]
-        y_validation = data_validation[2]
-        X_coord_test = data_test[0]
-        X_lidar_test = data_test[1]
-        y_test = data_test[2]
+        input_for_train = data_train[0]
+        X_lidar_train = input_for_train[0]
+        X_coord_train = input_for_train[1]
+        y_train = data_train[1]
+
+        input_for_validation = data_validation[0]
+        X_lidar_validation = input_for_validation[0]
+        X_coord_validation = input_for_validation[1]
+        y_validation = input_for_validation[1]
+
+        input_for_test = data_test[0]
+        X_lidar_test = input_for_test[0]
+        X_coord_test = input_for_test[1]
+        y_test = input_for_test[1]
 
 
 
@@ -503,8 +508,8 @@ def test_model(input, model, data_test, top_k):
     model_folder = 'models/'
 
     if input == 'lidar_coord':
-        x_test = [data_test [1], data_test [0]]
-        y_test = data_test [2]
+        x_test = [data_test[1], data_test[0]]
+        y_test = data_test[2]
         print ('***************Testing************')
         model.load_weights (model_folder + 'best_weights.coord_lidar.h5', by_name=True)
         scores = model.evaluate (x_test, y_test)
@@ -635,7 +640,7 @@ def test_model(input, model, data_test, top_k):
 
     elif input == 'coord':
         X_coord_test = data_test[0]
-        y_test = data_test[1]
+        y_test = np.array(data_test[1])
 
         if strategy == 'one_hot':
             #print ('All shapes', X_coord_train.shape, y_train.shape, X_coord_validation.shape, y_validation.shape)
@@ -657,33 +662,32 @@ def test_model(input, model, data_test, top_k):
 
             print ('***************Testing************')
             model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)  # to be added
-            scores = model.evaluate (X_coord_test, y_test)
-            print ("############ ----------------------------- ")
+            #scores = model.evaluate (X_coord_test, y_test)
+            #print ("############ ----------------------------- ")
 
-            print ("Test results", model.metrics_names, scores)
+            #print ("Test results", model.metrics_names, scores)
 
             # top_k = [1, 5, 10]
             #top_k = np.arange (1, 51, 1)
             accuracy_top_k = []
             process_time = []
             index_predict = []
-            for i in range (len (top_k)):
-                model_metrics = [metrics.CategoricalAccuracy (), metrics.TopKCategoricalAccuracy (k=top_k [i])]
-                model.compile (loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
+            for i in range(len(top_k)):
+                model_metrics = [metrics.CategoricalAccuracy(), metrics.TopKCategoricalAccuracy(k=top_k[i])]
+                model.compile(loss=categorical_crossentropy, optimizer=opt, metrics=model_metrics)
                 # model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)
 
                 ### Testing
-                star_test = time.process_time_ns ()
-                out = model.evaluate (X_coord_test, y_test)
-                end_test = time.process_time_ns ()
+                star_test = time.process_time_ns()
+                out = model.evaluate(X_coord_test, y_test)
+                end_test = time.process_time_ns()
                 delta = end_test - star_test
-                accuracy_top_k.append (out [2])
-                process_time.append (delta)
-                print ("top-k: ", top_k [i])
+                accuracy_top_k.append(out[2])
+                process_time.append(delta)
 
-            print ('top-k = ', top_k)
-            print ("Acuracy =", accuracy_top_k)
-            print ("process time: ", process_time)
+            print('top-k = ', top_k)
+            print("Acuracy =", accuracy_top_k)
+            print("process time: ", process_time)
 
             '''
             print ('usando o metodo predict: ')
@@ -712,9 +716,10 @@ def test_model(input, model, data_test, top_k):
             print ('score top-1: ', score)
             '''
 
-    df_results_top_k = pd.DataFrame({"Top-K": top_k,
-                                     "Acuracia": accuracy_top_k,
-                                     "Test Time": process_time})
+    df_results_top_k = pd.DataFrame({"top-k": top_k,
+                                     "score": accuracy_top_k,
+                                     "test_time": process_time,
+                                     "samples_tested": y_test.shape[0]})
     return df_results_top_k
 
 def beam_selection_Batool(input,
@@ -723,9 +728,17 @@ def beam_selection_Batool(input,
                           data_test,
                           num_classes):
 
+
+
     model = model_configuration(input, data_train, data_validation, data_test, num_classes)
     trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation)
     df_results_top_k = test_model(input, model, data_test, top_k)
+
+    df_results_top_k['trainning_process_time'] = trainning_process_time
+    df_results_top_k['samples_trainning'] = samples_shape[0]
+
+    return df_results_top_k
+
 
 def read_all_data():
 
@@ -803,7 +816,7 @@ def read_all_data():
         TrainData = pd.DataFrame({"EpisodeID": train_data['EpisodeID'],
                                   "coord": dataTrain})
     '''
-    return data_for_train, data_for_validation, data_for_test
+    return data_for_train, data_for_validation, data_for_test, num_classes
 
 
 def get_index_beams():
@@ -831,20 +844,20 @@ def prepare_coord_for_trainning(data, samples):
 
     return coord
 
-def prepare_coord_test_for_simulation(data, episodio_for_test):
+def prepare_coord_for_test(data, episodio_for_test):
     coord_x = np.vstack(data[data['EpisodeID'] == episodio_for_test]['x'].tolist())
     coord_y = np.vstack(data[data['EpisodeID'] == episodio_for_test]['y'].tolist())
     coord = np.concatenate((coord_x, coord_y), axis=1).reshape(len(coord_x),2,1)
     return coord
 
-def prepare_data_for_simulation(label_input_type):
+def fit_fixed_window_top_k(label_input_type):
     #data_train, data_validation, data_test, num_classes = prepare_data(input)
     #y_train, y_validation, y_test, num_classes = get_index_beams()
 
     nro_of_episodes = 2000
     episodes_for_train = 2086
 
-    data_for_train, data_for_validation, s009_data = read_all_data()
+    data_for_train, data_for_validation, s009_data, num_classes = read_all_data()
 
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
@@ -870,24 +883,34 @@ def prepare_data_for_simulation(label_input_type):
         input_train = [lidar_train, coord_train]
         input_validation = [lidar_validation, coord_validation]
 
+    df_all_results_top_k = pd.DataFrame()
 
     for i in range(len(episode_for_test)):
         if i in s009_data['EpisodeID'].tolist():
             label_test = s009_data[s009_data['EpisodeID'] == i]['beam'].tolist()
             if label_input_type == 'coord':
-                input_test = prepare_coord_test_for_simulation(data=s009_data, episodio_for_test=i)
+                input_test = prepare_coord_for_test(data=s009_data, episodio_for_test=i)
 
             elif label_input_type == 'lidar':
                 input_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
                                                                                                         20, 200, 10)
             elif label_input_type == 'lidar_coord':
-                coord_test = prepare_coord_test_for_simulation(data=s009_data, episodio_for_test=i)
+                coord_test = prepare_coord_for_test(data=s009_data, episodio_for_test=i)
                 lidar_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
                                                                                                         20, 200, 10)
                 input_test = [lidar_test, coord_test]
 
+            df_results_top_k = beam_selection_Batool(input=label_input_type,
+                                                     data_train=[input_train, label_train],
+                                                     data_validation=[input_validation, label_validation],
+                                                     data_test=[input_test, label_test],
+                                                     num_classes=num_classes)
 
-                a =0
+            df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
+    path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
+    df_all_results_top_k.to_csv(path_result + 'scores_with_fixed_window_top_k.csv', index=False)
+
+    a =0
 
 
 
@@ -895,11 +918,11 @@ def prepare_data_for_simulation(label_input_type):
 
 
 
-    a=0
+
 
 
 print("online learning Batool...")
-input = 'lidar_coord'
+input = 'coord'
 top_k = [1, 5, 10]
 
 
@@ -907,10 +930,9 @@ top_k = [1, 5, 10]
 
 
 
-prepare_data_for_simulation(input)
-data_train, data_validation, data_test, num_classes = prepare_data(input)
+fit_fixed_window_top_k(input)
+#data_train, data_validation, data_test, num_classes = prepare_data(input)
 
-beam_selection_Batool(input, data_train, data_validation, data_test, num_classes)
+#beam_selection_Batool(input, data_train, data_validation, data_test, num_classes)
 
 
-a=0
