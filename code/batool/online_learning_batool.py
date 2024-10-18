@@ -1,7 +1,11 @@
 import os
 import time
 import random
+
+import matplotlib.pyplot as plt
 import pandas as pd
+import warnings
+
 
 import numpy as np
 from sklearn.preprocessing import normalize
@@ -19,6 +23,8 @@ from custom_metrics import *
 #from main import open_npz
 
 
+warnings.filterwarnings("ignore")
+tf.get_logger().setLevel('ERROR')
 ############################
 # Fix the seed
 ############################
@@ -296,7 +302,7 @@ def model_configuration(input, data_train, data_validation, data_test, num_class
     elif input == 'lidar_coord':
         return model
 
-def train_model(input, model, data_train, data_validation):
+def train_model(input, model, data_train, data_validation, see_trainning_progress):
     x_train = data_train[0]
     y_train = data_train[1]
 
@@ -370,7 +376,7 @@ def train_model(input, model, data_train, data_validation):
                 print('losses in train:', hist.history['loss'])
 
         if strategy == 'one_hot':
-            print ('All shapes', X_coord_train.shape, y_train.shape, X_coord_validation.shape, y_validation.shape)
+            #print ('All shapes', X_coord_train.shape, y_train.shape, X_coord_validation.shape, y_validation.shape)
             #       X_coord_test.shape, y_test.shape)
             #model = coord_model
             model.compile(loss=categorical_crossentropy,
@@ -384,25 +390,27 @@ def train_model(input, model, data_train, data_validation):
                                    precision_m,
                                    recall_m,
                                    f1_m])
-            model.summary()
+            #model.summary()
 
             call_backs = []
             if train_or_test == 'train':
-                print('***************Training************')
+                if see_trainning_progress != 0:
+                    print('***************Training************')
                 star_trainning = time.process_time_ns ()
 
                 hist = model.fit(X_coord_train, y_train,
                                  validation_data=(X_coord_validation, y_validation),
-                                 epochs=epochs, batch_size=bs, shuffle=shuffle,
+                                 epochs=epochs, batch_size=bs, shuffle=shuffle, verbose=see_trainning_progress,
                                  callbacks=[tf.keras.callbacks.ModelCheckpoint(model_folder+'best_weights.coord.h5',
-                                                                               monitor='val_loss', verbose=1,
-                                                                               save_best_only=True,mode='auto'),
+                                                                               monitor='val_loss', verbose=see_trainning_progress,
+                                                                               save_best_only=True, mode='auto'),
                                             tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                                             patience=15, verbose=2, mode='auto')])
+                                                                             patience=15, verbose=0, mode='auto')])
 
                 end_trainning = time.process_time_ns()
                 trainning_process_time = (end_trainning - star_trainning)
                 #print("trainning Time: ", trainning_process_time)
+                '''
                 print(hist.history.keys())
                 print('val_loss',hist.history['val_loss'])
                 print('categorical_accuracy', hist.history['categorical_accuracy'],
@@ -417,6 +425,7 @@ def train_model(input, model, data_train, data_validation):
                       'val_top_10_accuracy',hist.history['val_top_10_accuracy'],
                       'val_top_25_accuracy',hist.history['val_top_25_accuracy'],
                       'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+                '''
 
     elif input == 'lidar':
         X_lidar_train = data_train[0]
@@ -493,10 +502,11 @@ def train_model(input, model, data_train, data_validation):
                       'val_top_25_accuracy',hist.history['val_top_25_accuracy'],
                       'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
-    print("trainning Time: ", trainning_process_time)
+    if see_trainning_progress != 0:
+        print("trainning Time: ", trainning_process_time)
     return trainning_process_time, data_train[0].shape
 
-def test_model(input, model, data_test, top_k):
+def test_model(input, model, data_test, top_k, see_trainning_progress):
     #    x_test = [data_test[1], data_test[0]]
     #    y_test = data_test[2]
 
@@ -646,6 +656,7 @@ def test_model(input, model, data_test, top_k):
             #print ('All shapes', X_coord_train.shape, y_train.shape, X_coord_validation.shape, y_validation.shape)
             #       X_coord_test.shape, y_test.shape)
             #model = coord_model
+            '''
             model.compile(loss=categorical_crossentropy,
                           optimizer=opt,
                           metrics=[metrics.categorical_accuracy,
@@ -657,11 +668,12 @@ def test_model(input, model, data_test, top_k):
                                    precision_m,
                                    recall_m,
                                    f1_m])
-            model.summary()
+            '''
+            #model.summary()
             call_backs = []
-
-            print ('***************Testing************')
-            model.load_weights (model_folder + 'best_weights.coord.h5', by_name=True)  # to be added
+            if see_trainning_progress != 0:
+                print('***************Testing************')
+            model.load_weights(model_folder + 'best_weights.coord.h5', by_name=True)  # to be added
             #scores = model.evaluate (X_coord_test, y_test)
             #print ("############ ----------------------------- ")
 
@@ -679,15 +691,16 @@ def test_model(input, model, data_test, top_k):
 
                 ### Testing
                 star_test = time.process_time_ns()
-                out = model.evaluate(X_coord_test, y_test)
+                out = model.evaluate(X_coord_test, y_test, verbose=see_trainning_progress)
                 end_test = time.process_time_ns()
                 delta = end_test - star_test
                 accuracy_top_k.append(out[2])
                 process_time.append(delta)
 
-            print('top-k = ', top_k)
-            print("Acuracy =", accuracy_top_k)
-            print("process time: ", process_time)
+            if see_trainning_progress != 0:
+                print('top-k = ', top_k)
+                print("Acuracy =", accuracy_top_k)
+                print("process time: ", process_time)
 
             '''
             print ('usando o metodo predict: ')
@@ -726,14 +739,17 @@ def beam_selection_Batool(input,
                           data_train,
                           data_validation,
                           data_test,
-                          num_classes):
+                          num_classes,
+                          episode,
+                          see_trainning_progress):
 
 
 
     model = model_configuration(input, data_train, data_validation, data_test, num_classes)
-    trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation)
-    df_results_top_k = test_model(input, model, data_test, top_k)
+    trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation, see_trainning_progress)
+    df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
 
+    df_results_top_k['episode'] = episode
     df_results_top_k['trainning_process_time'] = trainning_process_time
     df_results_top_k['samples_trainning'] = samples_shape[0]
 
@@ -854,8 +870,11 @@ def fit_fixed_window_top_k(label_input_type):
     #data_train, data_validation, data_test, num_classes = prepare_data(input)
     #y_train, y_validation, y_test, num_classes = get_index_beams()
 
-    nro_of_episodes = 2000
+    nro_of_episodes = 300
     episodes_for_train = 2086
+    see_trainning_progress = 0 # 0: no,
+                               # 1: yes (how you an animated progress bar)
+                               # 2: yes (will just mention the number of epochs completed)
 
     data_for_train, data_for_validation, s009_data, num_classes = read_all_data()
 
@@ -885,6 +904,7 @@ def fit_fixed_window_top_k(label_input_type):
 
     df_all_results_top_k = pd.DataFrame()
 
+    print('Episode: ', end=' ', flush=True)
     for i in range(len(episode_for_test)):
         if i in s009_data['EpisodeID'].tolist():
             label_test = s009_data[s009_data['EpisodeID'] == i]['beam'].tolist()
@@ -900,13 +920,18 @@ def fit_fixed_window_top_k(label_input_type):
                                                                                                         20, 200, 10)
                 input_test = [lidar_test, coord_test]
 
+            print(i, end=' ', flush=True)
             df_results_top_k = beam_selection_Batool(input=label_input_type,
                                                      data_train=[input_train, label_train],
                                                      data_validation=[input_validation, label_validation],
                                                      data_test=[input_test, label_test],
-                                                     num_classes=num_classes)
-
+                                                     num_classes=num_classes,
+                                                     episode=i,
+                                                     see_trainning_progress= see_trainning_progress)
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
+
+            a=0
+            b=0
     path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
     df_all_results_top_k.to_csv(path_result + 'scores_with_fixed_window_top_k.csv', index=False)
 
@@ -914,25 +939,67 @@ def fit_fixed_window_top_k(label_input_type):
 
 
 
+def calculate_mean_score(data):
+    #all_score = data ['Score'].tolist ()
+    average_score = []
+    for i in range(len(data)):
+        i = i + 1
+        average_score.append(np.mean(data[0:i]))
+    return average_score
 
 
+def plot_results():
+    filename = '../../results/score/Batool/online/top_k/coord/fixed_window/scores_with_fixed_window_top_k.csv'
+    all_csv_data = pd.read_csv(filename)
 
+    metric = 'score' #'time_trainning'
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
 
+    if metric == 'score':
+        pos_x = [10, 50, 100, 150, 200, 250, 300]
+        for i in range(len(top_k)):
+            top_1 = all_csv_data[all_csv_data['top-k'] == top_k[i]]
+            all_score_top_1 = top_1['score']
+            mean_accum_top_1 = calculate_mean_score(all_score_top_1)
+
+            plt.plot(top_1['episode'], mean_accum_top_1, '.', color=color[i],
+                     label='Top-'+str(top_k[i]))
+            plt.text(pos_x[i], 0.3,
+                     str(np.round(np.mean(mean_accum_top_1), 3)),
+                     fontsize=8, color=color[i])
+
+        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.ylabel ('Accumulative score', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.title ('Beam Selection using MPL with Coord \n Reference: Batool',
+                   fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.legend(ncol=3, loc='lower right')
+        plt.show()
+
+    elif metric == 'time_trainning':
+        top_1 = all_csv_data[all_csv_data['top-k'] == 1]
+        trainning_time = top_1['trainning_process_time']*1e-9
+        plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
+        plt.text (200, 80, 'Mean: '+str(np.round(np.mean(trainning_time), 3)),
+                  fontsize=12)
+        plt.xlabel('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.ylabel('Trainning Time [s]', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.title('Beam Selection using MPL with Coord \n Reference: Batool',
+                  fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.legend()
+        plt.show()
 
 
 
 print("online learning Batool...")
 input = 'coord'
-top_k = [1, 5, 10]
-
-
-#prepare_data(input)
+top_k = [1, 5, 10, 15, 20, 25, 30]
 
 
 
 fit_fixed_window_top_k(input)
-#data_train, data_validation, data_test, num_classes = prepare_data(input)
 
-#beam_selection_Batool(input, data_train, data_validation, data_test, num_classes)
+#plot_results()
+a=0
 
 
