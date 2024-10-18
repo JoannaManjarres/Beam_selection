@@ -935,7 +935,97 @@ def fit_fixed_window_top_k(label_input_type):
     path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
     df_all_results_top_k.to_csv(path_result + 'scores_with_fixed_window_top_k.csv', index=False)
 
-    a =0
+def fit_sliding_window_top_k(label_input_type,
+                             nro_of_episodes,
+                             window_size,
+                             s008_data,
+                             s009_data):
+
+    episode_for_test = np.arange(0, nro_of_episodes, 1)
+    start_index_s009 = 0
+    nro_episodes_s008 = 2085
+
+    for i in range(len(episode_for_test)):
+    #for i in tqdm(range(len(episode_for_test))):
+        if i in s009_data['Episode'].tolist():
+            if i == 0:
+                start_index_s008 = nro_episodes_s008 - window_size
+                input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
+                input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+            else:
+                start_index_s008 = (nro_episodes_s008 - window_size)+i
+                if start_index_s008 < nro_episodes_s008:
+                    start_index_s009 = 0
+                    end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
+
+                    input_train_s008, label_train_s008 = extract_training_data_from_s008(s008_data,
+                                                                                         start_index_s008,
+                                                                                         label_input_type)
+                    input_train_s009, label_train_s009 = extract_training_data_from_s009(s009_data,
+                                                                                         start_index_s009,
+                                                                                         end_index_s009,
+                                                                                         label_input_type)
+                    input_train = input_train_s008 + input_train_s009
+                    label_train = label_train_s008 + label_train_s009
+
+                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+
+                else:
+                    end_index_s009 = start_index_s009 + window_size
+                    input_train, label_train = extract_training_data_from_s009(s009_data,
+                                                                               start_index_s009,
+                                                                               end_index_s009,
+                                                                               label_input_type)
+                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                    start_index_s009 += 1
+
+
+
+def extract_training_data_from_s008(s008_data, start_index, input_type):
+    initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
+    label_train = initial_data_for_trainning ['index_beams'].tolist ()
+    input_train = []
+
+    if input_type == 'coord':
+        input_train = initial_data_for_trainning ['encoding_coord'].tolist ()
+    elif input_type == 'lidar':
+        input_train = initial_data_for_trainning ['lidar'].tolist ()
+    elif input_type == 'lidar_coord':
+        input_train = initial_data_for_trainning ['lidar_coord'].tolist ()
+    else:
+        print('error: deve especificar o tipo de entrada')
+
+    return input_train, label_train
+def extract_training_data_from_s009(s009_data, start_index, end_index, input_type):
+    data_for_trainnig = s009_data.loc[(s009_data['Episode'] >= start_index) & (s009_data['Episode'] < end_index)]
+
+    label_train = data_for_trainnig['index_beams'].tolist()
+
+    input_train = []
+    if input_type == 'coord':
+        input_train = data_for_trainnig['encoding_coord'].tolist()
+    elif input_type == 'lidar':
+        input_train = data_for_trainnig['lidar'].tolist()
+    elif input_type == 'lidar_coord':
+        input_train = data_for_trainnig['lidar_coord'].tolist()
+
+    return input_train, label_train
+def extract_test_data_from_s009(episode, label_input_type, s009_data):
+    label_test = s009_data [s009_data ['Episode'] == episode] ['index_beams'].tolist ()
+
+    input_test = []
+
+    if label_input_type == 'coord':
+        input_test = s009_data [s009_data ['Episode'] == episode] ['encoding_coord'].tolist ()
+    elif label_input_type == 'lidar':
+        input_test = s009_data [s009_data ['Episode'] == episode] ['lidar'].tolist ()
+    elif label_input_type == 'lidar_coord':
+        input_test = s009_data [s009_data ['Episode'] == episode] ['lidar_coord'].tolist ()
+    else:
+        print ('error: deve especificar o tipo de entrada')
+
+    return input_test, label_test
+
 
 
 
@@ -946,8 +1036,6 @@ def calculate_mean_score(data):
         i = i + 1
         average_score.append(np.mean(data[0:i]))
     return average_score
-
-
 def plot_results():
     filename = '../../results/score/Batool/online/top_k/coord/fixed_window/scores_with_fixed_window_top_k.csv'
     all_csv_data = pd.read_csv(filename)
