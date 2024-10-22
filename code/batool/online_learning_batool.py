@@ -870,7 +870,7 @@ def fit_fixed_window_top_k(label_input_type):
     #data_train, data_validation, data_test, num_classes = prepare_data(input)
     #y_train, y_validation, y_test, num_classes = get_index_beams()
 
-    nro_of_episodes = 300
+    nro_of_episodes = 2000
     episodes_for_train = 2086
     see_trainning_progress = 0 # 0: no,
                                # 1: yes (how you an animated progress bar)
@@ -940,6 +940,8 @@ def fit_sliding_window_top_k(label_input_type,
                              window_size,
                              s008_data,
                              s009_data):
+
+    data_for_train, data_for_validation, s009_data, num_classes = read_all_data ()
 
     episode_for_test = np.arange(0, nro_of_episodes, 1)
     start_index_s009 = 0
@@ -1079,13 +1081,26 @@ def plot_results():
 
 
 
-print("online learning Batool...")
+#print("online learning Batool...")
 input = 'coord'
 top_k = [1, 5, 10, 15, 20, 25, 30]
 
 
+#print(tf.__file__)
+#import keras
+#print(keras.__version__)
 
-fit_fixed_window_top_k(input)
+
+try: from pip._internal.operations import freeze
+except ImportError: # pip < 10.0
+    from pip.operations import freeze
+
+pkgs = freeze.freeze()
+for pkg in pkgs: print(pkg)
+#with open("requirements.txt", "a") as arquivo:
+	    #arquivo.write(pkg)
+
+#fit_fixed_window_top_k(input)
 
 #plot_results()
 a=0
