@@ -867,11 +867,11 @@ def prepare_coord_for_test(data, episodio_for_test):
     coord = np.concatenate((coord_x, coord_y), axis=1).reshape(len(coord_x),2,1)
     return coord
 
-def fit_fixed_window_top_k(label_input_type):
+def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
     #data_train, data_validation, data_test, num_classes = prepare_data(input)
     #y_train, y_validation, y_test, num_classes = get_index_beams()
 
-    nro_of_episodes = 2000
+    nro_of_episodes = nro_of_episodes_for_test
     episodes_for_train = 2086
     see_trainning_progress = 0 # 0: no,
                                # 1: yes (how you an animated progress bar)
@@ -1096,9 +1096,10 @@ def main():
 
 
 
-    fit_fixed_window_top_k(input)
+    fit_fixed_window_top_k(input, nro_of_episodes_for_test=5)
 
     #plot_results()
-a=0
+
+main()
 
 
