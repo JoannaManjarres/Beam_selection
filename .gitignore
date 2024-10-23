@@ -13,5 +13,7 @@ venv/
 /code/batool/models/best_weights.lidar.h5
 /code/batool/models/best_weights.coord_lidar.h5
 
+code/requirements.txt
+requirements.txt
 
 

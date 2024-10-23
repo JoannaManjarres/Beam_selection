@@ -1705,7 +1705,7 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
         path_result + 'trainning_time_with_std_fixed_window_top_k.csv', index=False)
 
 
-def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
+def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type, rodada):
     preprocess_resolution = 16
     th = 0.15
     all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
@@ -1842,38 +1842,41 @@ def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type):
         average_score.append (np.mean (all_score [0:i]))
 
     path_result = '../results/score/Wisard/online/' + label_input_type + '/fixed_window/'
-    # plt.plot (episode_for_test, average_score, 'o-', label='Cumulative average accuracy')
-    plt.plot (all_episodes, all_score, 'o--', color='red', label='Accuracy per episode')
-    plt.plot (all_episodes, average_score, 'o-', color='blue', label='Cumulative average accuracy')
+    plot=False
+    if plot:
+        # plt.plot (episode_for_test, average_score, 'o-', label='Cumulative average accuracy')
+        plt.plot (all_episodes, all_score, 'o--', color='red', label='Accuracy per episode')
+        plt.plot (all_episodes, average_score, 'o-', color='blue', label='Cumulative average accuracy')
 
-    plt.xlabel ('Episode')
-    plt.ylabel ('Accuracy')
-    plt.legend (loc='lower right', bbox_to_anchor=(1.04, 0))
-    plt.title ('Beam selection using WiSARD with ' + label_input_type + ' in fixed window')
-    #plt.savefig (path_result + str(rodada) +'score_fixed_window.png')
-    plt.savefig (path_result +  'score_fixed_window.png')
-    # plt.show ()
-    plt.close ()
+        plt.xlabel ('Episode')
+        plt.ylabel ('Accuracy')
+        plt.legend (loc='lower right', bbox_to_anchor=(1.04, 0))
+        plt.title ('Beam selection using WiSARD with ' + label_input_type + ' in fixed window')
+        #plt.savefig (path_result + str(rodada) +'score_fixed_window.png')
+        plt.savefig (path_result +  'score_fixed_window.png')
+        # plt.show ()
+        plt.close ()
 
-    plt.plot (all_episodes, all_trainning_time, 'o-', color='green')
-    plt.xlabel ('Episode')
-    plt.ylabel ('Trainning Time')
-    plt.title ('Trainning Time using fit with fixed window')
-    plt.savefig (path_result + 'time_train_fixed_window.png')
-    plt.close ()
+        plt.plot (all_episodes, all_trainning_time, 'o-', color='green')
+        plt.xlabel ('Episode')
+        plt.ylabel ('Trainning Time')
+        plt.title ('Trainning Time using fit with fixed window')
+        plt.savefig (path_result + 'time_train_fixed_window.png')
+        plt.close ()
 
-    plt.plot(all_episodes, all_test_time, 'o-', color='blue')
-    plt.xlabel('Episode')
-    plt.ylabel('Test Time')
-    plt.title('Test Time using fit with fixed window')
-    plt.savefig(path_result + 'time_test_fixed_window.png')
-    plt.close()
+        plt.plot(all_episodes, all_test_time, 'o-', color='blue')
+        plt.xlabel('Episode')
+        plt.ylabel('Test Time')
+        plt.title('Test Time using fit with fixed window')
+        plt.savefig(path_result + 'time_test_fixed_window.png')
+        plt.close()
 
     headerList = ['Episode', 'Score', 'Trainning Time', 'Test Time', 'Samples Train', 'Samples Test']
     #headerList = ['Episode', 'Score', 'Trainning Time', 'Trainning Time perf_counter', 'Trainning Time process_time',
     #              'Test Time', 'Test Time perf_counter', 'Test Time process_time',  'Samples Train', 'Samples Test']
 
-    with open (path_result  +'all_results_fixed_window.csv', 'w') as f:
+    print('vou guardar ...')
+    with open (path_result +str(rodada) +'_all_results_fixed_window.csv', 'w') as f:
         writer_results = csv.writer (f, delimiter=',')
         writer_results.writerow (headerList)
         writer_results.writerows (zip (all_episodes,all_score,
@@ -2410,7 +2413,7 @@ def print_of_report_input(input_type, s008_data, s009_data):
         print ('| TEST  |\t - \t |\t  -   |\t  ', data_lidar_coord_size_test, ' \t|', data_beams_test, '  |')
         print ('+------------------------------------------------+')
 def simulation_of_online_learning_top_k(input_type):
-    eposodies_for_test = 2000
+    eposodies_for_test = 2
     episodes_for_train = 2086
 
     print ('+------------------------------------------------+')
@@ -2433,8 +2436,8 @@ def simulation_of_online_learning_top_k(input_type):
     print('|----------------------------|')
 
 
-
-    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
+    rodada = 1
+    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data, rodada)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
@@ -2462,6 +2465,58 @@ def simulation_of_online_learning_top_k(input_type):
             #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
             plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
+def read_file_results_fixed_window(input_type):
+    path_result = '../results/score/Wisard/online/'
+    path_result_fixed_window = path_result + input_type + '/fixed_window/'
+
+    file_0 = pd.read_csv (path_result_fixed_window + '0_all_results_fixed_window.csv')
+    file_1 = pd.read_csv (path_result_fixed_window + '1_all_results_fixed_window.csv')
+    file_2 = pd.read_csv (path_result_fixed_window + '2_all_results_fixed_window.csv')
+    file_3 = pd.read_csv (path_result_fixed_window + '3_all_results_fixed_window.csv')
+    file_4 = pd.read_csv (path_result_fixed_window + '4_all_results_fixed_window.csv')
+    file_5 = pd.read_csv (path_result_fixed_window + '5_all_results_fixed_window.csv')
+    file_6 = pd.read_csv (path_result_fixed_window + '6_all_results_fixed_window.csv')
+    file_7 = pd.read_csv (path_result_fixed_window + '7_all_results_fixed_window.csv')
+    file_8 = pd.read_csv (path_result_fixed_window + '8_all_results_fixed_window.csv')
+    file_9 = pd.read_csv (path_result_fixed_window + '9_all_results_fixed_window.csv')
+
+
+
+    all_data = pd.DataFrame({'file_0': file_0['Trainning Time'].tolist(),
+                             'file_1': file_1['Trainning Time'].tolist(),
+                             'file_2': file_2['Trainning Time'].tolist(),
+                             'file_3': file_3['Trainning Time'].tolist(),
+                             'file_4': file_4['Trainning Time'].tolist(),
+                             'file_5': file_5['Trainning Time'].tolist(),
+                             'file_6': file_6['Trainning Time'].tolist(),
+                             'file_7': file_7['Trainning Time'].tolist(),
+                             'file_8': file_8['Trainning Time'].tolist(),
+                             'file_9': file_9['Trainning Time'].tolist()})
+
+    mean = np.mean(all_data.to_numpy(), axis=1)
+    std = np.std(all_data.to_numpy(), axis=1)
+
+
+    all_data['mean'] = mean
+    all_data['std'] = std
+    all_data['episode'] = file_0['Episode']
+
+    plt.plot(all_data['episode'], all_data['mean']*1e-9, 'o-', color='olive', marker=',')
+    plt.fill_between(all_data['episode'],
+                     all_data['mean']*1e-9 + all_data['std']*1e-9,
+                     all_data['mean']*1e-9 - all_data['std']*1e-9,
+                     color='olive', alpha=0.3)
+    plt.title('Beam selection using WiSARD with \n'+input_type+' in online learning [fixed window]')
+    plt.ylabel('Trainning Time [s]')
+    plt.xlabel('Episode')
+    #plt.show()
+    plt.savefig(path_result_fixed_window + 'time_trainning_comparation_with_std.png', dpi=300)
+
+    all_data.to_csv(path_result_fixed_window + 'all_data_[mean_std]_fixed_window.csv', index=False)
+    a=0
+
+
+
 eposodies_for_test = 2000
 episodes_for_train = 2086
 
@@ -2470,11 +2525,19 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
+input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 
+read_file_results_fixed_window(input_type)
 #simulation_of_online_learning_top_k(input_type)
 
-plot_std = True
+for rodada in range(10):
+    print('Rodada: ', rodada)
+    fit_fixed_window(nro_of_episodes_test=2000,
+                     nro_of_episodes_train=2086,
+                     input_type=input_type,
+                     rodada=rodada)
+
+plot_std = False
 if plot_std:
     top_k = [1, 5, 10, 15, 20, 25, 30]
     #top_k =[1, 5, 10]
