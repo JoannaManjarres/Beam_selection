@@ -747,6 +747,7 @@ def beam_selection_Batool(input,
 
     model = model_configuration(input, data_train, data_validation, data_test, num_classes)
     trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation, see_trainning_progress)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
     df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
 
     df_results_top_k['episode'] = episode
@@ -1079,30 +1080,25 @@ def plot_results():
         plt.legend()
         plt.show()
 
+def main():
+
+    print("+-------------------------------------"
+          "\n|    online learning - Batool "
+          "\n|          Fixed window"
+          "\n+----------------------------------")
+    input = 'coord'
+    top_k = [1, 5, 10, 15, 20, 25, 30]
 
 
-#print("online learning Batool...")
-input = 'coord'
-top_k = [1, 5, 10, 15, 20, 25, 30]
+    #print(tf.__file__)
+    #import keras
+    #print(keras.__version__)
 
 
-#print(tf.__file__)
-#import keras
-#print(keras.__version__)
 
+    fit_fixed_window_top_k(input)
 
-try: from pip._internal.operations import freeze
-except ImportError: # pip < 10.0
-    from pip.operations import freeze
-
-pkgs = freeze.freeze()
-for pkg in pkgs: print(pkg)
-#with open("requirements.txt", "a") as arquivo:
-	    #arquivo.write(pkg)
-
-#fit_fixed_window_top_k(input)
-
-#plot_results()
+    #plot_results()
 a=0
 
 
