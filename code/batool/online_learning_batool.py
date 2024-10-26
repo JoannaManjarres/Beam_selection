@@ -453,7 +453,8 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                 print('losses in train:', hist.history['loss'])
 
         if strategy == 'one_hot':
-            print('All shapes', X_lidar_train.shape, y_train.shape, X_lidar_validation.shape, y_validation.shape)
+            if see_trainning_progress != 0:
+                print('All shapes', X_lidar_train.shape, y_train.shape, X_lidar_validation.shape, y_validation.shape)
             #,X_lidar_test.shape,y_test.shape)
             #model = lidar_model
             model.compile(loss=categorical_crossentropy,
@@ -465,9 +466,11 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                    top_25_accuracy,
                                    top_50_accuracy,
                                    precision_m, recall_m, f1_m])
-            model.summary()
+            if see_trainning_progress != 0:
+                model.summary()
             if train_or_test == 'train':
-                print('***************Training************')
+                if see_trainning_progress != 0:
+                    print('***************Training************')
                 star_trainning = time.process_time_ns ()
                 hist = model.fit(X_lidar_train,
                                  y_train,
@@ -475,32 +478,37 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                  epochs=epochs,
                                  batch_size=bs,
                                  shuffle=shuffle,
+                                 verbose=0,
                                  callbacks=[tf.keras.callbacks.ModelCheckpoint(model_folder+'best_weights.lidar.h5',
                                                                                monitor='val_loss',
-                                                                               verbose=2,
+                                                                               verbose=0, #2,
                                                                                save_best_only=True,mode='auto'),
                                             tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                                              patience=15,
-                                                                             verbose=2,
+                                                                             verbose=0, #2,
                                                                              mode='auto')])
                 end_trainning = time.process_time_ns()
                 trainning_process_time = (end_trainning - star_trainning)
-                #print("trainning Time: ", trainning_process_time)
-                print(hist.history.keys())
-                print('loss',hist.history['loss'],
-                      'val_loss',hist.history['val_loss'],
-                      'categorical_accuracy', hist.history['categorical_accuracy'],
-                      'top_2_accuracy',hist.history['top_2_accuracy'],
-                      'top_5_accuracy',hist.history['top_5_accuracy'],
-                      'top_10_accuracy', hist.history['top_10_accuracy'],
-                      'top_25_accuracy',hist.history['top_25_accuracy'],
-                      'top_50_accuracy',hist.history['top_50_accuracy'],
-                      'val_categorical_accuracy',hist.history['val_categorical_accuracy'],
-                      'val_top_2_accuracy',hist.history['val_top_2_accuracy'],
-                      'val_top_5_accuracy',hist.history['val_top_5_accuracy'],
-                      'val_top_10_accuracy',hist.history['val_top_10_accuracy'],
-                      'val_top_25_accuracy',hist.history['val_top_25_accuracy'],
-                      'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+                if see_trainning_progress != 0:
+                    print("trainning Time: ", trainning_process_time)
+                    print(hist.history.keys())
+                if see_trainning_progress != 0:
+                    print('loss',hist.history['loss'],
+                          'val_loss',hist.history['val_loss'],
+                          'categorical_accuracy', hist.history['categorical_accuracy'],
+                          'top_2_accuracy',hist.history['top_2_accuracy'],
+                          'top_5_accuracy',hist.history['top_5_accuracy'],
+                          'top_10_accuracy', hist.history['top_10_accuracy'],
+                          'top_25_accuracy',hist.history['top_25_accuracy'],
+                          'top_50_accuracy',hist.history['top_50_accuracy'],
+                          'val_categorical_accuracy',hist.history['val_categorical_accuracy'],
+                          'val_top_2_accuracy',hist.history['val_top_2_accuracy'],
+                          'val_top_5_accuracy',hist.history['val_top_5_accuracy'],
+                          'val_top_10_accuracy',hist.history['val_top_10_accuracy'],
+                          'val_top_25_accuracy',hist.history['val_top_25_accuracy'],
+                          'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+
+
 
     if see_trainning_progress != 0:
         print("trainning Time: ", trainning_process_time)
@@ -590,15 +598,15 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
                                    top_25_accuracy,
                                    top_50_accuracy,
                                    precision_m, recall_m, f1_m])
-            model.summary()
+            #model.summary()
 
-
-            print ('***************Testing************')
+            if see_trainning_progress != 0:
+                print ('***************Testing************')
             model.load_weights (model_folder + 'best_weights.lidar.h5', by_name=True)  # to be added
             scores = model.evaluate (X_lidar_test, y_test)
-            print ("############ ----------------------------- ")
+            #print ("############ ----------------------------- ")
 
-            print ("Test results", model.metrics_names, scores)
+            #print ("Test results", model.metrics_names, scores)
 
             #top_k = [1, 5, 10]
             # top_k = np.arange (1, 51, 1)
@@ -617,11 +625,12 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
                 delta = end_test - star_test
                 accuracy_top_k.append (out [2])
                 process_time.append (delta)
-                print ("top-k: ", top_k [i])
+                #print ("top-k: ", top_k [i])
 
-            print ('top-k = ', top_k)
-            print ("Acuracy =", accuracy_top_k)
-            print ("process time: ", process_time)
+            if see_trainning_progress != 0:
+                print ('top-k = ', top_k)
+                print ("Acuracy =", accuracy_top_k)
+                print ("process time: ", process_time)
 
             '''
             all_index_predict = (model.predict (X_lidar_test, verbose=1))
@@ -888,7 +897,7 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
         input_validation = prepare_coord_for_trainning(data_for_validation, 1960)
 
     elif label_input_type == 'lidar':
-        print('Beam selection using ' + input)
+        #print('Beam selection using ' + label_input_type)
         input_train = np.array(data_for_train["lidar"].tolist()).reshape(9234, 20, 200, 10)
         input_validation = np.array(data_for_validation["lidar"].tolist()).reshape(1960, 20, 200, 10)
 
@@ -1040,15 +1049,15 @@ def calculate_mean_score(data):
         average_score.append(np.mean(data[0:i]))
     return average_score
 def plot_results():
-    filename = '../../results/score/Batool/online/top_k/coord/fixed_window/scores_with_fixed_window_top_k.csv'
+    filename = '../../results/score/Batool/online/top_k/coord/fixed_window/servidor/scores_with_fixed_window_top_k.csv'
     all_csv_data = pd.read_csv(filename)
 
-    metric = 'score' #'time_trainning'
+    metric = 'time_trainning' #'score'
     top_k = [1, 5, 10, 15, 20, 25, 30]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
 
     if metric == 'score':
-        pos_x = [10, 50, 100, 150, 200, 250, 300]
+        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
         for i in range(len(top_k)):
             top_1 = all_csv_data[all_csv_data['top-k'] == top_k[i]]
             all_score_top_1 = top_1['score']
@@ -1070,7 +1079,9 @@ def plot_results():
     elif metric == 'time_trainning':
         top_1 = all_csv_data[all_csv_data['top-k'] == 1]
         trainning_time = top_1['trainning_process_time']*1e-9
+        mean_accum_time = calculate_mean_score(trainning_time)
         plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
+        plt.plot(top_1['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
         plt.text (200, 80, 'Mean: '+str(np.round(np.mean(trainning_time), 3)),
                   fontsize=12)
         plt.xlabel('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
@@ -1080,13 +1091,16 @@ def plot_results():
         plt.legend()
         plt.show()
 
-def main():
+    a=0
 
+def main():
+    input = 'lidar'
     print("+-------------------------------------"
           "\n|    online learning - Batool "
           "\n|          Fixed window"
+          "\n|            " + input +
           "\n+----------------------------------")
-    input = 'coord'
+
     top_k = [1, 5, 10, 15, 20, 25, 30]
 
 
@@ -1096,7 +1110,7 @@ def main():
 
 
 
-    fit_fixed_window_top_k(input, nro_of_episodes_for_test=5)
+    fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
 
     #plot_results()
 
