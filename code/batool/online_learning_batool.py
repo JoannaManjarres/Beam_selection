@@ -465,7 +465,8 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                    top_10_accuracy,
                                    top_25_accuracy,
                                    top_50_accuracy,
-                                   precision_m, recall_m, f1_m])
+                                   precision_m, recall_m, f1_m],
+                          verbose=0)
             if see_trainning_progress != 0:
                 model.summary()
             if train_or_test == 'train':
