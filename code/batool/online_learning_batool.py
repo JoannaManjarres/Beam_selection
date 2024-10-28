@@ -917,14 +917,17 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
     print('Episode: ', end=' ', flush=True)
     for i in range(len(episode_for_test)):
         if i in s009_data['EpisodeID'].tolist():
-            label_test = s009_data[s009_data['EpisodeID'] == i]['beam'].tolist()
+            #label_test = np.array(s009_data[s009_data['EpisodeID'] == i]['beam'].tolist()) #se funciona, colocar um na if lidar con o np.array e um no coord sem o np.array
             if label_input_type == 'coord':
+                label_test = s009_data [s009_data ['EpisodeID'] == i] ['beam'].tolist()
                 input_test = prepare_coord_for_test(data=s009_data, episodio_for_test=i)
 
             elif label_input_type == 'lidar':
+                label_test = np.array (s009_data [s009_data ['EpisodeID'] == i] ['beam'].tolist ())
                 input_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
                                                                                                         20, 200, 10)
             elif label_input_type == 'lidar_coord':
+                label_test = np.array(s009_data[s009_data['EpisodeID'] == i] ['beam'].tolist ())
                 coord_test = prepare_coord_for_test(data=s009_data, episodio_for_test=i)
                 lidar_test = np.array(s009_data[s009_data['EpisodeID'] == i]['lidar'].tolist()).reshape(len(label_test),
                                                                                                         20, 200, 10)
