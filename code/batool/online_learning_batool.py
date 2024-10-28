@@ -620,7 +620,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
 
                 ### Testing
                 star_test = time.process_time_ns ()
-                out = model.evaluate (X_lidar_test, y_test)
+                out = model.evaluate (X_lidar_test, y_test, verbose=0)
                 end_test = time.process_time_ns ()
                 delta = end_test - star_test
                 accuracy_top_k.append (out [2])
