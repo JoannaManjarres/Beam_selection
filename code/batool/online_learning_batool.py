@@ -1044,13 +1044,7 @@ def extract_test_data_from_s009(episode, label_input_type, s009_data):
 
 
 
-def calculate_mean_score(data):
-    #all_score = data ['Score'].tolist ()
-    average_score = []
-    for i in range(len(data)):
-        i = i + 1
-        average_score.append(np.mean(data[0:i]))
-    return average_score
+
 def plot_results__():
     import sys
     import os
@@ -1062,12 +1056,15 @@ def plot_results__():
     # Agora é possível importar o arquivo como um módulo
     import plot_results as plot
 
-    flag_servidor = 1
-    filename = 'scores_with_fixed_window_top_k.csv'
+    type_of_input = 'coord'
+    type_of_window = 'fixed_window'
+    flag_servidor = 3
+    filename = 'scores_with_'+type_of_window+'_top_k.csv'
     metric = 'time_trainning'  # 'score'
 
+
     if flag_servidor == 1: #servidor local
-        path = '../../results/score/Batool/online/top_k/coord/fixed_window/'
+        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/'
         servidor = 'servidor_local'
         pos_y = 70
         pos_x = [10, 50, 100, 150, 200, 250, 300]
@@ -1075,14 +1072,14 @@ def plot_results__():
         servidor = 'servidor_portugal'
         pos_y = 525
         pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        path = '../../results/score/Batool/online/top_k/coord/fixed_window/' + servidor + '/'
+        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
     elif flag_servidor == 3: #servidor land
         servidor = 'servidor_land'
         pos_y = 51
         pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        path = '../../results/score/Batool/online/top_k/coord/fixed_window/' + servidor + '/'
+        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
 
-    title = 'Beam Selection using MPL with Coord \n Reference: Batool ' + servidor
+    title = 'Beam Selection using MPL with '+type_of_input+' and '+type_of_window+'\n Reference: Batool -' + servidor
     plot.plot_results_online_learning(path=path, filename=filename,
                                       metric=metric,
                                       pos_x=pos_x, pos_y=pos_y,
