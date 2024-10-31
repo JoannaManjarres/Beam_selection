@@ -482,6 +482,51 @@ def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
     plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
     plt.close()
 
+def plot_results_online_learning(metric, pos_x, pos_y, path, title, filename):
+    import tools as tls
+    print(path)
+    print(filename)
+    all_csv_data = pd.read_csv (path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
+             'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    if metric == 'score':
+
+        for i in range (len (top_k)):
+            top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
+            all_score_top_1 = top_1 ['score']
+            mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
+
+            plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
+                      label='Top-' + str (top_k [i]))
+            plt.text (pos_x [i], 0.3,
+                      str (np.round (np.mean (mean_accum_top_1), 3)),
+                      fontsize=8, color=color [i])
+
+        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.ylabel ('Accumulative score', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.legend (ncol=3, loc='lower right')
+        plt.savefig (path + 'top-k_score.png', dpi=300)
+        plt.show ()
+
+    elif metric == 'time_trainning':
+        top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+        trainning_time = top_1 ['trainning_process_time'] * 1e-9
+        mean_accum_time = tls.calculate_mean_score (trainning_time)
+        plt.plot (top_1 ['episode'], trainning_time, marker=',', label='fixed window')
+        plt.plot (top_1 ['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
+        plt.text (np.min (mean_accum_time), pos_y,
+                  'Mean: ' + str (np.round (np.mean (trainning_time), 3)),
+                  fontsize=12, color='red')
+        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.ylabel ('Trainning Time [s]', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.legend ()
+
+        plt.savefig (path + 'trainning_time.png', dpi=300)
+        plt.show ()
 
 '''
 def test:

@@ -465,8 +465,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                    top_10_accuracy,
                                    top_25_accuracy,
                                    top_50_accuracy,
-                                   precision_m, recall_m, f1_m],
-                          verbose=0)
+                                   precision_m, recall_m, f1_m])
             if see_trainning_progress != 0:
                 model.summary()
             if train_or_test == 'train':
@@ -1052,50 +1051,43 @@ def calculate_mean_score(data):
         i = i + 1
         average_score.append(np.mean(data[0:i]))
     return average_score
-def plot_results():
-    filename = '../../results/score/Batool/online/top_k/coord/fixed_window/servidor/scores_with_fixed_window_top_k.csv'
-    all_csv_data = pd.read_csv(filename)
+def plot_results__():
+    import sys
+    import os
 
-    metric = 'time_trainning' #'score'
-    top_k = [1, 5, 10, 15, 20, 25, 30]
-    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+    # Adiciona o caminho do diretório do arquivo que você quer importar
+    #sys.path.append(os.path.abspath("../"))
+    sys.path.append("../")
 
-    if metric == 'score':
+    # Agora é possível importar o arquivo como um módulo
+    import plot_results as plot
+
+    flag_servidor = 1
+    filename = 'scores_with_fixed_window_top_k.csv'
+    metric = 'time_trainning'  # 'score'
+
+    if flag_servidor == 1: #servidor local
+        path = '../../results/score/Batool/online/top_k/coord/fixed_window/'
+        servidor = 'servidor_local'
+        pos_y = 70
+        pos_x = [10, 50, 100, 150, 200, 250, 300]
+    elif flag_servidor == 2: #servidor portugal
+        servidor = 'servidor_portugal'
+        pos_y = 525
         pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        for i in range(len(top_k)):
-            top_1 = all_csv_data[all_csv_data['top-k'] == top_k[i]]
-            all_score_top_1 = top_1['score']
-            mean_accum_top_1 = calculate_mean_score(all_score_top_1)
+        path = '../../results/score/Batool/online/top_k/coord/fixed_window/' + servidor + '/'
+    elif flag_servidor == 3: #servidor land
+        servidor = 'servidor_land'
+        pos_y = 51
+        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+        path = '../../results/score/Batool/online/top_k/coord/fixed_window/' + servidor + '/'
 
-            plt.plot(top_1['episode'], mean_accum_top_1, '.', color=color[i],
-                     label='Top-'+str(top_k[i]))
-            plt.text(pos_x[i], 0.3,
-                     str(np.round(np.mean(mean_accum_top_1), 3)),
-                     fontsize=8, color=color[i])
+    title = 'Beam Selection using MPL with Coord \n Reference: Batool ' + servidor
+    plot.plot_results_online_learning(path=path, filename=filename,
+                                      metric=metric,
+                                      pos_x=pos_x, pos_y=pos_y,
+                                      title=title)
 
-        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.ylabel ('Accumulative score', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.title ('Beam Selection using MPL with Coord \n Reference: Batool',
-                   fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.legend(ncol=3, loc='lower right')
-        plt.show()
-
-    elif metric == 'time_trainning':
-        top_1 = all_csv_data[all_csv_data['top-k'] == 1]
-        trainning_time = top_1['trainning_process_time']*1e-9
-        mean_accum_time = calculate_mean_score(trainning_time)
-        plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
-        plt.plot(top_1['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
-        plt.text (200, 80, 'Mean: '+str(np.round(np.mean(trainning_time), 3)),
-                  fontsize=12)
-        plt.xlabel('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.ylabel('Trainning Time [s]', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.title('Beam Selection using MPL with Coord \n Reference: Batool',
-                  fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.legend()
-        plt.show()
-
-    a=0
 
 def main():
     input = 'lidar'
@@ -1114,10 +1106,14 @@ def main():
 
 
 
-    fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+    #fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
 
-    #plot_results()
+    plot_results__()
 
 main()
+
+fit_sliding_window_top_k(label_input_type='coord',
+                         episodes_for_test=1,
+                         window_size=100)
 
 
