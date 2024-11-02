@@ -992,14 +992,13 @@ def fit_sliding_window_top_k(label_input_type,
 
 
     episode_for_test = np.arange(0, episodes_for_test, 1)
+    see_trainning_progress = 0
     start_index_s009 = 0
     nro_episodes_s008 = 1564 #from 0 to 1564
-    nro_episodes_s008_validation = 2085  #from 1565 to 2085
-    #nro_episodes_s008 = 2085
 
+    df_all_results_top_k = pd.DataFrame()
     for i in range(len(episode_for_test)):
         # for i in tqdm(range(len(episode_for_test))):
-        i=1
         if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
@@ -1023,17 +1022,18 @@ def fit_sliding_window_top_k(label_input_type,
                 if start_index_s008 < nro_episodes_s008:
                     start_index_s009 = 0
                     end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
-                    input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
+                    input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(
+                                                                                          all_dataset_s008,
                                                                                           start_index_s008,
                                                                                           label_input_type)
                     input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning(input_for_train_s008)
                     label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning(label_for_train_s008)
 
                     input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window(
-                        s009_data=s009_data,
-                        start_index=start_index_s009,
-                        end_index=end_index_s009,
-                        input_type=label_input_type)
+                                                                    s009_data=s009_data,
+                                                                    start_index=start_index_s009,
+                                                                    end_index=end_index_s009,
+                                                                    input_type=label_input_type)
                     input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning(input_for_train_s009)
                     label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning(label_for_train_s009)
 
@@ -1046,28 +1046,37 @@ def fit_sliding_window_top_k(label_input_type,
                                                                                                     s009_data)
                     input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
                     label_test = np.array(label_for_test)
-                    a = 0
+
 
 
                 else:
                     end_index_s009 = start_index_s009 + window_size
-                    input_train, label_train = tls.extract_training_data_from_s009_sliding_window(s009_data=s009_data,
+                    input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window(s009_data=s009_data,
                                                                                                    start_index=start_index_s009,
                                                                                                    end_index=end_index_s009,
                                                                                                    input_type=label_input_type)
-                    input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (input_for_train_s009)
-                    label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
+                    input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train_s009)
+                    label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
+
 
 
                     input_test, label_test = extract_test_data_from_s009 (i, label_input_type, s009_data)
                     start_index_s009 += 1
 
+            print (i, end=' ', flush=True)
+            df_results_top_k = beam_selection_Batool (input=label_input_type,
+                                                      data_train=[input_train, label_train],
+                                                      data_validation=[input_validation, label_validation],
+                                                      data_test=[input_test, label_test],
+                                                      num_classes=num_classes,
+                                                      episode=i,
+                                                      see_trainning_progress=see_trainning_progress)
+            df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
+            path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/sliding_window/window_size_var'
+            df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
 
-            df_results_wisard_top_k_with_std = beam_selection_with_confidence_interval (input_train,
-                                                                                        input_test,
-                                                                                        label_train,
-                                                                                        label_test,
-                                                                                        label_input_type)
+    a = 0
+
 
 
 def extract_training_data_from_s008(s008_data, start_index, input_type):
