@@ -999,6 +999,7 @@ def fit_sliding_window_top_k(label_input_type,
     df_all_results_top_k = pd.DataFrame()
     for i in range(len(episode_for_test)):
         # for i in tqdm(range(len(episode_for_test))):
+        #i=101
         if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
@@ -1019,6 +1020,7 @@ def fit_sliding_window_top_k(label_input_type,
 
             else:
                 start_index_s008 = (nro_episodes_s008 - window_size) + i
+                #start_index_s008 = 1565
                 if start_index_s008 < nro_episodes_s008:
                     start_index_s009 = 0
                     end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
@@ -1060,9 +1062,11 @@ def fit_sliding_window_top_k(label_input_type,
 
 
 
-                    input_test, label_test = tls.extract_test_data_from_s009_sliding_window (i,
+                    input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                              label_input_type,
                                                                                              s009_data)
+                    input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                    label_test = np.array (label_for_test)
                     start_index_s009 += 1
 
             print (i, end=' ', flush=True)
@@ -1188,7 +1192,7 @@ def plot_results__():
 
 
 def main():
-    input = 'lidar'
+    input = 'coord'
     type_of_window = 2
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1224,6 +1228,9 @@ def main():
     # print(keras.__version__)
 
 main()
+#fit_sliding_window_top_k(label_input_type='coord',
+#                                     episodes_for_test=1,
+#                                     window_size=100)
 
 
 
