@@ -1205,6 +1205,7 @@ def main():
     #fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
     window_size = [100, 500, 1000, 1500, 2000]
     for i in range(len(window_size)):
+        print('window_size:', window_size[i])
         fit_sliding_window_top_k(label_input_type='coord',
                                  episodes_for_test=2000,
                                  window_size=window_size[i])
