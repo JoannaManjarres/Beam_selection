@@ -1060,7 +1060,9 @@ def fit_sliding_window_top_k(label_input_type,
 
 
 
-                    input_test, label_test = extract_test_data_from_s009 (i, label_input_type, s009_data)
+                    input_test, label_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                             label_input_type,
+                                                                                             s009_data)
                     start_index_s009 += 1
 
             print (i, end=' ', flush=True)
@@ -1072,7 +1074,7 @@ def fit_sliding_window_top_k(label_input_type,
                                                       episode=i,
                                                       see_trainning_progress=see_trainning_progress)
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
-            path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/sliding_window/window_size_var'
+            path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/sliding_window/window_size_var/'
             df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
 
     a = 0
