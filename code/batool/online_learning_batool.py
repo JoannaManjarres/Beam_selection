@@ -799,10 +799,11 @@ def read_all_data():
 
 
 
-    data_for_train = pd.DataFrame({"EpisodeID": train_data['EpisodeID'],
+    data_for_train = pd.DataFrame({"Episode": train_data['EpisodeID'],
+                                   "coord": coord_train.tolist(),
                                    "x": coord_train[:, 0],
                                    "y": coord_train[:, 1],
-                                   "beam": y_train.tolist(),
+                                   "index_beams": y_train.tolist(),
                                    "lidar": lidar_train_reshaped.tolist()})
 
     #para recuperar a matriz original do lidar
@@ -811,11 +812,12 @@ def read_all_data():
     #data_for_train["lidar"] = lidar_train.tolist ()
 
 
-    data_for_validation = pd.DataFrame({"EpisodeID": validation_data['EpisodeID'],
+    data_for_validation = pd.DataFrame({"Episode": validation_data['EpisodeID'],
+                                        "coord": coord_validation.tolist(),
                                         "x": coord_validation[:, 0],
                                         "y": coord_validation[:, 1]})
     data_for_validation["lidar"] = lidar_validation_reshaped.tolist()
-    data_for_validation["beam"] = y_validation.tolist()
+    data_for_validation["index_beams"] = y_validation.tolist()
 
     filename = '../../data/coord/CoordVehiclesRxPerScene_s009.csv'
     all_csv_data = pd.read_csv(filename)
@@ -826,11 +828,12 @@ def read_all_data():
     coord_for_test[:, 1] = valid_data['y']
     coord_test = normalize(coord_for_test, axis=1, norm='l1')
 
-    data_for_test = pd.DataFrame({"EpisodeID": valid_data['EpisodeID'],
+    data_for_test = pd.DataFrame({"Episode": valid_data['EpisodeID'],
+                                    "coord": coord_test.tolist(),
                                     "x": coord_test[:, 0],
                                     "y": coord_test[:, 1]})
     data_for_test["lidar"] = lidar_test_reshaped.tolist()
-    data_for_test["beam"] = y_test.tolist()
+    data_for_test["index_beams"] = y_test.tolist()
 
     '''
     input = 'coord'
@@ -890,8 +893,8 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
 
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
-    label_train = np.array(data_for_train['beam'].tolist())
-    label_validation = np.array(data_for_validation['beam'].tolist())
+    label_train = np.array(data_for_train['index_beams'].tolist())
+    label_validation = np.array(data_for_validation['index_beams'].tolist())
     if label_input_type == 'coord':
         input_train = prepare_coord_for_trainning(data_for_train, 9234)
         input_validation = prepare_coord_for_trainning(data_for_validation, 1960)
@@ -948,61 +951,139 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
     path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
     df_all_results_top_k.to_csv(path_result + 'scores_with_fixed_window_top_k.csv', index=False)
 
+def sliding_prepare_coord_for_trainning(input_for_train):
+    new_form_of_input = np.zeros ((len (input_for_train), 2))
+    for i in range (len (input_for_train)):
+        new_form_of_input[i] = np.array(input_for_train [i])
+
+    size_of_input = new_form_of_input.shape
+    size_of_train = int (size_of_input [0] * 0.8)
+    train = new_form_of_input[:size_of_train]
+    input_train = train.reshape(train.shape[0], 2, 1)
+    val = new_form_of_input[size_of_train:]
+    input_validation = val.reshape(val.shape[0], 2, 1)
+
+    return input_train, input_validation
+
+def sliding_prepare_label_for_trainning(label_for_train):
+    new_form_for_label = np.array(label_for_train)
+    size_of_label = new_form_for_label.shape
+    size_of_train = int(size_of_label[0] * 0.8)
+    label_train = new_form_for_label[:size_of_train]
+    label_validation = new_form_for_label[size_of_train:]
+    return label_train, label_validation
+
 def fit_sliding_window_top_k(label_input_type,
-                             nro_of_episodes,
-                             window_size,
-                             s008_data,
-                             s009_data):
+                             episodes_for_test,
+                             window_size):
+    import sys
+    import os
 
-    data_for_train, data_for_validation, s009_data, num_classes = read_all_data ()
+    # Adiciona o caminho do diretório do arquivo que você quer importar
+    # sys.path.append(os.path.abspath("../"))
+    sys.path.append ("../")
 
-    episode_for_test = np.arange(0, nro_of_episodes, 1)
+    # Agora é possível importar o arquivo como um módulo
+    import tools as tls
+
+
+    data_for_train, data_for_validation, s009_data, num_classes = read_all_data()
+    all_dataset_s008 = pd.concat([data_for_train, data_for_validation], axis=0)
+
+
+    episode_for_test = np.arange(0, episodes_for_test, 1)
     start_index_s009 = 0
-    nro_episodes_s008 = 2085
+    nro_episodes_s008 = 1564 #from 0 to 1564
+    nro_episodes_s008_validation = 2085  #from 1565 to 2085
+    #nro_episodes_s008 = 2085
 
     for i in range(len(episode_for_test)):
-    #for i in tqdm(range(len(episode_for_test))):
+        # for i in tqdm(range(len(episode_for_test))):
+        i=1
         if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
-                input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
-                input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
+                                                                                                      start_index_s008,
+                                                                                                      label_input_type)
+
+                input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
+                label_train, label_validation = sliding_prepare_label_for_trainning(label_for_train)
+
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
+                                                                                                label_input_type,
+                                                                                                s009_data)
+
+                input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                label_test = np.array(label_for_test)
+
+
             else:
-                start_index_s008 = (nro_episodes_s008 - window_size)+i
+                start_index_s008 = (nro_episodes_s008 - window_size) + i
                 if start_index_s008 < nro_episodes_s008:
                     start_index_s009 = 0
                     end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
+                    input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
+                                                                                          start_index_s008,
+                                                                                          label_input_type)
+                    input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning(input_for_train_s008)
+                    label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning(label_for_train_s008)
 
-                    input_train_s008, label_train_s008 = extract_training_data_from_s008(s008_data,
-                                                                                         start_index_s008,
-                                                                                         label_input_type)
-                    input_train_s009, label_train_s009 = extract_training_data_from_s009(s009_data,
-                                                                                         start_index_s009,
-                                                                                         end_index_s009,
-                                                                                         label_input_type)
-                    input_train = input_train_s008 + input_train_s009
-                    label_train = label_train_s008 + label_train_s009
+                    input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window(
+                        s009_data=s009_data,
+                        start_index=start_index_s009,
+                        end_index=end_index_s009,
+                        input_type=label_input_type)
+                    input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning(input_for_train_s009)
+                    label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning(label_for_train_s009)
 
-                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+
+                    input_train = np.concatenate((input_train_s008, input_train_s009), axis=0)
+                    label_train = np.concatenate((label_train_s008, label_train_s009), axis=0)
+
+                    input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
+                                                                                                    label_input_type,
+                                                                                                    s009_data)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                    label_test = np.array(label_for_test)
+                    a = 0
+
 
                 else:
                     end_index_s009 = start_index_s009 + window_size
-                    input_train, label_train = extract_training_data_from_s009(s009_data,
-                                                                               start_index_s009,
-                                                                               end_index_s009,
-                                                                               label_input_type)
-                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                    input_train, label_train = tls.extract_training_data_from_s009_sliding_window(s009_data=s009_data,
+                                                                                                   start_index=start_index_s009,
+                                                                                                   end_index=end_index_s009,
+                                                                                                   input_type=label_input_type)
+                    input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (input_for_train_s009)
+                    label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+
+                    input_test, label_test = extract_test_data_from_s009 (i, label_input_type, s009_data)
                     start_index_s009 += 1
 
 
+            df_results_wisard_top_k_with_std = beam_selection_with_confidence_interval (input_train,
+                                                                                        input_test,
+                                                                                        label_train,
+                                                                                        label_test,
+                                                                                        label_input_type)
+
 
 def extract_training_data_from_s008(s008_data, start_index, input_type):
-    initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
-    label_train = initial_data_for_trainning ['index_beams'].tolist ()
+    initial_data_for_trainning = s008_data[s008_data['EpisodeID'] > start_index]
+    label_train = initial_data_for_trainning['beam'].tolist()
     input_train = []
 
     if input_type == 'coord':
-        input_train = initial_data_for_trainning ['encoding_coord'].tolist ()
+
+        coord_x = np.vstack(initial_data_for_trainning['x'].tolist())
+        coord_y = np.vstack(initial_data_for_trainning['y'].tolist())
+        input_train = np.concatenate((coord_x, coord_y), axis=1).reshape(len(initial_data_for_trainning), 2, 1)
+
+        #input_train = initial_data_for_trainning ['encoding_coord'].tolist ()
+
+
     elif input_type == 'lidar':
         input_train = initial_data_for_trainning ['lidar'].tolist ()
     elif input_type == 'lidar_coord':
@@ -1014,11 +1095,15 @@ def extract_training_data_from_s008(s008_data, start_index, input_type):
 def extract_training_data_from_s009(s009_data, start_index, end_index, input_type):
     data_for_trainnig = s009_data.loc[(s009_data['Episode'] >= start_index) & (s009_data['Episode'] < end_index)]
 
-    label_train = data_for_trainnig['index_beams'].tolist()
+    label_train = data_for_trainnig['beam'].tolist()
 
     input_train = []
     if input_type == 'coord':
-        input_train = data_for_trainnig['encoding_coord'].tolist()
+        coord_x = np.vstack (data_for_trainnig ['x'].tolist ())
+        coord_y = np.vstack (data_for_trainnig ['y'].tolist ())
+        input_train = np.concatenate ((coord_x, coord_y), axis=1).reshape (len (data_for_trainnig), 2, 1)
+
+        #input_train = data_for_trainnig['encoding_coord'].tolist()
     elif input_type == 'lidar':
         input_train = data_for_trainnig['lidar'].tolist()
     elif input_type == 'lidar_coord':
@@ -1026,16 +1111,21 @@ def extract_training_data_from_s009(s009_data, start_index, end_index, input_typ
 
     return input_train, label_train
 def extract_test_data_from_s009(episode, label_input_type, s009_data):
-    label_test = s009_data [s009_data ['Episode'] == episode] ['index_beams'].tolist ()
+    data_for_test = s009_data[s009_data['EpisodeID'] == episode]
+    label_test = s009_data[s009_data['EpisodeID'] == episode]['beam'].tolist()
 
     input_test = []
 
     if label_input_type == 'coord':
-        input_test = s009_data [s009_data ['Episode'] == episode] ['encoding_coord'].tolist ()
+        coord_x = np.vstack(data_for_test['x'].tolist())
+        coord_y = np.vstack(data_for_test['y'].tolist())
+        input_test = np.concatenate((coord_x, coord_y), axis=1).reshape (len (data_for_test), 2, 1)
+
+
     elif label_input_type == 'lidar':
-        input_test = s009_data [s009_data ['Episode'] == episode] ['lidar'].tolist ()
+        input_test = s009_data [s009_data ['EpisodeID'] == episode] ['lidar'].tolist ()
     elif label_input_type == 'lidar_coord':
-        input_test = s009_data [s009_data ['Episode'] == episode] ['lidar_coord'].tolist ()
+        input_test = s009_data [s009_data ['EpisodeID'] == episode] ['lidar_coord'].tolist ()
     else:
         print ('error: deve especificar o tipo de entrada')
 
@@ -1103,11 +1193,11 @@ def main():
 
 
 
-    #fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+    fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
 
-    plot_results__()
+    #plot_results__()
 
-main()
+#main()
 
 fit_sliding_window_top_k(label_input_type='coord',
                          episodes_for_test=1,
