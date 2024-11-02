@@ -37,7 +37,7 @@ random.seed(seed)
 
 def getBeamOutput(output_file):
     thresholdBelowMax = 6
-    print("Reading dataset...", output_file)
+    #print("Reading dataset...", output_file)
     output_cache_file = np.load(output_file)
     yMatrix = output_cache_file['output_classification']
 
@@ -1202,14 +1202,17 @@ def main():
 
 
 
-    fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+    #fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+    window_size = [100, 500, 1000, 1500, 2000]
+    for i in range(len(window_size)):
+        fit_sliding_window_top_k(label_input_type='coord',
+                                 episodes_for_test=2000,
+                                 window_size=window_size[i])
 
     #plot_results__()
 
-#main()
+main()
 
-fit_sliding_window_top_k(label_input_type='coord',
-                         episodes_for_test=1,
-                         window_size=100)
+
 
 
