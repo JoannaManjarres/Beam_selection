@@ -1187,30 +1187,39 @@ def plot_results__():
 
 def main():
     input = 'lidar'
+    type_of_window = 2
+        #1 = 'fixed_window'
+        #2 = 'sliding_window'
+        #3 = 'incrmental_window'
     print("+-------------------------------------"
-          "\n|    online learning - Batool "
-          "\n|          Fixed window"
-          "\n|            " + input +
+          "\n|    online learning - Batool ")
+    if type_of_window == 1 :
+        print("|          Fixed window")
+    elif type_of_window == 2 :
+        print("|          Sliding window")
+    elif type_of_window == 3 :
+        print("|          Incremental window")
+
+    print("|            " + input +
           "\n+----------------------------------")
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
 
-
-    #print(tf.__file__)
-    #import keras
-    #print(keras.__version__)
-
-
-
-    #fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
-    window_size = [100, 500, 1000, 1500, 2000]
-    for i in range(len(window_size)):
-        print('window_size:', window_size[i])
-        fit_sliding_window_top_k(label_input_type='coord',
-                                 episodes_for_test=2000,
-                                 window_size=window_size[i])
+    if type_of_window == 1:
+            fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+    elif type_of_window == 2:
+        window_size = [100, 500, 1000, 1500, 2000]
+        for i in range(len(window_size)):
+            print('window_size:', window_size[i])
+            fit_sliding_window_top_k(label_input_type='coord',
+                                     episodes_for_test=2000,
+                                     window_size=window_size[i])
 
     #plot_results__()
+
+    # print(tf.__file__)
+    # import keras
+    # print(keras.__version__)
 
 main()
 
