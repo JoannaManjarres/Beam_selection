@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import seaborn as sns
+from matplotlib.ticker import PercentFormatter
 
 
 def results_lidar_2D_binary_without_variance():
@@ -484,49 +486,87 @@ def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
 
 def plot_results_online_learning(metric, pos_x, pos_y, path, title, filename):
     import tools as tls
-    print(path)
-    print(filename)
     all_csv_data = pd.read_csv (path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
              'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
 
-    if metric == 'score':
+    for i in range (len (top_k)):
+        top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
+        all_score_top_1 = top_1 ['score']
+        mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
 
-        for i in range (len (top_k)):
-            top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
-            all_score_top_1 = top_1 ['score']
-            mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
+        plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
+                  label='Top-' + str (top_k [i]))
+        plt.text (pos_x [i], 0.3,
+                  str (np.round (np.mean (mean_accum_top_1), 3)),
+                  fontsize=8, color=color [i])
+    plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Accumulative score', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend (ncol=4, loc='lower right')
+    plt.savefig (path + 'top-k_score.png', dpi=300)
+    plt.close()
 
-            plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
-                      label='Top-' + str (top_k [i]))
-            plt.text (pos_x [i], 0.3,
-                      str (np.round (np.mean (mean_accum_top_1), 3)),
-                      fontsize=8, color=color [i])
+    top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+    trainning_time = top_1 ['trainning_process_time'] * 1e-9
+    mean_accum_time = tls.calculate_mean_score (trainning_time)
+    plt.plot (top_1 ['episode'], trainning_time, marker=',', label='fixed window')
+    plt.plot (top_1 ['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
+    plt.text (np.min (mean_accum_time), pos_y,
+              'Mean: ' + str (np.round (np.mean (trainning_time), 3)),
+              fontsize=12, color='red')
+    plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Trainning Time [s]', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend ()
+    plt.savefig (path + 'trainning_time.png', dpi=300)
+    plt.close()
 
-        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.ylabel ('Accumulative score', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.legend (ncol=3, loc='lower right')
-        plt.savefig (path + 'top-k_score.png', dpi=300)
-        plt.show ()
 
-    elif metric == 'time_trainning':
-        top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+
+def plot_histogram_of_trainning_time(path, filename, title):
+    all_csv_data = pd.read_csv (path + filename)
+
+
+    top_k = [1]#[1, 5, 10, 15, 20, 25, 30]
+    fig, ax1 = plt.subplots()
+    binwidth =20
+    for i in range(len(top_k)):
+        top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
         trainning_time = top_1 ['trainning_process_time'] * 1e-9
-        mean_accum_time = tls.calculate_mean_score (trainning_time)
-        plt.plot (top_1 ['episode'], trainning_time, marker=',', label='fixed window')
-        plt.plot (top_1 ['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
-        plt.text (np.min (mean_accum_time), pos_y,
-                  'Mean: ' + str (np.round (np.mean (trainning_time), 3)),
-                  fontsize=12, color='red')
-        plt.xlabel ('Episode', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.ylabel ('Trainning Time [s]', fontsize=12, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.title (title, fontsize=14, fontweight='bold', fontname='Myanmar Sangam MN')
-        plt.legend ()
 
-        plt.savefig (path + 'trainning_time.png', dpi=300)
-        plt.show ()
+    sns.set_style('whitegrid', {'axes.edgecolor': '.6', 'grid.color': '.6'})
+    #sns.set()
+    flag_plot = 2
+    if flag_plot == 1:
+        sns.ecdfplot (trainning_time, label='Top-' + str (top_k [i]))
+        plt.title(title+' Trainning Time with ECDF')
+        #plt.show()
+        plt.grid()
+        plt.savefig(path + 'ecdf_of_trainning_time.png', dpi=300)
+        plt.close()
+    if flag_plot == 2:
+        sns.kdeplot(trainning_time, label='kde density', shade=False)
+        ax2 = ax1.twinx()
+        plt.hist(trainning_time, bins=60, alpha=0.3, label='Top-' + str (top_k [i]))
+        ax2.set_ylabel('Counts')
+        ax1.set_xlabel('Trainning Time [s]')
+        ax1.legend(loc='upper right')
+        plt.title(title)
+        #ax2.legend (loc='upper right')
+        #plt.show()
+        plt.savefig (path + 'histogram_of_trainning_time.png', dpi=300)
+        plt.close()
+    if flag_plot==3:
+        sns.kdeplot(trainning_time, label='kde density', shade=True, alpha=0.3)
+        plt.title(title)
+        plt.show()
+        plt.savefig(path + 'kde_of_trainning_time.png', dpi=300)
+        plt.close()
+
+
+
 
 '''
 def test:

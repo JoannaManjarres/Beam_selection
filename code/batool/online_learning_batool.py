@@ -1149,8 +1149,41 @@ def extract_test_data_from_s009(episode, label_input_type, s009_data):
 
 
 
+def plot_histogram_of_time(title, type_of_input, type_of_window):
+    import sys
+    import os
+    sys.path.append ("../")
+    import plot_results as plot
+    path, servidor, filename = read_results_for_plot(type_of_input, type_of_window)
+    plot.plot_histogram_of_trainning_time(path, filename, title)
 
-def plot_results__():
+
+
+def read_results_for_plot(type_of_input, type_of_window):
+    #type_of_input = 'coord'
+    #type_of_window = 'fixed_window'
+    flag_servidor = 3
+    filename = 'scores_with_' + type_of_window + '_top_k.csv'
+    metric = 'time_trainning'  # 'score'
+
+    if flag_servidor == 1:  # servidor local
+        path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/'
+        servidor = 'servidor_local'
+        pos_y = 70
+        pos_x = [10, 50, 100, 150, 200, 250, 300]
+    elif flag_servidor == 2:  # servidor portugal
+        servidor = 'servidor_portugal'
+        pos_y = 525
+        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+        path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+    elif flag_servidor == 3:  # servidor land
+        servidor = 'servidor_land'
+        pos_y = 51
+        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+        path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+
+    return path, servidor, filename
+def plot_results__(type_of_input, type_of_window):
     import sys
     import os
 
@@ -1161,8 +1194,8 @@ def plot_results__():
     # Agora é possível importar o arquivo como um módulo
     import plot_results as plot
 
-    type_of_input = 'coord'
-    type_of_window = 'fixed_window'
+    #type_of_input = 'coord'
+    #type_of_window = 'fixed_window'
     flag_servidor = 3
     filename = 'scores_with_'+type_of_window+'_top_k.csv'
     metric = 'time_trainning'  # 'score'
@@ -1185,49 +1218,58 @@ def plot_results__():
         path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
 
     title = 'Beam Selection using MPL with '+type_of_input+' and '+type_of_window+'\n Reference: Batool -' + servidor
+    plot_histogram_of_time(title, type_of_input, type_of_window)
     plot.plot_results_online_learning(path=path, filename=filename,
                                       metric=metric,
                                       pos_x=pos_x, pos_y=pos_y,
                                       title=title)
 
 
+
 def main():
-    input = 'coord'
-    type_of_window = 2
+    input = 'lidar'
+    type_of_window = 1
+    run_simulation = False
         #1 = 'fixed_window'
         #2 = 'sliding_window'
         #3 = 'incrmental_window'
+
     print("+-------------------------------------"
           "\n|    online learning - Batool ")
     if type_of_window == 1 :
         print("|          Fixed window")
+        window = 'fixed_window'
     elif type_of_window == 2 :
         print("|          Sliding window")
+        window = 'sliding_window'
     elif type_of_window == 3 :
         print("|          Incremental window")
+        window = 'incremental_window'
 
     print("|            " + input +
           "\n+----------------------------------")
 
-    top_k = [1, 5, 10, 15, 20, 25, 30]
+    #top_k = [1, 5, 10, 15, 20, 25, 30]
 
-    if type_of_window == 1:
-            fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
-    elif type_of_window == 2:
-        window_size = [100, 500, 1000, 1500, 2000]
-        for i in range(len(window_size)):
-            print('window_size:', window_size[i])
-            fit_sliding_window_top_k(label_input_type='coord',
-                                     episodes_for_test=2000,
-                                     window_size=window_size[i])
-
-    #plot_results__()
+    if run_simulation:
+        if type_of_window == 1:
+                fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+        elif type_of_window == 2:
+            window_size = [100, 500, 1000, 1500, 2000]
+            for i in range(len(window_size)):
+                print('window_size:', window_size[i])
+                fit_sliding_window_top_k(label_input_type='coord',
+                                         episodes_for_test=2000,
+                                         window_size=window_size[i])
+    else:
+        plot_results__(type_of_input=input, type_of_window=window)
 
     # print(tf.__file__)
     # import keras
     # print(keras.__version__)
 
 main()
+
 #fit_sliding_window_top_k(label_input_type='coord',
 #                                     episodes_for_test=1,
 #                                     window_size=100)
