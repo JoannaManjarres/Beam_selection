@@ -1149,19 +1149,10 @@ def extract_test_data_from_s009(episode, label_input_type, s009_data):
 
 
 
-def plot_histogram_of_time(title, type_of_input, type_of_window):
-    import sys
-    import os
-    sys.path.append ("../")
-    import plot_results as plot
-    path, servidor, filename = read_results_for_plot(type_of_input, type_of_window)
-    plot.plot_histogram_of_trainning_time(path, filename, title)
-
-
-
-def read_results_for_plot(type_of_input, type_of_window):
+def read_results_for_plot(type_of_input, type_of_window, window_size, model):
     #type_of_input = 'coord'
     #type_of_window = 'fixed_window'
+    window_size = str(window_size)
     flag_servidor = 3
     filename = 'scores_with_' + type_of_window + '_top_k.csv'
     metric = 'time_trainning'  # 'score'
@@ -1169,6 +1160,7 @@ def read_results_for_plot(type_of_input, type_of_window):
     if flag_servidor == 1:  # servidor local
         path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/'
         servidor = 'servidor_local'
+
         pos_y = 70
         pos_x = [10, 50, 100, 150, 200, 250, 300]
     elif flag_servidor == 2:  # servidor portugal
@@ -1178,11 +1170,23 @@ def read_results_for_plot(type_of_input, type_of_window):
         path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
     elif flag_servidor == 3:  # servidor land
         servidor = 'servidor_land'
-        pos_y = 51
-        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
 
-    return path, servidor, filename
+        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+
+        if type_of_input == 'coord':
+            pos_y = 0.3
+        elif type_of_input == 'lidar':
+            pos_y = 0.6
+        if type_of_window == 'fixed_window':
+            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
+
+        elif type_of_window == 'sliding_window':
+            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'+ window_size +'/'
+            title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + window_size + '\n Reference: Batool -' + servidor
+            filename = 'all_results_sliding_window_'+ window_size +'_top_k.csv'
+
+    return path, servidor, filename, pos_x, pos_y, title
 def plot_results__(type_of_input, type_of_window):
     import sys
     import os
@@ -1194,6 +1198,7 @@ def plot_results__(type_of_input, type_of_window):
     # Agora é possível importar o arquivo como um módulo
     import plot_results as plot
 
+    '''
     #type_of_input = 'coord'
     #type_of_window = 'fixed_window'
     flag_servidor = 3
@@ -1216,20 +1221,36 @@ def plot_results__(type_of_input, type_of_window):
         pos_y = 51
         pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
         path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
+    '''
 
-    title = 'Beam Selection using MPL with '+type_of_input+' and '+type_of_window+'\n Reference: Batool -' + servidor
-    plot_histogram_of_time(title, type_of_input, type_of_window)
+    if type_of_input == 'coord':
+        model = 'MLP'
+    elif type_of_input == 'lidar':
+        model = 'DNN'
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot(type_of_input,
+                                                                          type_of_window,
+                                                                          2000,
+                                                                          model)
+
+
+
+
+
+    #title = 'Beam Selection using '+ model +' with '+type_of_input+' and '+type_of_window+'\n Reference: Batool -' + servidor
+    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
+    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
+
     plot.plot_results_online_learning(path=path, filename=filename,
-                                      metric=metric,
                                       pos_x=pos_x, pos_y=pos_y,
                                       title=title)
 
 
 
 def main():
-    input = 'lidar'
-    type_of_window = 1
     run_simulation = False
+    input = 'coord'
+    type_of_window = 2
+
         #1 = 'fixed_window'
         #2 = 'sliding_window'
         #3 = 'incrmental_window'
