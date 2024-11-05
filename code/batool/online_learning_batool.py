@@ -1012,14 +1012,14 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                                                                                                        label_input_type)
                 input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (s009_data=s009_data,
                                                                                                                  start_index=0,
-                                                                                                                 end_index=i+1,
+                                                                                                                 end_index=i,
                                                                                                                  input_type=label_input_type)
                 input_for_train = np.concatenate ((input_for_train_s008, input_for_train_s009), axis=0)
                 label_for_train = np.concatenate ((label_for_train_s008, label_for_train_s009), axis=0)
                 input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
                 label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
 
-                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i+1,
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
                                                                                                 label_input_type,
                                                                                                 s009_data)
                 input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
