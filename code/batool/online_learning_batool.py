@@ -964,7 +964,6 @@ def sliding_prepare_coord_for_trainning(input_for_train):
     input_validation = val.reshape(val.shape[0], 2, 1)
 
     return input_train, input_validation
-
 def sliding_prepare_label_for_trainning(label_for_train):
     new_form_for_label = np.array(label_for_train)
     size_of_label = new_form_for_label.shape
@@ -972,7 +971,6 @@ def sliding_prepare_label_for_trainning(label_for_train):
     label_train = new_form_for_label[:size_of_train]
     label_validation = new_form_for_label[size_of_train:]
     return label_train, label_validation
-
 def fit_sliding_window_top_k(label_input_type,
                              episodes_for_test,
                              window_size):
@@ -1081,70 +1079,6 @@ def fit_sliding_window_top_k(label_input_type,
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/sliding_window/window_size_var/'
             df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
 
-    a = 0
-
-
-
-def extract_training_data_from_s008(s008_data, start_index, input_type):
-    initial_data_for_trainning = s008_data[s008_data['EpisodeID'] > start_index]
-    label_train = initial_data_for_trainning['beam'].tolist()
-    input_train = []
-
-    if input_type == 'coord':
-
-        coord_x = np.vstack(initial_data_for_trainning['x'].tolist())
-        coord_y = np.vstack(initial_data_for_trainning['y'].tolist())
-        input_train = np.concatenate((coord_x, coord_y), axis=1).reshape(len(initial_data_for_trainning), 2, 1)
-
-        #input_train = initial_data_for_trainning ['encoding_coord'].tolist ()
-
-
-    elif input_type == 'lidar':
-        input_train = initial_data_for_trainning ['lidar'].tolist ()
-    elif input_type == 'lidar_coord':
-        input_train = initial_data_for_trainning ['lidar_coord'].tolist ()
-    else:
-        print('error: deve especificar o tipo de entrada')
-
-    return input_train, label_train
-def extract_training_data_from_s009(s009_data, start_index, end_index, input_type):
-    data_for_trainnig = s009_data.loc[(s009_data['Episode'] >= start_index) & (s009_data['Episode'] < end_index)]
-
-    label_train = data_for_trainnig['beam'].tolist()
-
-    input_train = []
-    if input_type == 'coord':
-        coord_x = np.vstack (data_for_trainnig ['x'].tolist ())
-        coord_y = np.vstack (data_for_trainnig ['y'].tolist ())
-        input_train = np.concatenate ((coord_x, coord_y), axis=1).reshape (len (data_for_trainnig), 2, 1)
-
-        #input_train = data_for_trainnig['encoding_coord'].tolist()
-    elif input_type == 'lidar':
-        input_train = data_for_trainnig['lidar'].tolist()
-    elif input_type == 'lidar_coord':
-        input_train = data_for_trainnig['lidar_coord'].tolist()
-
-    return input_train, label_train
-def extract_test_data_from_s009(episode, label_input_type, s009_data):
-    data_for_test = s009_data[s009_data['EpisodeID'] == episode]
-    label_test = s009_data[s009_data['EpisodeID'] == episode]['beam'].tolist()
-
-    input_test = []
-
-    if label_input_type == 'coord':
-        coord_x = np.vstack(data_for_test['x'].tolist())
-        coord_y = np.vstack(data_for_test['y'].tolist())
-        input_test = np.concatenate((coord_x, coord_y), axis=1).reshape (len (data_for_test), 2, 1)
-
-
-    elif label_input_type == 'lidar':
-        input_test = s009_data [s009_data ['EpisodeID'] == episode] ['lidar'].tolist ()
-    elif label_input_type == 'lidar_coord':
-        input_test = s009_data [s009_data ['EpisodeID'] == episode] ['lidar_coord'].tolist ()
-    else:
-        print ('error: deve especificar o tipo de entrada')
-
-    return input_test, label_test
 
 
 
@@ -1247,7 +1181,7 @@ def plot_results__(type_of_input, type_of_window):
 
 
 def main():
-    run_simulation = False
+    run_simulation = True
     input = 'coord'
     type_of_window = 2
 
@@ -1276,7 +1210,7 @@ def main():
         if type_of_window == 1:
                 fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
         elif type_of_window == 2:
-            window_size = [100, 500, 1000, 1500, 2000]
+            window_size = [100]#[100, 500, 1000, 1500, 2000]
             for i in range(len(window_size)):
                 print('window_size:', window_size[i])
                 fit_sliding_window_top_k(label_input_type='coord',
