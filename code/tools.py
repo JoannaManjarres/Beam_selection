@@ -26,7 +26,7 @@ def extract_test_data_from_s009_sliding_window(episode, label_input_type, s009_d
     return input_test, label_test
 def extract_training_data_from_s008_sliding_window(s008_data, start_index, input_type):
 
-    initial_data_for_trainning = s008_data [s008_data ['Episode'] > start_index]
+    initial_data_for_trainning = s008_data [s008_data ['Episode'] >= start_index]
     label_train = initial_data_for_trainning ['index_beams'].tolist ()
     input_train = []
 
