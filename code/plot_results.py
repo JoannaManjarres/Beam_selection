@@ -484,7 +484,7 @@ def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
     plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
     plt.close()
 
-def plot_results_online_learning( pos_x, pos_y, path, title, filename):
+def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, filename):
     import tools as tls
     all_csv_data = pd.read_csv (path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]

@@ -1189,6 +1189,11 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + window_size + '\n Reference: Batool -' + servidor
             filename = 'all_results_sliding_window_'+ window_size +'_top_k.csv'
 
+        elif type_of_window == 'incremental_window':
+            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
+            filename = 'all_results_incremental_window_top_k.csv'
+
     return path, servidor, filename, pos_x, pos_y, title
 def plot_results__(type_of_input, type_of_window):
     import sys
@@ -1243,14 +1248,128 @@ def plot_results__(type_of_input, type_of_window):
     plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
     plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
 
-    plot.plot_results_online_learning(path=path, filename=filename,
-                                      pos_x=pos_x, pos_y=pos_y,
-                                      title=title)
+    plot.plot_score_and_time_process_online_learning(path=path, filename=filename,
+                                                     pos_x=pos_x, pos_y=pos_y, title=title)
 
+def plot_comparition_time_process(type_of_input, type_of_window, model):
+    import seaborn as sns
+
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window='fixed_window',
+                                                                           window_size=2000,
+                                                                           model=model)
+    all_results_fixed_window = pd.read_csv (path + 'scores_with_fixed_window_top_k.csv')
+
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window='incremental_window',
+                                                                           window_size=2000,
+                                                                           model=model)
+
+    all_results_incremental_window = pd.read_csv (path + 'all_results_incremental_window_top_k.csv')
+
+
+
+    size_of_window = [100, 500, 1000, 1500, 2000]
+    color = ['orange', 'blue', 'red', 'green', 'purple']
+    flag = 'training'
+    sns.set_theme (style="darkgrid")
+    fig, ax1 = plt.subplots (figsize=(15, 7))
+    plt.plot (all_results_fixed_window['episode'],
+              all_results_fixed_window['trainning_process_time'] * 1e-9,
+              color='grey', alpha=0.3)
+    plt.plot (all_results_incremental_window['episode'],
+              all_results_incremental_window['trainning_process_time'] * 1e-9,
+              color='magenta', alpha=0.3)
+
+    for i in range(len(size_of_window)):
+        path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                               type_of_window='sliding_window',
+                                                                               window_size=size_of_window[i],
+                                                                               model=model)
+        all_results_sliding_window = pd.read_csv (path + 'all_results_sliding_window_'+str(size_of_window[i])+'_top_k.csv')
+        plt.plot (all_results_sliding_window ['episode'],
+                  all_results_sliding_window ['trainning_process_time'] * 1e-9,
+                  color=color[i], alpha=0.3)
+
+
+
+    ax1.set_ylabel (flag + ' time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold',
+                    fontname='Myanmar Sangam MN')
+    ax1.set_xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold', fontname='Myanmar Sangam MN')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx ()
+    plt.plot (all_results_fixed_window ['episode'],
+              all_results_fixed_window ['samples_trainning'],
+              marker=',', color='grey',  label='fixed window')
+
+    plt.plot (all_results_incremental_window ['episode'],
+              all_results_incremental_window ['samples_trainning'],
+              marker=',', color='magenta',  label='incremental window')
+
+    for i in range(len(size_of_window)):
+        path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                               type_of_window='sliding_window',
+                                                                               window_size=size_of_window [i],
+                                                                               model=model)
+        all_results_sliding_window = pd.read_csv (path + 'all_results_sliding_window_' + str (size_of_window [i]) + '_top_k.csv')
+
+        plt.plot (all_results_sliding_window ['episode'],
+                  all_results_sliding_window ['samples_trainning'],
+                  marker=',', color=color[i],  label='sliding window ' + str(size_of_window[i]))
+
+
+
+    ax2.set_ylabel ('training samples', fontsize=12, color='black', labelpad=12, fontweight='bold',
+                    fontname='Myanmar Sangam MN')  # , color='red')
+
+    # Adicionando título e legendas
+    title = "Relationship between trained samples and training time \n usign data: " + type_of_input
+    plt.title (title, fontsize=15, color='black', fontweight='bold')
+    # plt.xticks(all_results_traditional['Episode'])
+    plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
+    #plt.savefig (path_result + input_type + '/time_and_samples_train_comparation.png', dpi=300)
+    plt.show ()
+    #plt.close ()
+
+
+    plt.plot (all_results_fixed_window ['episode'], all_results_fixed_window ['trainning_process_time'] / 1e9, '.',
+              color='purple', label='Fixed window')
+
+    plt.plot (all_results_sliding_window ['episode'], all_results_sliding_window ['trainning_process_time'] / 1e9, '.',
+              color='red', label='Sliding window')
+    '''
+    plt.plot (all_results_incremental_window ['Episode'], all_results_incremental_window ['Trainning Time'] / 1e9, '.',
+              color='green', label='Incremental window')
+              '''
+    plt.xlabel ('Episode', fontsize=12, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.ylabel ('Trainning Time', fontsize=12, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.legend (loc='best')  # , bbox_to_anchor=(1.04, 0))
+    plt.title ('Trainning Time using '+ model +' with \n' + type_of_input + ' in online learning - Ref Batool')
+    #plt.savefig (path_result + input_type + '/time_train_comparation.png', dpi=300)
+    plt.show()
+    #plt.close ()
+
+    '''
+    plt.plot (all_results_fixed_window ['Episode'], all_results_fixed_window ['Test Time'] / 1e9, '.', color='purple',
+              label='Fixed window')
+    plt.plot (all_results_sliding_window ['Episode'], all_results_sliding_window ['Test Time'] / 1e9, '.', color='red',
+              label='Sliding window')
+    plt.plot (all_results_incremental_window ['Episode'], all_results_incremental_window ['Test Time'] / 1e9, '.',
+              color='green', label='Incremental window')
+    plt.xlabel ('Episode', fontsize=12, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.ylabel ('Test Time', fontsize=12, color='black', fontname='Myanmar Sangam MN', fontweight='bold')
+    plt.legend (loc='best')  # , bbox_to_anchor=(1.04, 0))
+    plt.title ('Test Time using WiSARD with \n' + input_type + ' in online learning', fontsize=12, color='black')
+    plt.savefig (path_result + input_type + '/time_test_comparation.png', dpi=300)
+    plt.close ()
+    '''
+    a=0
 
 
 def main():
-    run_simulation = True
+    run_simulation = False
     input = 'coord'
     type_of_window = 3
 
@@ -1296,7 +1415,9 @@ def main():
     # print(keras.__version__)
 
 main()
-
+#window = 'fixed_window'
+#input = 'coord'
+#plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')
 
 
 
