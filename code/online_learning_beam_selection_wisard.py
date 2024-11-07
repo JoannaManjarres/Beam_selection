@@ -2254,6 +2254,96 @@ def comparition_between_types_time_measurement():
         'Test Time using fixed window \n comparition between time measurement: \n perf_counter, process_time and time it')
     plt.show ()
 
+def plot_score_and_time_process_online_learning(input_type, type_of_window):
+    path, score_results, times_results = read_results_for_plot (input_type=input_type,
+                                                                type_of_window=type_of_window)
+
+    if type_of_window == 'sliding_window':
+        title = 'Beam selection using WiSARD with ' + input_type + ' \n and ' + type_of_window + ' servidor Land'
+        trainning_time = times_results ['tranning_time_top_1'] * 1e-9
+        mean_cumulative_incremental_window = calculate_mean_score (trainning_time)
+
+    else:
+        trainning_time = times_results ['tranning_time_mean_top_1'] * 1e-9
+        mean_cumulative_incremental_window = calculate_mean_score (trainning_time)
+        title = 'Beam selection using WiSARD with ' + input_type + ' \n and ' + type_of_window + ' servidor Land'
+
+    plt.plot (times_results ['episode'], trainning_time, '.', label='Incremental Window')
+    plt.plot(times_results['episode'], mean_cumulative_incremental_window, '.', color='red', label='Incremental Window Mean')
+    plt.text (np.mean (times_results ['episode']), np.mean (mean_cumulative_incremental_window),
+              'Mean: ' + str (np.round (np.mean (mean_cumulative_incremental_window), 3)),
+              bbox={'facecolor': 'white',
+                    'alpha': 0.8,
+                    'pad': 0.1,
+                    'edgecolor': 'white',
+                    'boxstyle': 'round'},
+              fontsize=10, color='red')
+    plt.xlabel('Episode')
+    plt.ylabel('Trainning Time [s]')
+    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend (ncol=4, loc='lower right')
+    plt.show()
+    #plt.savefig (path + 'trainning_time.png', dpi=300)
+    #plt.close ()
+    a=0
+def plot_hist_ecdf(input_type, type_of_window):
+    import plot_results as plot
+
+    path, score_results, times_results= read_results_for_plot(input_type=input_type,
+                                                                                  type_of_window=type_of_window)
+    title = 'Beam selection using WiSARD with '+ input_type+' \n and '+type_of_window +' servidor Land'
+
+    trainning_time = times_results['tranning_time_mean_top_1']* 1e-9
+
+    sns.ecdfplot (trainning_time, label='Top-')
+    plt.title (title + ' Trainning Time with ECDF')
+    plt.grid (True)
+    plt.savefig (path + 'ecdf_of_trainning_time.png', dpi=300)
+    plt.close ()
+
+    fig, ax1 = plt.subplots ()
+    sns.kdeplot (trainning_time, label='kde density', shade=False)
+    ax2 = ax1.twinx ()
+    plt.grid (True)
+    plt.hist (trainning_time, bins=60, alpha=0.3, label='Top-' )
+    ax2.set_ylabel ('Counts')
+    ax1.set_xlabel ('Trainning Time [s]')
+    ax1.legend (loc='upper right')
+    plt.title (title)
+    plt.grid (True)
+    plt.savefig (path + 'histogram_of_trainning_time.png', dpi=300)
+    plt.close()
+
+    #plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf')
+    #all_scores_incremental_window, all_times_incremental_window = read_results_for_plot(input_type='coord',
+#                                                                                        type_of_window='incremental_window')
+
+def read_results_for_plot(input_type, type_of_window):
+    path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
+
+    if type_of_window == 'sliding_window':
+        path_result_fixed_window = path_result + input_type + '/'+ type_of_window + '/window_size_var/'
+        filename = 'all_results_' + type_of_window + '_500_top_k.csv'
+        name_of_file_score = 'all_results_'
+        name_of_file_time = 'all_results_'
+        type_of_file = '_500_top_k.csv'
+    else:
+        folder_std_results = 'results_with_std/'
+        path_result_fixed_window = path_result + input_type + '/' + type_of_window  + '/' +folder_std_results
+        filename = 'all_results_' + type_of_window + '_top_k.csv'
+
+        name_of_file_score = 'scores_with_std_'
+        name_of_file_time = 'trainning_time_with_std_'
+        type_of_file = '_top_k.csv'
+
+
+    score_results = pd.read_csv(path_result_fixed_window + name_of_file_score + type_of_window + type_of_file)
+    times_results = pd.read_csv(path_result_fixed_window + name_of_file_time + type_of_window + type_of_file)
+
+    #all_scores_incremental_window = pd.read_csv(path_result_incremental_window + name_of_file_score + type_of_window [1] + type_of_file)
+    #all_times_incremental_window = pd.read_csv(path_result_incremental_window + name_of_file_time + type_of_window [1] + type_of_file)
+    return path_result_fixed_window, score_results, times_results
+
 def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
     path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
 
@@ -2527,6 +2617,13 @@ args = parser.parse_args()
 input_type = args.input_type
 input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 
+
+plot_score_and_time_process_online_learning(input_type, 'sliding_window')
+plot_hist_ecdf (input_type, 'sliding_window')
+
+plot_hist_ecdf(input_type, 'fixed_window')
+plot_hist_ecdf(input_type, 'incremental_window')
+#plot_hist_ecdf(input_type, 'sliding_window')
 read_file_results_fixed_window(input_type)
 #simulation_of_online_learning_top_k(input_type)
 
