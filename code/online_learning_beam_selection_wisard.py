@@ -242,7 +242,7 @@ def fit_fixed_window_top_k_novo(nro_of_episodes_test,
         else:
             continue
 
-    path_result = '../results/score/Wisard/online/' + label_input_type + '/fixed_window/'
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
     path = path_result + str(rodada)
     df_all_results_top_k.to_csv(path + '_all_results_fixed_window_top_k.csv', index=False)
 
