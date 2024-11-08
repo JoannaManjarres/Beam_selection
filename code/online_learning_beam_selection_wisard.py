@@ -2428,8 +2428,4 @@ if plot_std:
 
 
 
-#comparition_between_two_measurements_time()
-# testar tempo de treinamento e teste com esta ferramenta: https://docs.python.org/3/library/time.html#time.perf_counter
-
-
 
