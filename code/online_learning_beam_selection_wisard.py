@@ -18,56 +18,38 @@ import argparse
 def beam_selection_top_k_wisard(x_train, x_test,
                                 y_train, y_test,
                                 address_of_size,
-                                name_of_conf_input):
+                                input_type):
 
-    #print ("... Calculando os top-k com Wisard")
     addressSize = address_of_size
     ignoreZero = False
-    verbose = False #True
+    verbose = False  # True
     var = True
-    wsd = wp.Wisard(addressSize,
-                    ignoreZero=ignoreZero,
-                    verbose=verbose,
-                    returnConfidence=var,
-                    returnActivationDegree=var,
-                    returnClassesDegrees=var)
+    wsd = wp.Wisard (addressSize,
+                     ignoreZero=ignoreZero,
+                     verbose=verbose,
+                     returnConfidence=var,
+                     returnActivationDegree=var,
+                     returnClassesDegrees=var)
 
-    star_trainning = time.process_time_ns ()
-    wsd.train(x_train, y_train)
-    end_trainning = time.process_time_ns ()
+    star_trainning = time.process_time_ns()
+    wsd.train (x_train, y_train)
+    end_trainning = time.process_time_ns()
     trainning_process_time = (end_trainning - star_trainning)
 
-
-
     # the output is a list of string, this represent the classes attributed to each input
-    star_test = time.process_time_ns ()
-    out = wsd.classify(x_test)
-    end_test = time.process_time_ns ()
+    star_test = time.process_time_ns()
+    wisard_result = wsd.classify(x_test)
+    end_test = time.process_time_ns()
     test_process_time = (end_test - star_test)
 
-    #wsd_1 = wp.Wisard(addressSize, ignoreZero=ignoreZero, verbose=verbose)
-    #wsd_1.train(x_train, y_train)
-    #out_1 = wsd_1.classify(x_test)
-
-
-    content_index = 0
-    ram_index = 0
-    #print(wsd.getsizeof(ram_index,content_index))
-    #print(wsd.json())
-    #print(out)
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
-    #top_k = np.arange(1, 51, 1)
-
-
-    acuracia = []
     score = []
-
     all_classes_order = []
 
-    for sample in range(len(out)):
+    for sample in range(len(wisard_result)):
 
-        classes_degree = out[sample]['classesDegrees']
+        classes_degree = wisard_result[sample]['classesDegrees']
         dict_classes_degree_order = sorted(classes_degree, key=itemgetter('degree'), reverse=True)
 
         classes_by_sample_in_order = []
@@ -75,164 +57,55 @@ def beam_selection_top_k_wisard(x_train, x_test,
             classes_by_sample_in_order.append(dict_classes_degree_order[x]['class'])
         all_classes_order.append(classes_by_sample_in_order)
 
-    path_index_predict = '../results/score/Wisard/online/top_k/' + name_of_conf_input + '/'
-    for i in range (len(top_k)):
+
+    for i in range (len (top_k)):
         acerto = 0
         nao_acerto = 0
         best_classes = []
         best_classes_int = []
-        for sample in range (len(all_classes_order)):
+        for sample in range(len(all_classes_order)):
             best_classes.append(all_classes_order[sample][:top_k[i]])
             best_classes_int.append([int(x) for x in best_classes[sample]])
-            if (y_test[sample] in best_classes[sample]):
+            if (y_test [sample] in best_classes [sample]):
                 acerto = acerto + 1
             else:
                 nao_acerto = nao_acerto + 1
 
-        score.append(acerto / len(out))
+        score.append(acerto / len(wisard_result))
 
-        #file_name = 'index_beams_predict_top_' + str(top_k[i]) + '.npz'
-        #npz_index_predict = path_index_predict + file_name
-        #np.savez(npz_index_predict, output_classification=best_classes_int)
+    df_results_wisard_top_k = pd.DataFrame ({"top-k": top_k,
+                                             "score": score,
+                                             "samples_trainning": len(x_train),
+                                             "trainning_process_time": trainning_process_time,
+                                             "samples_tested": len(x_test),
+                                             "test_time": test_process_time})
 
-    df_results_wisard_top_k = pd.DataFrame ({"Top-K": top_k,
-                                           "Acuracia": score,
-                                           "Trainning Time": trainning_process_time,
-                                           "Test Time": test_process_time})
-    #path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
-    path_csv = '../results/score/Wisard/online/top_k/'+name_of_conf_input+'/'
-    #df_score_wisard_top_k.to_csv (path_csv + 'score_' + name_of_conf_input + '_top_k.csv', index=False)
-
-    file_name = 'index_beams_predict_top_k.npz'
-    npz_index_predict = path_index_predict + file_name
-    #np.savez (npz_index_predict, output_classification=all_classes_order)
+    save_index_predict = False
+    if save_index_predict:
+        path_index_predict = '../results/score/Wisard/online/top_k/' + input_type + '/'
+        file_name = 'index_beams_predict_top_k.npz'
+        npz_index_predict = path_index_predict + file_name
+        np.savez(npz_index_predict, output_classification=all_classes_order)
 
 
-    plot =False
+    plot = False
     if plot:
         print ('Enderecamento de memoria: ', addressSize)
-        '''
-        for i in range(len(top_k)):
-            acerto = 0
-            nao_acerto = 0
-    
-            if top_k[i] == 1:
-                a=0
-                #acuracia_tpo_1 = accuracy_score(y_test, out_1)
-                #print('Acuracia top k =1: ', acuracia_tpo_1)
-    
-            for amostra_a_avaliar in range(len(out)):
-    
-                lista_das_classes = out[amostra_a_avaliar]['classesDegrees']
-                dict_com_classes_na_ordem = sorted(lista_das_classes, key=itemgetter('degree'), reverse=True)
-                #f.write(str(dict_com_classes_na_ordem))
-    
-                classes_na_ordem_descendente = []
-                for x in range(len(dict_com_classes_na_ordem)):
-                    classes_na_ordem_descendente.append(dict_com_classes_na_ordem[x]['class'])
-    
-                top_5 = classes_na_ordem_descendente[0:top_k[i]]
-    
-                if top_k[i] == 1:
-                    index_predict_top_1.append(top_5)
-                if top_k[i] == 2:
-                    index_predict_top_2.append(top_5)
-                if top_k[i] == 3:
-                    index_predict_top_3.append(top_5)
-                if top_k [i] == 4:
-                    index_predict_top_4.append (top_5)
-                elif top_k[i] == 5:
-                    index_predict_top_5.append(top_5)
-                elif top_k[i] == 6:
-                    index_predict_top_6.append(top_5)
-                elif top_k[i] == 7:
-                    index_predict_top_7.append(top_5)
-                elif top_k[i] == 8:
-                    index_predict_top_8.append(top_5)
-                elif top_k[i] == 9:
-                    index_predict_top_9.append(top_5)
-                elif top_k[i] == 10:
-                    index_predict_top_10.append(top_5)
-                elif top_k[i] == 20:
-                    index_predict_top_20.append(top_5)
-                elif top_k[i] == 30:
-                    index_predict_top_30.append(top_5)
-                elif top_k[i] == 40:
-                    index_predict_top_40.append(top_5)
-                elif top_k[i] == 50:
-                    index_predict_top_50.append(top_5)
-    
-    
-                if( y_test[amostra_a_avaliar] in top_5):
-                    acerto = acerto + 1
-                else:
-                    nao_acerto = nao_acerto + 1
-    
-            acuracia.append(acerto/len(out))
-    
-        #print("len(out):", len(out))
-        #print("TOP-K: ", top_k)
-        #print("Acuracia: ",acuracia)
-        #f.close()
-        path_index_predict = '../results/index_beams_predict/WiSARD/top_k/'+name_of_conf_input+'/'
-        for i in range(len(top_k)):
-            file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
-            npz_index_predict = path_index_predict + file_name
-            if top_k[i] == 1:
-                np.savez(npz_index_predict, output_classification=index_predict_top_1)
-            if top_k[i] == 2:
-                np.savez(npz_index_predict, output_classification=index_predict_top_2)
-            if top_k[i] == 3:
-                np.savez(npz_index_predict, output_classification=index_predict_top_3)
-            if top_k[i] == 4:
-                np.savez(npz_index_predict, output_classification=index_predict_top_4)
-            elif top_k[i] == 5:
-                np.savez(npz_index_predict, output_classification=index_predict_top_5)
-            elif top_k[i] == 6:
-                np.savez(npz_index_predict, output_classification=index_predict_top_6)
-            elif top_k[i] == 7:
-                np.savez(npz_index_predict, output_classification=index_predict_top_7)
-            elif top_k[i] == 8:
-                np.savez(npz_index_predict, output_classification=index_predict_top_8)
-            elif top_k[i] == 9:
-                np.savez(npz_index_predict, output_classification=index_predict_top_9)
-            elif top_k[i] == 10:
-                np.savez(npz_index_predict, output_classification=index_predict_top_10)
-            elif top_k[i] == 20:
-                np.savez(npz_index_predict, output_classification=index_predict_top_20)
-            elif top_k[i] == 30:
-                np.savez(npz_index_predict, output_classification=index_predict_top_30)
-            elif top_k[i] == 40:
-                np.savez(npz_index_predict, output_classification=index_predict_top_40)
-            elif top_k[i] == 50:
-                np.savez(npz_index_predict, output_classification=index_predict_top_50)
-    
-        #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
-        #np.savez (npz_index_predict, output_classification=estimated_beams)
-        '''
         print ("-----------------------------")
         print ("TOP-K \t\t|\t Acuracia")
-        print("-----------------------------")
-        for i in range(len(top_k)):
-            if top_k[i] == 1:
-                print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
-            elif top_k[i] == 5:
+        print ("-----------------------------")
+        for i in range (len (top_k)):
+            if top_k [i] == 1:
+                print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
+            elif top_k [i] == 5:
                 print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
             else:
-                print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
+                print ('K = ', top_k [i], '\t|\t ', np.round (score [i], 3)), '\t\t|'
         print ("-----------------------------")
 
-
-    #df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
-    #path_csv='../results/accuracy/8X32/'+data_input+'/top_k/'
-    #print(path_csv+'acuracia_wisard_' + data_input + '_top_k.csv')
-    #df_acuracia_wisard_top_k.to_csv(path_csv + 'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv', index=False)
-    #df_acuracia_wisard_top_k.to_csv (path_csv + 'acuracia_wisard_' + name_of_conf_input + '_top_k.csv',
-    #                                 index=False)
+    return df_results_wisard_top_k
 
 
-    #plot_top_k(top_k, score, data_input, name_of_conf_input=name_of_conf_input)
-    return top_k, df_results_wisard_top_k
 
 def beam_selection_wisard(data_train,
                           data_validation,
@@ -245,7 +118,10 @@ def beam_selection_wisard(data_train,
     # when True, WiSARD prints the progress of train() and classify()
     verbose = False
 
-    wsd = wp.Wisard (addressSize, ignoreZero=ignoreZero, verbose=verbose, bleachingActivated=True)
+    wsd = wp.Wisard (addressSize,
+                     ignoreZero=ignoreZero,
+                     verbose=verbose,
+                     bleachingActivated=True)
 
     #tic ()
     #start_time = time.perf_counter_ns()
@@ -270,6 +146,8 @@ def beam_selection_wisard(data_train,
     #test_time_perf_counter = end_classify_perf_counter - star_classify_perf_counter
 
     return wisard_result, trainning_time_process_time, test_time_process_time
+
+
 
 def tic():
     global tic_s
@@ -302,6 +180,72 @@ def read_s008_data(preprocess_resolution):
     info_s008 = pd.DataFrame(all_info_s008, columns=['Episode', 'x', 'y', 'z', 'LOS'])
 
     return info_s008, encoding_coord_train, beams_train
+
+
+def fit_fixed_window_top_k_novo(nro_of_episodes_test,
+                                nro_of_episodes_train,
+                                input_type,
+                                rodada,
+                                s008_data,
+                                s009_data):
+
+    episode_for_test = np.arange (0, nro_of_episodes_test, 1)
+    episode_for_train = np.arange (0, nro_of_episodes_train, 1)
+
+    label_input_type = input_type
+
+    label_train =[]
+    input_train = []
+    nonexistent_episodes = []
+    index_beams =[]
+    input = []
+
+    for i in range(len (episode_for_train)):
+        if i in s008_data['Episode'].tolist():
+            index_beams.append(s008_data[s008_data['Episode'] == i]['index_beams'].tolist())
+            if label_input_type == 'coord':
+                input.append(s008_data[s008_data['Episode'] == i]['coord'].tolist())
+            elif label_input_type == 'lidar':
+                input.append(s008_data[s008_data['Episode'] == i]['lidar'].tolist())
+            elif label_input_type == 'lidar_coord':
+                input.append(s008_data[s008_data['Episode'] == i]['lidar_coord'].tolist())
+        else:
+            nonexistent_episodes.append(i)
+            continue
+
+    for i in range(len(index_beams)):
+        for j in range(len(index_beams[i])):
+            label_train.append(index_beams[i][j])
+            input_train.append(input[i][j])
+
+    df_all_results_top_k = pd.DataFrame ()
+    for i in range(len(episode_for_test)):
+        if i in s009_data['Episode'].tolist():
+            label_test = s009_data[s009_data['Episode'] == i]['index_beams'].tolist()
+            if label_input_type == 'coord':
+                input_test = s009_data[s009_data['Episode'] == i]['coord'].tolist()
+            elif label_input_type == 'lidar':
+                input_test = s009_data[s009_data['Episode'] == i]['lidar'].tolist()
+            elif label_input_type == 'lidar_coord':
+                input_test = s009_data[s009_data['Episode'] == i]['lidar_coord'].tolist()
+
+            df_results_top_k = beam_selection_top_k_wisard(x_train=input_train,
+                                                           x_test=input_test,
+                                                           y_train=label_train,
+                                                           y_test=label_test,
+                                                           address_of_size=44,
+                                                           input_type=label_input_type)
+            df_results_top_k['episode'] = i
+            df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
+
+
+        else:
+            continue
+
+    path_result = '../results/score/Wisard/online/' + label_input_type + '/fixed_window/'
+    path = path_result + str(rodada)
+    df_all_results_top_k.to_csv(path + '_all_results_fixed_window_top_k.csv', index=False)
+
 
 def fit_incremental_window(nro_of_episodes, input_type):
     preprocess_resolution = 16
@@ -433,7 +377,6 @@ def fit_incremental_window(nro_of_episodes, input_type):
                                      all_score,
                                      all_trainning_time, all_test_time,
                                      all_samples_train, all_samples_test))
-
 def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_data):
     #print(" ____________________________________________")
     #print('/ Fit a WiSARD with: INCREMENTAL window top-k /')
@@ -644,6 +587,8 @@ def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_da
         '''
 
 
+
+
 def save_in_csv_all_metrics_top_k(path_result, file_name, episodes, score, time, samples_train, samples_test):
     headerList = ['episode',
                   'score top-1',
@@ -851,7 +796,6 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
         path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/sliding_window/window_size_var/results_with_std/'
         df_results_score.to_csv(path_result + 'scores_with_std_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
         df_results_trainning_time.to_csv(path_result + 'trainning_time_with_std_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
-
 
 
 def fit_sliding_window_with_size_var(nro_of_episodes, input_type, window_size):
@@ -1283,6 +1227,8 @@ def fit_sliding_window_top_k(nro_of_episodes, input_type):
                                                            address_of_size=44,
                                                            name_of_conf_input=label_input_type)
 
+
+
             # score = accuracy_score (label_test, acuracia)
             all_score.append (np.array (acuracia ['Acuracia']))
             all_score_top_5.append (acuracia ['Acuracia'] [0])
@@ -1346,13 +1292,13 @@ def prepare_data_for_simulation():
 
     s008_data = all_info_s008 [['Episode']].copy ()
     s008_data ['index_beams'] = beams_s008.tolist ()
-    s008_data ['encoding_coord'] = encoding_coord_s008.tolist ()
+    s008_data ['coord'] = encoding_coord_s008.tolist ()
     s008_data ['lidar'] = data_lidar_s008.tolist ()
     s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
 
     s009_data = all_info_s009 [['Episode']].copy ()
     s009_data['index_beams'] = beams_s009
-    s009_data['encoding_coord'] = encoding_coord_s009.tolist ()
+    s009_data['coord'] = encoding_coord_s009.tolist ()
     s009_data['lidar'] = data_lidar_s009.tolist ()
     s009_data['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
 
@@ -1705,184 +1651,7 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
         path_result + 'trainning_time_with_std_fixed_window_top_k.csv', index=False)
 
 
-def fit_fixed_window(nro_of_episodes_test, nro_of_episodes_train, input_type, rodada):
-    preprocess_resolution = 16
-    th = 0.15
-    all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
-    all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
-    data_lidar_2D_with_rx_s008, data_lidar_2D_with_rx_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
-    data_lidar_s008, data_lidar_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (
-        data_lidar_2D_with_rx_s008,
-        data_lidar_2D_with_rx_s009,
-        th)
 
-    s008_data = all_info_s008 [['Episode']].copy ()
-    s008_data ['index_beams'] = beams_s008.tolist ()
-    s008_data ['encoding_coord'] = encoding_coord_s008.tolist ()
-    s008_data ['lidar'] = data_lidar_s008.tolist ()
-    s008_data ['lidar_coord'] = np.concatenate ((encoding_coord_s008, data_lidar_s008), axis=1).tolist ()
-
-    # info_of_episode = s008_data[s008_data['Episode'] == 0]
-
-    s009_data = all_info_s009 [['Episode']].copy ()
-    s009_data ['index_beams'] = beams_s009
-    s009_data ['encoding_coord'] = encoding_coord_s009.tolist ()
-    s009_data ['lidar'] = data_lidar_s009.tolist ()
-    s009_data ['lidar_coord'] = np.concatenate ((encoding_coord_s009, data_lidar_s009), axis=1).tolist ()
-
-    # episode_for_test = np.arange(0, 2000, 1)
-    episode_for_test = np.arange (0, nro_of_episodes_test, 1)
-    episode_for_train = np.arange (0, nro_of_episodes_train, 1)
-
-    label_input_type = input_type
-    s008_data_copy = s008_data.copy ()
-
-    labels_for_next_train = []
-    samples_for_next_train = []
-    all_score = []
-    all_trainning_time = []
-    all_test_time = []
-    all_episodes = []
-    all_samples_train = []
-    all_samples_test = []
-
-    label_train =[]
-    input_train = []
-    nonexistent_episodes = []
-    index_beams =[]
-    input = []
-
-    all_score = []
-    all_trainning_time = []
-    #all_trainning_time_perf_counter = []
-    #all_trainning_time_process_time = []
-    all_test_time = []
-    #all_test_time_perf_counter = []
-    #all_test_time_process_time = []
-    all_episodes = []
-    all_samples_train = []
-    all_samples_test = []
-
-
-    for i in range(len (episode_for_train)):
-        if i in s008_data['Episode'].tolist():
-            index_beams.append(s008_data[s008_data['Episode'] == i]['index_beams'].tolist())
-            #for j in range(len(index_beams)):
-            #    label_train.append(index_beams[j])
-            if label_input_type == 'coord':
-                input.append(s008_data[s008_data['Episode'] == i]['encoding_coord'].tolist())
-            #    for m in range(len(input)):
-            #        input_train.append(input[m])
-            elif label_input_type == 'lidar':
-                input.append(s008_data[s008_data['Episode'] == i]['lidar'].tolist())
-            #    for m in range(len(input)):
-            #        input_train.append(input[m])
-            elif label_input_type == 'lidar_coord':
-                input.append(s008_data[s008_data['Episode'] == i]['lidar_coord'].tolist())
-        else:
-            nonexistent_episodes.append(i)
-            continue
-
-    for i in range(len(index_beams)):
-        for j in range(len(index_beams[i])):
-            label_train.append(index_beams[i][j])
-            input_train.append(input[i][j])
-
-
-    for i in range(len(episode_for_test)):
-        if i in s009_data ['Episode'].tolist():
-            label_test = s009_data [s009_data['Episode'] == i]['index_beams'].tolist ()
-            if label_input_type == 'coord':
-                input_test = s009_data [s009_data ['Episode'] == i] ['encoding_coord'].tolist ()
-            elif label_input_type == 'lidar':
-                input_test = s009_data [s009_data ['Episode'] == i] ['lidar'].tolist ()
-            elif label_input_type == 'lidar_coord':
-                input_test = s009_data [s009_data ['Episode'] == i] ['lidar_coord'].tolist ()
-
-                # print(i, len(label_train), len(label_test))
-
-            index_predict, trainning_time, test_time = beam_selection_wisard (data_train=input_train,
-                                                                              data_validation=input_test,
-                                                                              label_train=label_train,
-                                                                              addressSize=44)
-
-            #index_predict, trainning_time, trainning_time_perf_counter, trainning_time_process_time, test_time, test_time_perf_counter, test_time_process_time = beam_selection_wisard (
-            #    data_train=input_train,
-            #    data_validation=input_test,
-            #    label_train=label_train,
-            #    addressSize=44)
-
-            score = accuracy_score(label_test, index_predict)
-            all_score.append(score)
-            all_trainning_time.append(trainning_time)
-            #all_trainning_time_perf_counter.append(trainning_time_perf_counter)
-            #all_trainning_time_process_time.append(trainning_time_process_time)
-
-            all_test_time.append(test_time)
-            #all_test_time_perf_counter.append (test_time_perf_counter)
-            #all_test_time_process_time.append (test_time_process_time)
-
-            all_episodes.append (i)
-            all_samples_train.append (len (input_train))
-            all_samples_test.append (len (input_test))
-
-            #score = accuracy_score (label_test, index_predict)
-            #all_score.append (score)
-            #all_trainning_time.append (trainning_time)
-            #all_test_time.append (test_time)
-            #all_episodes.append (i)
-            #all_samples_train.append (len (input_train))
-            #all_samples_test.append (len (input_test))
-        else:
-            continue
-
-    average_score = []
-    for i in range (len (all_score)):
-        i = i + 1
-        average_score.append (np.mean (all_score [0:i]))
-
-    path_result = '../results/score/Wisard/online/' + label_input_type + '/fixed_window/'
-    plot=False
-    if plot:
-        # plt.plot (episode_for_test, average_score, 'o-', label='Cumulative average accuracy')
-        plt.plot (all_episodes, all_score, 'o--', color='red', label='Accuracy per episode')
-        plt.plot (all_episodes, average_score, 'o-', color='blue', label='Cumulative average accuracy')
-
-        plt.xlabel ('Episode')
-        plt.ylabel ('Accuracy')
-        plt.legend (loc='lower right', bbox_to_anchor=(1.04, 0))
-        plt.title ('Beam selection using WiSARD with ' + label_input_type + ' in fixed window')
-        #plt.savefig (path_result + str(rodada) +'score_fixed_window.png')
-        plt.savefig (path_result +  'score_fixed_window.png')
-        # plt.show ()
-        plt.close ()
-
-        plt.plot (all_episodes, all_trainning_time, 'o-', color='green')
-        plt.xlabel ('Episode')
-        plt.ylabel ('Trainning Time')
-        plt.title ('Trainning Time using fit with fixed window')
-        plt.savefig (path_result + 'time_train_fixed_window.png')
-        plt.close ()
-
-        plt.plot(all_episodes, all_test_time, 'o-', color='blue')
-        plt.xlabel('Episode')
-        plt.ylabel('Test Time')
-        plt.title('Test Time using fit with fixed window')
-        plt.savefig(path_result + 'time_test_fixed_window.png')
-        plt.close()
-
-    headerList = ['Episode', 'Score', 'Trainning Time', 'Test Time', 'Samples Train', 'Samples Test']
-    #headerList = ['Episode', 'Score', 'Trainning Time', 'Trainning Time perf_counter', 'Trainning Time process_time',
-    #              'Test Time', 'Test Time perf_counter', 'Test Time process_time',  'Samples Train', 'Samples Test']
-
-    print('vou guardar ...')
-    with open (path_result +str(rodada) +'_all_results_fixed_window.csv', 'w') as f:
-        writer_results = csv.writer (f, delimiter=',')
-        writer_results.writerow (headerList)
-        writer_results.writerows (zip (all_episodes,all_score,
-                                       all_trainning_time,
-                                       all_test_time,
-                                       all_samples_train, all_samples_test))
 
 def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type):
     path_result = '../results/score/Wisard/online/top_k/' + input_type + '/' + simulation_type + '/'
@@ -2478,8 +2247,8 @@ def plot_comparition_top_k_with_standar_desviation(input_type, top_k):
 
 def print_of_report_input(input_type, s008_data, s009_data):
 
-    data_coord_size_train = len (s008_data ['encoding_coord'] [0])
-    data_coord_size_test = len (s009_data ['encoding_coord'] [0])
+    data_coord_size_train = len (s008_data ['coord'] [0])
+    data_coord_size_test = len (s009_data ['coord'] [0])
 
     data_lidar_size_train = len (s008_data ['lidar'] [0])
     data_lidar_size_test = len (s009_data ['lidar'] [0])
@@ -2503,7 +2272,7 @@ def print_of_report_input(input_type, s008_data, s009_data):
         print ('| TEST  |\t - \t |\t  -   |\t  ', data_lidar_coord_size_test, ' \t|', data_beams_test, '  |')
         print ('+------------------------------------------------+')
 def simulation_of_online_learning_top_k(input_type):
-    eposodies_for_test = 2
+    eposodies_for_test = 2000
     episodes_for_train = 2086
 
     print ('+------------------------------------------------+')
@@ -2526,8 +2295,13 @@ def simulation_of_online_learning_top_k(input_type):
     print('|----------------------------|')
 
 
-    rodada = 1
-    fit_fixed_window_top_k(eposodies_for_test, input_type, s008_data, s009_data, rodada)
+    for rodada in range(10):
+        fit_fixed_window_top_k_novo(nro_of_episodes_test=eposodies_for_test,
+                                    nro_of_episodes_train=episodes_for_train,
+                                    input_type=input_type,
+                                    rodada=rodada,
+                                    s008_data=s008_data,
+                                    s009_data=s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
@@ -2618,6 +2392,8 @@ input_type = args.input_type
 input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 
 
+simulation_of_online_learning_top_k(input_type)
+'''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
 
@@ -2644,6 +2420,7 @@ if plot_std:
 
 #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
 #plot_comparition_top_k_with_standar_desviation(input_type, 10)
+'''
 
 
 
