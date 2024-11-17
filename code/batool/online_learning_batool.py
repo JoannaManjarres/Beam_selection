@@ -158,7 +158,9 @@ def prepare_data(input):
 
     return data_train, data_validation, data_test, num_classes
 
-def model_configuration(input, data_train, data_validation, data_test, num_classes):
+def model_configuration(input, data_train, data_validation, data_test, num_classes, restore_models):
+    #quando nao usar o modelo saltitante tirar a variavel restore_models dos parametros,
+    # e descomentar a linha 212
     if input == 'coord':
         X_coord_train = data_train[0]
         y_train = data_train[1]
@@ -207,7 +209,7 @@ def model_configuration(input, data_train, data_validation, data_test, num_class
     lr = 0.0001  # default learning rate
     opt = Adam(learning_rate=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
-    restore_models = False  # default
+    #restore_models = False  # default
     strategy = 'one_hot'  # default
     model_folder = 'models/'
     if input == 'coord' or input == 'lidar_coord':
@@ -765,6 +767,37 @@ def beam_selection_Batool(input,
 
     return df_results_top_k
 
+def beam_selection_Batool_for_fit_jumpy(input,
+                          data_train,
+                          data_validation,
+                          data_test,
+                          num_classes,
+                          episode,
+                          see_trainning_progress, flag_fit_jumpy):
+
+
+    if flag_fit_jumpy:
+        restore_models = False
+        model = model_configuration(input, data_train, data_validation, data_test, num_classes, restore_models)
+        trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation, see_trainning_progress)
+        top_k = [1, 5, 10, 15, 20, 25, 30]
+        df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
+
+    else:
+        restore_models = True
+        model = model_configuration (input, data_train, data_validation, data_test, num_classes, restore_models)
+        trainning_process_time = 0
+        samples_shape = [0,0,0]
+        top_k = [1, 5, 10, 15, 20, 25, 30]
+        df_results_top_k = test_model (input, model, data_test, top_k, see_trainning_progress)
+
+
+    df_results_top_k['episode'] = episode
+    df_results_top_k['trainning_process_time'] = trainning_process_time
+    df_results_top_k['samples_trainning'] = samples_shape[0]
+
+    return df_results_top_k
+
 
 def read_all_data():
 
@@ -1038,6 +1071,200 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/incremental_window/'
             df_all_results_top_k.to_csv(path_result + 'all_results_incremental_window_' + '_top_k.csv', index=False)
             a=0
+
+def fit_jumpy_sliding_window_top_k(label_input_type,
+                                        episodes_for_test,
+                                        window_size):
+
+    import sys
+    import os
+
+    # Adiciona o caminho do diretório do arquivo que você quer importar
+    # sys.path.append(os.path.abspath("../"))
+    sys.path.append ("../")
+
+    # Agora é possível importar o arquivo como um módulo
+    import tools as tls
+
+
+    data_for_train, data_for_validation, s009_data, num_classes = read_all_data ()
+    all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+
+
+    episode_for_test = np.arange (0, episodes_for_test, 1)
+    see_trainning_progress = 0
+    start_index_s009 = 0
+    nro_episodes_s008 = 2086  # from 0 to 1564
+
+    df_all_results_top_k = pd.DataFrame ()
+    episode_monitor = 0
+    for i in range (len (episode_for_test)):
+        if i in s009_data ['Episode'].tolist ():
+            if i == 0:
+                start_index_s008 = nro_episodes_s008 - window_size
+
+                #print('Episodes for train s008: from', start_index_s008, 'until', nro_episodes_s008)
+
+                input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
+                                                                                                       start_index_s008,
+                                                                                                       label_input_type)
+
+                input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
+
+                input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                label_test = np.array (label_for_test)
+
+                #print ('Test Episode: ', i)
+                flag_fit_jumpy = True
+                '''
+                df_results = beam_selection_Batool_for_fit_jumpy(input=label_input_type,
+                                                                 data_train = [input_train, label_train],
+                                                                 data_validation = [input_validation, label_validation],
+                                                                 data_test=[input_test, label_test],
+                                                                 num_classes = num_classes,
+                                                                 episode=i,
+                                                                 see_trainning_progress=see_trainning_progress,
+                                                                 flag_fit_jumpy=True)
+                                                                 
+                '''
+
+
+            else:
+                episode_monitor = episode_monitor+1
+                if episode_monitor <40:
+                    #Test
+                    #print('Test episode: ', i)
+                    input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                     label_input_type,
+                                                                                                     s009_data)
+
+                    input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                    label_test = np.array (label_for_test)
+                    flag_fit_jumpy = False
+                    '''
+                    df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
+                                                                      data_train=[input_train,
+                                                                                  label_train],
+                                                                      data_validation=[input_validation,
+                                                                                       label_validation],
+                                                                      data_test=[input_test, label_test],
+                                                                      num_classes=num_classes,
+                                                                      episode=i,
+                                                                      see_trainning_progress=see_trainning_progress,
+                                                                      flag_fit_jumpy=False)
+                    '''
+                else:
+                    start_index_s008 = (nro_episodes_s008-window_size) + i
+                    if start_index_s008 < nro_episodes_s008:
+                        episode_monitor=0
+                        start_index_s009 = 0
+                        end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
+                        #print('Train s008 from Episode: ', start_index_s008, 'until', nro_episodes_s008, '=', nro_episodes_s008-start_index_s008)
+                        #print('Train s009 from Episode: ', start_index_s009, 'until', end_index_s009, '=', end_index_s009-start_index_s009)
+
+                        input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window (
+                            all_dataset_s008,
+                            start_index_s008,
+                            label_input_type)
+                        input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning (
+                            input_for_train_s008)
+                        label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (
+                            label_for_train_s008)
+
+                        input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
+                            s009_data=s009_data,
+                            start_index=start_index_s009,
+                            end_index=end_index_s009,
+                            input_type=label_input_type)
+                        input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (
+                            input_for_train_s009)
+                        label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (
+                            label_for_train_s009)
+
+                        input_train = np.concatenate ((input_train_s008, input_train_s009), axis=0)
+                        label_train = np.concatenate ((label_train_s008, label_train_s009), axis=0)
+
+                        #print('Test episode: ', i)
+
+
+                        input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                         label_input_type,
+                                                                                                         s009_data)
+                        input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                        label_test = np.array (label_for_test)
+                        flag_fit_jumpy = True
+                        '''
+
+                        df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
+                                                                          data_train=[input_train,
+                                                                                      label_train],
+                                                                          data_validation=[input_validation,
+                                                                                           label_validation],
+                                                                          data_test=[input_test, label_test],
+                                                                          num_classes=num_classes,
+                                                                          episode=i,
+                                                                          see_trainning_progress=see_trainning_progress,
+                                                                          flag_fit_jumpy=True)
+
+
+                        '''
+                    else:
+                        episode_monitor=0
+                        end_index_s009 = start_index_s009 + window_size
+                        #print('Train s009 from Episode: ', start_index_s009, 'until', end_index_s009 , '=', end_index_s009-start_index_s009)
+
+                        input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
+                            s009_data=s009_data,
+                            start_index=start_index_s009,
+                            end_index=end_index_s009,
+                            input_type=label_input_type)
+                        input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train_s009)
+                        label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+                        #print('Test episode: ', i)
+
+
+                        input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                         label_input_type,
+                                                                                                         s009_data)
+                        input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                        label_test = np.array (label_for_test)
+
+                        start_index_s009 += 1
+                        flag_fit_jumpy = True
+                        '''
+
+                        df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
+                                                                          data_train=[input_train,
+                                                                                      label_train],
+                                                                          data_validation=[input_validation,
+                                                                                           label_validation],
+                                                                          data_test=[input_test, label_test],
+                                                                          num_classes=num_classes,
+                                                                          episode=i,
+                                                                          see_trainning_progress=see_trainning_progress,
+                                                                          flag_fit_jumpy=True)
+                        '''
+        print (i, end=' ', flush=True)
+        df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
+                                                          data_train=[input_train,
+                                                                      label_train],
+                                                          data_validation=[input_validation,
+                                                                           label_validation],
+                                                          data_test=[input_test, label_test],
+                                                          num_classes=num_classes,
+                                                          episode=i,
+                                                          see_trainning_progress=see_trainning_progress,
+                                                          flag_fit_jumpy=flag_fit_jumpy)
+
+        df_all_results_top_k = pd.concat([df_all_results_top_k, df_results], ignore_index=True)
+        path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/jumpy_sliding_window/'
+        df_all_results_top_k.to_csv(path_result + 'all_results_jumpy_sliding_window_top_k.csv', index=False)
 
 
 def fit_sliding_window_top_k(label_input_type,
@@ -1414,7 +1641,8 @@ def main():
     # import keras
     # print(keras.__version__)
 
-main()
+#main()
+fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')

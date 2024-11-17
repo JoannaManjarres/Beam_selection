@@ -2329,55 +2329,82 @@ def simulation_of_online_learning_top_k(input_type):
             #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
             plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
 
-def read_file_results_fixed_window(input_type):
-    path_result = '../results/score/Wisard/online/'
-    path_result_fixed_window = path_result + input_type + '/fixed_window/'
+def read_files_results(path_results, file_name, key_process_time):
 
-    file_0 = pd.read_csv (path_result_fixed_window + '0_all_results_fixed_window.csv')
-    file_1 = pd.read_csv (path_result_fixed_window + '1_all_results_fixed_window.csv')
-    file_2 = pd.read_csv (path_result_fixed_window + '2_all_results_fixed_window.csv')
-    file_3 = pd.read_csv (path_result_fixed_window + '3_all_results_fixed_window.csv')
-    file_4 = pd.read_csv (path_result_fixed_window + '4_all_results_fixed_window.csv')
-    file_5 = pd.read_csv (path_result_fixed_window + '5_all_results_fixed_window.csv')
-    file_6 = pd.read_csv (path_result_fixed_window + '6_all_results_fixed_window.csv')
-    file_7 = pd.read_csv (path_result_fixed_window + '7_all_results_fixed_window.csv')
-    file_8 = pd.read_csv (path_result_fixed_window + '8_all_results_fixed_window.csv')
-    file_9 = pd.read_csv (path_result_fixed_window + '9_all_results_fixed_window.csv')
+    file_0 = pd.read_csv (path_results + '0' + file_name)
+    file_1 = pd.read_csv (path_results + '1' + file_name)
+    file_2 = pd.read_csv (path_results + '2' + file_name)
+    file_3 = pd.read_csv (path_results + '3' + file_name)
+    file_4 = pd.read_csv (path_results + '4' + file_name)
+    file_5 = pd.read_csv (path_results + '5' + file_name)
+    file_6 = pd.read_csv (path_results + '6' + file_name)
+    file_7 = pd.read_csv (path_results + '7' + file_name)
+    file_8 = pd.read_csv (path_results + '8' + file_name)
+    file_9 = pd.read_csv (path_results + '9' + file_name)
+
+    file_0_top_1 = file_0[file_0['top-k'] == 1]
+    file_1_top_1 = file_1[file_1 ['top-k'] == 1]
+    file_2_top_1 = file_2[file_2 ['top-k'] == 1]
+    file_3_top_1 = file_3[file_3 ['top-k'] == 1]
+    file_4_top_1 = file_4[file_4 ['top-k'] == 1]
+    file_5_top_1 = file_5[file_5 ['top-k'] == 1]
+    file_6_top_1 = file_6[file_6 ['top-k'] == 1]
+    file_7_top_1 = file_7[file_7 ['top-k'] == 1]
+    file_8_top_1 = file_8[file_8 ['top-k'] == 1]
+    file_9_top_1 = file_9[file_9 ['top-k'] == 1]
 
 
 
-    all_data = pd.DataFrame({'file_0': file_0['Trainning Time'].tolist(),
-                             'file_1': file_1['Trainning Time'].tolist(),
-                             'file_2': file_2['Trainning Time'].tolist(),
-                             'file_3': file_3['Trainning Time'].tolist(),
-                             'file_4': file_4['Trainning Time'].tolist(),
-                             'file_5': file_5['Trainning Time'].tolist(),
-                             'file_6': file_6['Trainning Time'].tolist(),
-                             'file_7': file_7['Trainning Time'].tolist(),
-                             'file_8': file_8['Trainning Time'].tolist(),
-                             'file_9': file_9['Trainning Time'].tolist()})
+    all_data = pd.DataFrame({#'episode': file_0_top_1 ['episode'].tolist(),
+                             'file_0': file_0_top_1 [key_process_time].tolist(),
+                             'file_1': file_1_top_1 [key_process_time].tolist(),
+                             'file_2': file_2_top_1 [key_process_time].tolist(),
+                             'file_3': file_3_top_1 [key_process_time].tolist(),
+                             'file_4': file_4_top_1 [key_process_time].tolist(),
+                             'file_5': file_5_top_1 [key_process_time].tolist(),
+                             'file_6': file_6_top_1 [key_process_time].tolist(),
+                             'file_7': file_7_top_1 [key_process_time].tolist(),
+                             'file_8': file_8_top_1 [key_process_time].tolist(),
+                             'file_9': file_9_top_1 [key_process_time].tolist()})
 
     mean = np.mean(all_data.to_numpy(), axis=1)
     std = np.std(all_data.to_numpy(), axis=1)
+    episodes = file_0_top_1['episode']
+    mean_std_ep_samples = pd.DataFrame({'episode': episodes,
+                                        'mean': mean,
+                                        'std': std,
+                                        'samples_trainning': file_0_top_1['samples_trainning']})
+
+    return all_data, mean, std, episodes, mean_std_ep_samples
 
 
-    all_data['mean'] = mean
-    all_data['std'] = std
-    all_data['episode'] = file_0['Episode']
 
-    plt.plot(all_data['episode'], all_data['mean']*1e-9, 'o-', color='olive', marker=',')
-    plt.fill_between(all_data['episode'],
-                     all_data['mean']*1e-9 + all_data['std']*1e-9,
-                     all_data['mean']*1e-9 - all_data['std']*1e-9,
-                     color='olive', alpha=0.3)
+
+def read_files_process_results(input_type, type_of_window):
+    path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
+    path_results = path_result + input_type + '/'+type_of_window+'/'
+    file_name = '_all_results_'+type_of_window+'_top_k.csv'
+
+    key_process_time = 'trainning_process_time'
+    all_process_time, mean, std, episodes, mean_std_ep_samples = read_files_results(path_results, file_name, key_process_time)
+
+    #plt.plot(all_process_time*1e-9, mean_std_ep_samples['samples_trainning'], '.', color='red')
+    plt.plot (episodes, mean * 1e-9, color='red', marker=',')
+    plt.plot(episodes, all_process_time*1e-9, color='olive', marker=',', alpha=0.25)
+    plt.text(500, 0.5, 'Mean: ' + str(np.round(np.mean(mean)*1e-9, 3)), fontsize=12, color='red')
+
+    #plt.fill_between(episodes,
+    #                 mean*1e-9 + std*1e-9,
+    #                 mean*1e-9 - std*1e-9,
+    #                 color='olive', alpha=0.3)
     plt.title('Beam selection using WiSARD with \n'+input_type+' in online learning [fixed window]')
     plt.ylabel('Trainning Time [s]')
     plt.xlabel('Episode')
-    #plt.show()
-    plt.savefig(path_result_fixed_window + 'time_trainning_comparation_with_std.png', dpi=300)
+    plt.show()
+    #plt.savefig(path_result_fixed_window + 'time_trainning_comparation_with_std.png', dpi=300)
+    a = 0
+    #all_data.to_csv(path_result_fixed_window + 'all_data_[mean_std]_fixed_window.csv', index=False)
 
-    all_data.to_csv(path_result_fixed_window + 'all_data_[mean_std]_fixed_window.csv', index=False)
-    a=0
 
 
 
@@ -2392,7 +2419,8 @@ input_type = args.input_type
 input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 
 
-simulation_of_online_learning_top_k(input_type)
+read_files_process_results(input_type, 'fixed_window')
+#simulation_of_online_learning_top_k(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
@@ -2421,11 +2449,3 @@ if plot_std:
 #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
 #plot_comparition_top_k_with_standar_desviation(input_type, 10)
 '''
-
-
-
-
-
-
-
-
