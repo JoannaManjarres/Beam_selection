@@ -997,6 +997,14 @@ def sliding_prepare_coord_for_trainning(input_for_train):
     input_validation = val.reshape(val.shape[0], 2, 1)
 
     return input_train, input_validation
+
+def sliding_prepare_lidar_for_trainning(lidar_for_train):
+    new_form_for_lidar = np.array(lidar_for_train)
+    size_of_lidar = new_form_for_lidar.shape
+    size_of_train = int(size_of_lidar[0] * 0.8)
+    lidar_train = new_form_for_lidar[:size_of_train]
+    lidar_validation = new_form_for_lidar[size_of_train:]
+    return lidar_train, lidar_validation
 def sliding_prepare_label_for_trainning(label_for_train):
     new_form_for_label = np.array(label_for_train)
     size_of_label = new_form_for_label.shape
@@ -1109,14 +1117,32 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                                                                                                        start_index_s008,
                                                                                                        label_input_type)
 
-                input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
-                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
-
                 input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                  label_input_type,
                                                                                                  s009_data)
 
-                input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+
+
+
+                if label_input_type == 'coord':
+                    input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+
+                if label_input_type == 'lidar':
+                    input_train_1, input_validation_1 = sliding_prepare_lidar_for_trainning (input_for_train)
+                    shape_of_input_train_1 = input_train_1.shape
+                    shape_of_input_validation_1 = input_validation_1.shape
+
+                    input_train = input_train_1.reshape(shape_of_input_train_1[0], 20, 200, 10)
+                    input_validation = input_validation_1.reshape(shape_of_input_validation_1[0], 20, 200, 10)
+
+                    input_test = np.array(input_for_test).reshape(len(input_for_test),20, 200, 10)
+
+
+                #if label_input_type == 'lidar_coord':
+                #    input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
+
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
                 label_test = np.array (label_for_test)
 
                 #print ('Test Episode: ', i)
@@ -1142,8 +1168,10 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                     input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                      label_input_type,
                                                                                                      s009_data)
-
-                    input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                    if label_input_type == 'coord':
+                        input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                    if label_input_type == 'lidar':
+                        input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
                     label_test = np.array (label_for_test)
                     flag_fit_jumpy = False
                     '''
@@ -1171,32 +1199,49 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                             all_dataset_s008,
                             start_index_s008,
                             label_input_type)
-                        input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning (
-                            input_for_train_s008)
-                        label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (
-                            label_for_train_s008)
 
                         input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
                             s009_data=s009_data,
                             start_index=start_index_s009,
                             end_index=end_index_s009,
                             input_type=label_input_type)
-                        input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (
-                            input_for_train_s009)
-                        label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (
-                            label_for_train_s009)
 
-                        input_train = np.concatenate ((input_train_s008, input_train_s009), axis=0)
+                        label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (label_for_train_s008)
+                        label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
                         label_train = np.concatenate ((label_train_s008, label_train_s009), axis=0)
+                        label_validation = np.concatenate ((label_val_s008, label_val_s009), axis=0)
 
                         #print('Test episode: ', i)
-
 
                         input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                          label_input_type,
                                                                                                          s009_data)
-                        input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
-                        label_test = np.array (label_for_test)
+
+                        if label_input_type == 'coord':
+
+                            input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning(input_for_train_s008)
+                            input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning(input_for_train_s009)
+                            input_for_train = np.concatenate((input_train_s008, input_train_s009), axis=0)
+                            input_for_validation = np.concatenate((input_val_s008, input_val_s009), axis=0)
+
+                            input_train = input_for_train.reshape(input_for_train.shape[0], 2, 1)
+                            input_validation = input_for_validation.reshape(input_for_validation.shape[0], 2, 1)
+                            input_test = np.array(input_for_test).reshape(len (input_for_test), 2, 1)
+
+                        if label_input_type == 'lidar':
+                            input_train_s008, input_validation_s008 = sliding_prepare_lidar_for_trainning (input_for_train_s008)
+                            input_train_s009, input_validation_s009 = sliding_prepare_lidar_for_trainning (input_for_train_s009)
+                            input_for_train = np.concatenate ((input_train_s008, input_train_s009), axis=0)
+                            input_for_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
+
+                            input_train = np.array(input_for_train).reshape(input_for_train.shape[0], 20, 200, 10)
+                            input_validation = np.array(input_for_validation).reshape(input_for_validation.shape[0], 20, 200, 10)
+
+                            input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+
+                        label_test = np.array(label_for_test)
+                        #label_train = np.array(label_for_train)
+                        #label_validation = np.array(label_for_validation)
                         flag_fit_jumpy = True
                         '''
 
@@ -1223,17 +1268,35 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                             start_index=start_index_s009,
                             end_index=end_index_s009,
                             input_type=label_input_type)
-                        input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train_s009)
-                        label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
-
-                        #print('Test episode: ', i)
-
-
                         input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                          label_input_type,
                                                                                                          s009_data)
-                        input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                        label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+                        if label_input_type == 'coord':
+                            input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning(input_for_train_s009)
+
+                            input_for_train = input_train_s009
+                            input_for_validation = input_val_s009
+
+                            input_train = input_for_train.reshape (input_for_train.shape [0], 2, 1)
+                            input_validation = input_for_validation.reshape (input_for_validation.shape [0], 2, 1)
+
+                            input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+
+                        if label_input_type == 'lidar':
+                            input_train_s009, input_validation_s009 = sliding_prepare_lidar_for_trainning (input_for_train_s009)
+                            input_for_train = input_train_s009
+                            input_for_validation = input_validation_s009
+
+                            input_train = np.array(input_for_train).reshape(input_for_train.shape[0], 20, 200, 10)
+                            input_validation = np.array(input_for_validation).reshape(input_for_validation.shape[0], 20, 200, 10)
+                            input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+
+                        #print('Test episode: ', i)
                         label_test = np.array (label_for_test)
+                        #label_train = np.array (label_for_train)
+                        #label_validation = np.array (label_for_validation)
 
                         start_index_s009 += 1
                         flag_fit_jumpy = True
@@ -1596,9 +1659,9 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
 
 
 def main():
-    run_simulation = False
-    input = 'coord'
-    type_of_window = 3
+    run_simulation = True
+    input = 'lidar'
+    type_of_window = 1
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1642,7 +1705,7 @@ def main():
     # print(keras.__version__)
 
 #main()
-fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
+fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=100, window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')
