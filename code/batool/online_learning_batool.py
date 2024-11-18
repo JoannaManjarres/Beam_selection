@@ -784,7 +784,7 @@ def beam_selection_Batool_for_fit_jumpy(input,
         df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
 
     else:
-        restore_models = True
+        restore_models = False
         model = model_configuration (input, data_train, data_validation, data_test, num_classes, restore_models)
         trainning_process_time = 0
         samples_shape = [0,0,0]
@@ -1483,6 +1483,13 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
             filename = 'all_results_incremental_window_top_k.csv'
+        elif type_of_window == 'jumpy_sliding_window':
+            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
+            filename = 'all_results_jumpy_sliding_window_top_k.csv'
+            pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+            #pos_x = [0, 10, 20, 40, 60, 70, 80, 100]
+            pos_y = 0.8
 
     return path, servidor, filename, pos_x, pos_y, title
 def plot_results__(type_of_input, type_of_window):
@@ -1530,14 +1537,15 @@ def plot_results__(type_of_input, type_of_window):
                                                                           2000,
                                                                           model)
 
-
+    a=0
 
 
 
     #title = 'Beam Selection using '+ model +' with '+type_of_input+' and '+type_of_window+'\n Reference: Batool -' + servidor
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
-
+    #plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
+    #plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
+    plot.plot_score_jumpy_online_learning(path=path, filename=filename,
+                                          pos_x=pos_x, pos_y=pos_y, title=title)
     plot.plot_score_and_time_process_online_learning(path=path, filename=filename,
                                                      pos_x=pos_x, pos_y=pos_y, title=title)
 
@@ -1659,9 +1667,9 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
 
 
 def main():
-    run_simulation = True
+    run_simulation = False
     input = 'lidar'
-    type_of_window = 1
+    type_of_window = 4
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1678,6 +1686,9 @@ def main():
     elif type_of_window == 3 :
         print("|          Incremental window")
         window = 'incremental_window'
+    elif type_of_window == 4 :
+        print("|          Jumpy sliding window")
+        window = 'jumpy_sliding_window'
 
     print("|            " + input +
           "\n+----------------------------------")
@@ -1697,6 +1708,7 @@ def main():
         elif type_of_window == 3:
             fit_incremental_window_top_k(label_input_type='coord',
                                          episodes_for_test=2)
+
     else:
         plot_results__(type_of_input=input, type_of_window=window)
 
@@ -1705,7 +1717,7 @@ def main():
     # print(keras.__version__)
 
 #main()
-fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=100, window_size=2000)
+fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')

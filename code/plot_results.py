@@ -530,26 +530,26 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
 
 def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, filename):
     import tools as tls
-    all_csv_data = pd.read_csv (path + filename)
+    all_csv_data = pd.read_csv(path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
              'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
 
-    for i in range (len (top_k)):
-        top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
-        all_score_top_1 = top_1 ['score']
-        mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
+    for i in range(len(top_k)):
+        top_1 = all_csv_data[all_csv_data['top-k'] == top_k[i]]
+        all_score_top_1 = top_1['score']
+        mean_accum_top_1 = tls.calculate_mean_score(all_score_top_1)
 
-        plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
-                  label='Top-' + str (top_k [i]))
-        plt.text (pos_x [i], pos_y,
-                  str (np.round (np.mean (mean_accum_top_1), 3)),
-                  fontsize=8, color=color [i])
-    plt.xlabel ('Episode', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.ylabel ('Accumulative score', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.title (title, fontsize=12)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.legend (ncol=4, loc='lower right')
-    plt.savefig (path + 'top-k_score.png', dpi=300)
+        plt.plot(top_1['episode'], mean_accum_top_1, '.', color=color[i],
+                  label='Top-' + str(top_k[i]))
+        plt.text(pos_x[i], pos_y,
+                  str(np.round(np.mean(mean_accum_top_1), 3)),
+                  fontsize=8, color=color[i])
+    plt.xlabel('Episode', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel('Accumulative score', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title(title, fontsize=12)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend(ncol=4, loc='lower right')
+    plt.savefig(path + 'top-k_score.png', dpi=300)
     plt.close()
 
     top_1 = all_csv_data[all_csv_data ['top-k'] == 1]
@@ -613,6 +613,52 @@ def plot_histogram_of_trainning_time(path, filename, title, graph_type):
         plt.savefig(path + 'kde_of_trainning_time.png', dpi=300)
         plt.close()
 
+def plot_score_jumpy_online_learning( pos_x, pos_y, path, title, filename):
+    import tools as tls
+    all_csv_data = pd.read_csv(path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
+             'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+    all_score_top_1 = top_1 ['score']
+    mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
+
+    plt.plot(top_1['episode'], mean_accum_top_1, '.', color=color[0],
+                  label='Top-' + str(top_k[0]))
+    #plt.text(pos_x[i], pos_y,
+    #              str(np.round(np.mean(mean_accum_top_1), 3)),
+    #              fontsize=8, color=color[i])
+    plt.xlabel('Episode', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel('Accumulative score', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title(title, fontsize=12)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend(ncol=4, loc='lower right')
+    plt.show()
+    a = 0
+    #plt.savefig(path + 'top-k_1_score.png', dpi=300)
+    #plt.close()
+
+    '''
+    top_1 = all_csv_data[all_csv_data ['top-k'] == 1]
+    trainning_time = top_1['trainning_process_time'] * 1e-9
+    mean_accum_time = tls.calculate_mean_score (trainning_time)
+    plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
+    plt.plot(top_1['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
+    plt.text(np.mean(top_1['episode']), np.mean(mean_accum_time)+2,
+              'Mean: ' + str(np.round(np.mean(trainning_time), 3)),
+             bbox={'facecolor': 'white',
+                   'alpha': 0.8,
+                   'pad': 0.1,
+                   'edgecolor': 'white',
+                   'boxstyle': 'round'},
+              fontsize=10, color='red')
+    plt.xlabel('Episode', fontsize=10)#, fontweight='bold', fontname='Arial')
+    plt.ylabel('Trainning Time [s]', fontsize=10)#, fontweight='bold', fontname='Arial')
+    plt.title(title, fontsize=12)#, fontweight='bold')#, family=['DejaVu Sans'])# fontname='Arial')
+    plt.legend(loc='lower right', frameon=False)
+    plt.savefig(path + 'trainning_time_1.png', dpi=300)
+    plt.close()
+    '''
 
 
 
