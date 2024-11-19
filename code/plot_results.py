@@ -528,33 +528,15 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, filename):
+def plot_time_process_online_learning( path, title, filename):
     import tools as tls
     all_csv_data = pd.read_csv(path + filename)
-    top_k = [1, 5, 10, 15, 20, 25, 30]
-    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
-             'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
-
-    for i in range(len(top_k)):
-        top_1 = all_csv_data[all_csv_data['top-k'] == top_k[i]]
-        all_score_top_1 = top_1['score']
-        mean_accum_top_1 = tls.calculate_mean_score(all_score_top_1)
-
-        plt.plot(top_1['episode'], mean_accum_top_1, '.', color=color[i],
-                  label='Top-' + str(top_k[i]))
-        plt.text(pos_x[i], pos_y,
-                  str(np.round(np.mean(mean_accum_top_1), 3)),
-                  fontsize=8, color=color[i])
-    plt.xlabel('Episode', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.ylabel('Accumulative score', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.title(title, fontsize=12)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.legend(ncol=4, loc='lower right')
-    plt.savefig(path + 'top-k_score.png', dpi=300)
-    plt.close()
 
     top_1 = all_csv_data[all_csv_data ['top-k'] == 1]
     trainning_time = top_1['trainning_process_time'] * 1e-9
     mean_accum_time = tls.calculate_mean_score (trainning_time)
+    max_time = np.max(trainning_time)
+    min_time = np.min(trainning_time)
     plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
     plt.plot(top_1['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
     plt.text(np.mean(top_1['episode']), np.mean(mean_accum_time)+2,
@@ -565,6 +547,8 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
                    'edgecolor': 'white',
                    'boxstyle': 'round'},
               fontsize=10, color='red')
+    plt.text(1500, max_time-2, 'Max: ' + str(np.round(max_time, 3)), fontsize=10, color='red')
+    plt.text(5, max_time-2, 'Min: ' + str(np.round(min_time, 3)), fontsize=10, color='red')
     plt.xlabel('Episode', fontsize=10)#, fontweight='bold', fontname='Arial')
     plt.ylabel('Trainning Time [s]', fontsize=10)#, fontweight='bold', fontname='Arial')
     plt.title(title, fontsize=12)#, fontweight='bold')#, family=['DejaVu Sans'])# fontname='Arial')
@@ -572,7 +556,37 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
+def plot_time_process_vs_samples_online_learning( path, title, filename):
 
+    sns.set_theme (style="darkgrid")
+    all_csv_data = pd.read_csv (path + filename)
+    top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+    trainning_time = top_1 ['trainning_process_time'] * 1e-9
+    max_time = np.max (trainning_time)
+    min_time = np.min (trainning_time)
+
+    fig, ax1 = plt.subplots(figsize=(15, 7))
+    plt.plot(top_1['episode'], trainning_time)#, color='purple')
+    plt.text(1750, max_time - 2, 'Max: ' + str(np.round(max_time, 3)) + 'seg', fontsize=10, color='red')
+    plt.text(5, max_time - 2, 'Min: ' + str(np.round(min_time, 3)) + 'seg', fontsize=10, color='red')
+    plt.text(np.mean(top_1['episode']), max_time - 2, 'Mean: ' + str(np.round(np.mean(trainning_time), 3)) + 'seg', fontsize=10, color='red')
+
+    ax1.set_ylabel ('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    ax1.set_xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx ()
+    plt.plot(top_1['episode'], top_1['samples_trainning'], 'o', color='red')#, alpha=0.3)#, label='fixed window')
+
+    ax2.set_ylabel ('Training samples', fontsize=12, color='black', labelpad=12, fontweight='bold')  # , color='red')
+
+    # Adicionando título e legendas
+    plt.title (title, fontsize=15, color='black', fontweight='bold')
+    # plt.xticks(all_results_traditional['Episode'])
+    plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
+    plt.savefig (path + 'time_and_samples_train_comparation.png', dpi=300)
+    plt.close ()
 def plot_histogram_of_trainning_time(path, filename, title, graph_type):
     all_csv_data = pd.read_csv (path + filename)
 
@@ -660,22 +674,76 @@ def plot_score_jumpy_online_learning( pos_x, pos_y, path, title, filename):
     plt.close()
     '''
 
+def plot_score_top_k(path, filename, title):
+    all_csv_data = pd.read_csv (path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+
+    all_mean_score_top_k = []
+    for i in range(len(top_k)):
+        score_top_k = all_csv_data[all_csv_data['top-k'] == top_k[i]]
+        mean_score_top_k = np.mean(score_top_k['score'])
+        all_mean_score_top_k.append(mean_score_top_k)
+
+    plt.plot(top_k, all_mean_score_top_k, 'o-', color='blue')
+    for i in range(len(top_k)):
+        plt.text(top_k[i], all_mean_score_top_k[i] - 0.08, str(np.round(all_mean_score_top_k[i], 3)))
+    plt.xlabel('Top-K', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.xticks(top_k)
+    plt.ylim([0, 1.1])
+    plt.xlim([0, 35])
+    plt.grid()
+    plt.title(title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.savefig(path + 'score_top_k.png', dpi=300)
+    plt.close()
 
 
-'''
-def test:
-    plt.bar ([i - (2 * barWidth) for i in space], score_coord ['Accuracy'],
-              color='salmon', label='coord')
-    plt.bar ([i - barWidth for i in space], lidar_2D_Rx_term ['Accuracy'],
-              color='teal', label='lidar 2D with rx term')
-    plt.bar (space, lidar_2D_Rx_term_sv ['Accuracy'],
-              color='teal', label='lidar 2D with rx term svar', alpha=0.5)
-    plt.bar ([i + barWidth for i in space], lidar_2D_Rx_term_coord ['Accuracy'],
-              color='darkred', label='lidar 2D with rx term and coord')
-    plt.bar ([i + 2 * barWidth for i in space], lidar_2D_Rx_term_coord_sv ['Accuracy'],
-              color='darkred', label='lidar 2D with rx term and coord svar', alpha=0.5)
-    plt.xticks (ticks=space, labels=[str (i) for i in score_coord ['top_k']])
-'''
+
+
+
+
+
+
+
+
+
+
+
+    '''
+    plt.plot (top_1 ['episode'], all_score_top_1, '.', color=color [0],
+              label='Top-' + str (top_k [0]))
+    plt.text (1750, 0.8, str (np.round (np.mean (all_score_top_1), 3)),
+              fontsize=10, color=color [1],
+              bbox=dict (facecolor='yellow', edgecolor='none'))
+    plt.xlabel ('Episode', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend (ncol=4, loc='lower right')
+    #plt.savefig (path + 'score_top_k.png', dpi=300)
+    plt.show ()
+    '''
+def plot_score_top_1(path, filename, title):
+    all_csv_data = pd.read_csv (path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
+             'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+    all_score_top_1 = top_1 ['score']
+
+    plt.plot (top_1 ['episode'], all_score_top_1, '.', color=color [0],
+              label='Top-' + str (top_k [0]))
+    plt.text(1750, 0.8, str(np.round(np.mean(all_score_top_1), 3)),
+                  fontsize=10, color=color[1],
+                bbox=dict(facecolor='yellow', edgecolor='none'))
+    plt.xlabel ('Episode', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend (ncol=4, loc='lower right')
+    plt.savefig (path + 'score_top_1.png', dpi=300)
+    plt.close()
+
+
 #plot_results_lidar_with_coord_top_k()
 #plot_of_bars()
 
