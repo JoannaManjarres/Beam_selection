@@ -752,11 +752,11 @@ def beam_selection_Batool(input,
                           data_test,
                           num_classes,
                           episode,
-                          see_trainning_progress):
+                          see_trainning_progress, restore_models):
 
 
 
-    model = model_configuration(input, data_train, data_validation, data_test, num_classes)
+    model = model_configuration(input, data_train, data_validation, data_test, num_classes, restore_models)
     trainning_process_time, samples_shape = train_model(input, model, data_train, data_validation, see_trainning_progress)
     top_k = [1, 5, 10, 15, 20, 25, 30]
     df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
@@ -976,7 +976,8 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
                                                      data_test=[input_test, label_test],
                                                      num_classes=num_classes,
                                                      episode=i,
-                                                     see_trainning_progress= see_trainning_progress)
+                                                     see_trainning_progress= see_trainning_progress,
+                                                     restore_models=False)
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
 
             a=0
@@ -1002,8 +1003,11 @@ def sliding_prepare_lidar_for_trainning(lidar_for_train):
     new_form_for_lidar = np.array(lidar_for_train)
     size_of_lidar = new_form_for_lidar.shape
     size_of_train = int(size_of_lidar[0] * 0.8)
-    lidar_train = new_form_for_lidar[:size_of_train]
-    lidar_validation = new_form_for_lidar[size_of_train:]
+    input_train = new_form_for_lidar[:size_of_train]
+    input_validation = new_form_for_lidar[size_of_train:]
+
+    lidar_train = input_train.reshape(input_train.shape[0], 20, 200, 10)
+    lidar_validation = input_validation.reshape(input_validation.shape[0], 20, 200, 10)
     return lidar_train, lidar_validation
 def sliding_prepare_label_for_trainning(label_for_train):
     new_form_for_label = np.array(label_for_train)
@@ -1073,7 +1077,8 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                                                       data_test=[input_test, label_test],
                                                       num_classes=num_classes,
                                                       episode=i,
-                                                      see_trainning_progress=see_trainning_progress)
+                                                      see_trainning_progress=see_trainning_progress,
+                                                      restore_models=False)
 
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/incremental_window/'
@@ -1351,7 +1356,7 @@ def fit_sliding_window_top_k(label_input_type,
     episode_for_test = np.arange(0, episodes_for_test, 1)
     see_trainning_progress = 0
     start_index_s009 = 0
-    nro_episodes_s008 = 1564 #from 0 to 1564
+    nro_episodes_s008 = 2086 #from 0 to 1564
 
     df_all_results_top_k = pd.DataFrame()
     for i in range(len(episode_for_test)):
@@ -1364,15 +1369,20 @@ def fit_sliding_window_top_k(label_input_type,
                                                                                                       start_index_s008,
                                                                                                       label_input_type)
 
-                input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
-                label_train, label_validation = sliding_prepare_label_for_trainning(label_for_train)
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+                label_test = np.array (label_for_test)
 
-                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
-                                                                                                label_input_type,
-                                                                                                s009_data)
+                if label_input_type == 'coord':
+                    input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                if label_input_type == 'lidar':
+                    input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
 
-                input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
-                label_test = np.array(label_for_test)
+
 
 
             else:
@@ -1385,7 +1395,6 @@ def fit_sliding_window_top_k(label_input_type,
                                                                                           all_dataset_s008,
                                                                                           start_index_s008,
                                                                                           label_input_type)
-                    input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning(input_for_train_s008)
                     label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning(label_for_train_s008)
 
                     input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window(
@@ -1393,18 +1402,39 @@ def fit_sliding_window_top_k(label_input_type,
                                                                     start_index=start_index_s009,
                                                                     end_index=end_index_s009,
                                                                     input_type=label_input_type)
-                    input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning(input_for_train_s009)
                     label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning(label_for_train_s009)
 
-
-                    input_train = np.concatenate((input_train_s008, input_train_s009), axis=0)
                     label_train = np.concatenate((label_train_s008, label_train_s009), axis=0)
+                    label_validation = np.concatenate((label_val_s008, label_val_s009), axis=0)
+
 
                     input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
                                                                                                     label_input_type,
                                                                                                     s009_data)
-                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
                     label_test = np.array(label_for_test)
+
+                    if label_input_type == 'coord':
+                        input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning (input_for_train_s008)
+                        input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (input_for_train_s009)
+
+                        input_train = np.concatenate((input_train_s008, input_train_s009), axis=0)
+                        input_validation = np.concatenate((input_val_s008, input_val_s009), axis=0)
+
+                        #input_train = input_for_train.reshape(input_for_train.shape[0], 2, 1)
+                        #input_validation = input_for_validation.reshape(input_for_validation.shape[0], 2, 1)
+
+                        input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+
+                    if label_input_type == 'lidar':
+                        input_train_s008, input_validation_s008 = sliding_prepare_lidar_for_trainning(input_for_train_s008)
+                        input_train_s009, input_validation_s009 = sliding_prepare_lidar_for_trainning(input_for_train_s009)
+
+                        input_train = np.concatenate((input_train_s008, input_train_s009), axis=0)
+                        input_validation = np.concatenate((input_validation_s008, input_validation_s009), axis=0)
+
+                        input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+
+
 
 
 
@@ -1414,16 +1444,21 @@ def fit_sliding_window_top_k(label_input_type,
                                                                                                    start_index=start_index_s009,
                                                                                                    end_index=end_index_s009,
                                                                                                    input_type=label_input_type)
-                    input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train_s009)
+
                     label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
-
-
-
                     input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
-                                                                                             label_input_type,
-                                                                                             s009_data)
-                    input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                                                                                                     label_input_type,
+                                                                                                     s009_data)
+
                     label_test = np.array (label_for_test)
+                    if label_input_type == 'coord':
+                        input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train_s009)
+                        input_test = np.array(input_for_test).reshape (len (input_for_test), 2, 1)
+                    if label_input_type == 'lidar':
+                        input_train, input_validation = sliding_prepare_lidar_for_trainning (input_for_train_s009)
+                        input_test = np.array(input_for_test).reshape (len (input_for_test), 20, 200, 10)
+
+
                     start_index_s009 += 1
 
             print (i, end=' ', flush=True)
@@ -1433,7 +1468,8 @@ def fit_sliding_window_top_k(label_input_type,
                                                       data_test=[input_test, label_test],
                                                       num_classes=num_classes,
                                                       episode=i,
-                                                      see_trainning_progress=see_trainning_progress)
+                                                      see_trainning_progress=see_trainning_progress,
+                                                      restore_models=False)
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/sliding_window/window_size_var/'
             df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
@@ -1683,9 +1719,9 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
 
 
 def main():
-    run_simulation = False
+    run_simulation = True
     input = 'lidar'
-    type_of_window = 1
+    type_of_window = 2
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1713,16 +1749,16 @@ def main():
 
     if run_simulation:
         if type_of_window == 1:
-                fit_fixed_window_top_k(input, nro_of_episodes_for_test=1)
+                fit_fixed_window_top_k(input, nro_of_episodes_for_test=2000)
         elif type_of_window == 2:
-            window_size = [100]#[100, 500, 1000, 1500, 2000]
+            window_size = [100, 500, 1000, 1500, 2000]
             for i in range(len(window_size)):
                 print('window_size:', window_size[i])
-                fit_sliding_window_top_k(label_input_type='coord',
+                fit_sliding_window_top_k(label_input_type=input,
                                          episodes_for_test=2000,
                                          window_size=window_size[i])
         elif type_of_window == 3:
-            fit_incremental_window_top_k(label_input_type='coord',
+            fit_incremental_window_top_k(label_input_type=input,
                                          episodes_for_test=2)
 
     else:
