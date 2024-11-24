@@ -556,7 +556,7 @@ def plot_time_process_online_learning( path, title, filename):
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_time_process_vs_samples_online_learning( path, title, filename):
+def plot_time_process_vs_samples_online_learning( path, title, filename, ref):
 
     sns.set_theme (style="darkgrid")
     all_csv_data = pd.read_csv (path + filename)
@@ -565,10 +565,16 @@ def plot_time_process_vs_samples_online_learning( path, title, filename):
     max_time = np.max (trainning_time)
     min_time = np.min (trainning_time)
 
+    if ref == 'wisard':
+        offset = 0
+        print(ref)
+    else:
+        offset = 2
+
     fig, ax1 = plt.subplots(figsize=(15, 7))
     plt.plot(top_1['episode'], trainning_time)#, color='purple')
-    plt.text(1750, max_time - 2, 'Max: ' + str(np.round(max_time, 3)) + 'seg', fontsize=10, color='red')
-    plt.text(5, max_time - 2, 'Min: ' + str(np.round(min_time, 3)) + 'seg', fontsize=10, color='red')
+    plt.text(1750, max_time - offset, 'Max: ' + str(np.round(max_time, 3)) + ' seg', fontsize=10, color='red')
+    plt.text(5, max_time - offset, 'Min: ' + str(np.round(min_time, 3)) + ' seg', fontsize=10, color='red')
     plt.text(np.mean(top_1['episode']), max_time - 2, 'Mean: ' + str(np.round(np.mean(trainning_time), 3)) + 'seg', fontsize=10, color='red')
 
     ax1.set_ylabel ('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
@@ -600,14 +606,15 @@ def plot_histogram_of_trainning_time(path, filename, title, graph_type):
     if graph_type == 'ecdf':
         #sns.set_style ('whitegrid', {'axes.edgecolor': '.6', 'grid.color': '.6'})
         sns.ecdfplot(trainning_time, label='Top-' + str (top_k [i]))
-        plt.title(title + ' Trainning Time with ECDF')
+
+        plt.title(title + ' \n Trainning Time with ECDF')
         plt.grid(True)
         plt.savefig(path + 'ecdf_of_trainning_time.png', dpi=300)
         plt.close()
 
     if graph_type == 'hist':
         fig, ax1 = plt.subplots ()
-        sns.kdeplot(trainning_time, label='kde density', shade=False)
+        sns.kdeplot(trainning_time, label='kde density')
         ax2 = ax1.twinx()
         plt.grid (True)
         plt.hist(trainning_time, bins=60, alpha=0.3, label='Top-' + str (top_k [i]))
@@ -627,6 +634,41 @@ def plot_histogram_of_trainning_time(path, filename, title, graph_type):
         plt.savefig(path + 'kde_of_trainning_time.png', dpi=300)
         plt.close()
 
+def plot_histogram_of_trainning_time_Wisard(path, filename, title, graph_type, window_size):
+    all_csv_data = pd.read_csv (path + filename)
+
+    trainning_time = all_csv_data ['trainning Time top-1'] * 1e-9
+
+    if graph_type == 'ecdf':
+        #sns.set_style ('whitegrid', {'axes.edgecolor': '.6', 'grid.color': '.6'})
+        sns.ecdfplot(trainning_time, label='Top-1')
+
+        plt.title(title + ' \n Trainning Time with ECDF')
+        plt.grid(True)
+        plt.savefig(path + str(window_size)+'_ecdf_of_trainning_time.png', dpi=300)
+        plt.close()
+
+    if graph_type == 'hist':
+        fig, ax1 = plt.subplots ()
+        sns.kdeplot(trainning_time, label='kde density')
+        ax2 = ax1.twinx()
+        plt.grid (True)
+        plt.hist(trainning_time, bins=60, alpha=0.3, label='Top-1')
+        ax2.set_ylabel('Counts')
+        ax1.set_xlabel('Trainning Time [s]')
+        ax1.legend(loc='upper right')
+        plt.title(title)
+        plt.grid(True)
+        #ax2.legend (loc='upper right')
+        plt.savefig (path + str(window_size)+'_histogram_of_trainning_time.png', dpi=300)
+        plt.close()
+
+    if graph_type == 'kde':
+        sns.kdeplot(trainning_time, label='kde density', shade=True, alpha=0.3)
+        plt.title(title)
+        plt.show()
+        plt.savefig(path +str(window_size)+ '_kde_of_trainning_time.png', dpi=300)
+        plt.close()
 def plot_score_jumpy_online_learning( pos_x, pos_y, path, title, filename):
     import tools as tls
     all_csv_data = pd.read_csv(path + filename)
@@ -698,30 +740,6 @@ def plot_score_top_k(path, filename, title):
     plt.close()
 
 
-
-
-
-
-
-
-
-
-
-
-
-    '''
-    plt.plot (top_1 ['episode'], all_score_top_1, '.', color=color [0],
-              label='Top-' + str (top_k [0]))
-    plt.text (1750, 0.8, str (np.round (np.mean (all_score_top_1), 3)),
-              fontsize=10, color=color [1],
-              bbox=dict (facecolor='yellow', edgecolor='none'))
-    plt.xlabel ('Episode', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.ylabel ('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.legend (ncol=4, loc='lower right')
-    #plt.savefig (path + 'score_top_k.png', dpi=300)
-    plt.show ()
-    '''
 def plot_score_top_1(path, filename, title):
     all_csv_data = pd.read_csv (path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -742,6 +760,76 @@ def plot_score_top_1(path, filename, title):
     plt.legend (ncol=4, loc='lower right')
     plt.savefig (path + 'score_top_1.png', dpi=300)
     plt.close()
+
+def plot_score_top_k_wisard(path, filename, title, window_size):
+    all_csv_data = pd.read_csv (path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+
+    all_mean_score_top_k = []
+    for i in range (len (top_k)):
+        all_mean_score_top_k.append (np.mean(all_csv_data['score top-'+str(top_k[i])]))
+
+
+    plt.plot (top_k, all_mean_score_top_k, 'o-', color='blue')
+    for i in range (len (top_k)):
+        plt.text (top_k [i], all_mean_score_top_k [i] - 0.08, str (np.round (all_mean_score_top_k [i], 3)))
+    plt.xlabel ('Top-K', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.xticks (top_k)
+    plt.ylim ([0, 1.1])
+    plt.xlim ([0, 35])
+    plt.grid ()
+    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.savefig (path + str(window_size)+'_score_top_k.png', dpi=300)
+    plt.close ()
+
+def plot_time_process_vs_samples_online_learning_wisard( path,
+                                                         title,
+                                                         filename,
+                                                         ref,
+                                                         type_window,
+                                                         size_window):
+
+    sns.set_theme (style="darkgrid")
+    all_csv_data = pd.read_csv (path + filename)
+
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    trainning_time = all_csv_data['trainning Time top-1']* 1e-9
+    max_time = np.max (trainning_time)
+    min_time = np.min (trainning_time)
+
+    if ref == 'wisard':
+        offset = 0
+        print(ref)
+    else:
+        offset = 2
+
+    fig, ax1 = plt.subplots(figsize=(15, 7))
+    plt.plot(all_csv_data['episode'], trainning_time)#, color='purple')
+    plt.text(1750, max_time - offset, 'Max: ' + str(np.round(max_time, 3)) + ' seg', fontsize=10, color='red')
+    plt.text(5, max_time - offset, 'Min: ' + str(np.round(min_time, 3)) + ' seg', fontsize=10, color='red')
+    plt.text(np.mean(all_csv_data['episode']), max_time - 2, 'Mean: ' + str(np.round(np.mean(trainning_time), 3)) + 'seg', fontsize=10, color='red')
+
+    ax1.set_ylabel ('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    ax1.set_xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx ()
+    plt.plot(all_csv_data['episode'], all_csv_data['samples train'], 'o', color='red')#, alpha=0.3)#, label='fixed window')
+
+    ax2.set_ylabel ('Training samples', fontsize=12, color='black', labelpad=12, fontweight='bold')  # , color='red')
+
+    # Adicionando título e legendas
+    plt.title (title, fontsize=15, color='black', fontweight='bold')
+    # plt.xticks(all_results_traditional['Episode'])
+    plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
+    if type_window == 'sliding_window':
+        plt.savefig (path + str(size_window)+'_time_and_samples_train_comparation.png', dpi=300)
+    plt.savefig (path + 'time_and_samples_train_comparation.png', dpi=300)
+    plt.close ()
+
+
 
 
 #plot_results_lidar_with_coord_top_k()

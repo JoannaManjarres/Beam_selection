@@ -1560,6 +1560,7 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
     elif label_input_type == 'lidar_coord':
         input_train = s008_data['lidar_coord'].tolist()
 
+    df_all_results_top_k = pd.DataFrame ()
     for i in range(len(episode_for_test)):
         if i in s009_data['Episode'].tolist():
             label_test = s009_data[s009_data['Episode'] == i]['index_beams'].tolist()
@@ -1570,12 +1571,22 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
             elif label_input_type == 'lidar_coord':
                 input_test = s009_data[s009_data['Episode'] == i]['lidar_coord'].tolist()
 
+            df_results_top_k = beam_selection_with_confidence_interval (input_train,
+                                                                                        input_test,
+                                                                                        label_train,
+                                                                                        label_test,
+                                                                                        label_input_type)
+            df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+
+
+            '''
             df_results_wisard_top_k_with_std = beam_selection_with_confidence_interval (input_train,
                                                                                         input_test,
                                                                                         label_train,
                                                                                         label_test,
                                                                                         label_input_type)
 
+            
             all_score_top_1.append (df_results_wisard_top_k_with_std ['score_mean'] [0])
             all_score_top_5.append (df_results_wisard_top_k_with_std ['score_mean'] [1])
             all_score_top_10.append (df_results_wisard_top_k_with_std ['score_mean'] [2])
@@ -1612,10 +1623,12 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
             all_episodes.append (i)
             all_samples_train.append (len (input_train))
             all_samples_test.append (len (input_test))
+            '''
         else:
             continue
 
     ## SAVE RESULTS
+    '''
 
     df_results_score = pd.DataFrame ({"episode": all_episodes,
                                       "score_mean_top_1": all_score_top_1, "score_std_top_1": std_score_top_1,
@@ -1643,14 +1656,16 @@ def fit_fixed_window_top_k(nro_of_episodes, label_input_type, s008_data, s009_da
                                                "tranning_time_mean_top_30": trainning_time_top_30,
                                                "tranning_time_std_top_30": std_trainning_time_top_30,
                                                "samples_train": all_samples_train, "samples_test": all_samples_test})
+   
 
     path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/results_with_std/'
     df_results_score.to_csv(path_result + 'scores_with_std_fixed_window_top_k.csv',
                              index=False)
     df_results_trainning_time.to_csv(
         path_result + 'trainning_time_with_std_fixed_window_top_k.csv', index=False)
-
-
+    '''
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/results_with_std/'
+    df_all_results_top_k.to_csv(path_result + 'all_results_fixed_window_top_k.csv', index=False)
 
 
 def plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type):
@@ -2090,6 +2105,7 @@ def plot_hist_ecdf(input_type, type_of_window):
 def read_results_for_plot(input_type, type_of_window):
     path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
 
+
     if type_of_window == 'sliding_window':
         path_result_fixed_window = path_result + input_type + '/'+ type_of_window + '/window_size_var/'
         filename = 'all_results_' + type_of_window + '_500_top_k.csv'
@@ -2405,7 +2421,68 @@ def read_files_process_results(input_type, type_of_window):
     a = 0
     #all_data.to_csv(path_result_fixed_window + 'all_data_[mean_std]_fixed_window.csv', index=False)
 
+def plot_score(type_of_input, type_of_window):
+    import sys
+    import os
+    sys.path.append ("../")
+    import plot_results as plot
 
+    path = '../results/score/Wisard/online/top_k/results_servidor/top_k/'+type_of_input+'/'+type_of_window+'/'
+    title = 'Beam Selection using WiSARD with ' + type_of_input + ' and ' + type_of_window
+
+    if type_of_window == 'fixed_window':
+        if type_of_input == 'coord':
+            filename = '0_all_results_' + type_of_window + '_top_k.csv'
+            plot.plot_score_top_k(path, filename, title)
+            plot.plot_score_top_1(path, filename, title)
+            plot.plot_time_process_vs_samples_online_learning (path=path, filename=filename, title=title, ref='wisard')
+            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='hist')
+            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf')
+
+        if type_of_input == 'lidar':
+            filename = 'all_results_' + type_of_window + '_top_k.csv'
+            #plot.plot_score_top_k_wisard (path, filename, title, 0)
+
+            plot.plot_time_process_vs_samples_online_learning_wisard (path=path,
+                                                                      filename=filename,
+                                                                      title=title,
+                                                                      ref='wisard',
+                                                                      type_window=type_of_window,
+                                                                      size_window=0)
+
+            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'hist', 0)
+            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'ecdf', 0)
+
+    if type_of_window == 'incremental_window':
+        filename = 'all_results_' + type_of_window + '_top_k.csv'
+        plot.plot_score_top_k_wisard (path, filename, title, 0)
+        plot.plot_time_process_vs_samples_online_learning_wisard (path=path,
+                                                                  filename=filename,
+                                                                  title=title,
+                                                                  ref='wisard',
+                                                                  type_window=type_of_window,
+                                                                  size_window=0)
+        plot.plot_histogram_of_trainning_time_Wisard(path, filename, title, 'hist', 0)
+        plot.plot_histogram_of_trainning_time_Wisard(path, filename, title, 'ecdf', 0)
+
+    if type_of_window == 'sliding_window':
+        path = path + 'window_size_var/'
+        window_size = [100, 500, 1000, 1500, 2000]
+        for i in range(len(window_size)):
+            filename = 'all_results_' + type_of_window + '_'+str(window_size[i])+'_top_k.csv'
+            title = 'Beam Selection using WiSARD with ' + type_of_input + ' and \n' + type_of_window + ' window size: ' + str(window_size[i])
+
+            #plot.plot_score_top_k_wisard(path, filename, title, window_size[i])
+
+            plot.plot_time_process_vs_samples_online_learning_wisard(path=path,
+                                                                     filename=filename,
+                                                                     title=title,
+                                                                     ref='wisard',
+                                                                     type_window=type_of_window,
+                                                                     size_window=window_size[i])
+
+            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'hist', window_size[i])
+            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'ecdf', window_size[i])
 
 
 eposodies_for_test = 2000
@@ -2416,10 +2493,13 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
+input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 
 
-read_files_process_results(input_type, 'fixed_window')
+
+#fit_fixed_window_top_k(eposodies_for_test, episodes_for_train, input_type)
+plot_score(input_type, 'fixed_window')
+#read_files_process_results(input_type, 'fixed_window')
 #simulation_of_online_learning_top_k(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')

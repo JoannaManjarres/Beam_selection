@@ -785,7 +785,7 @@ def beam_selection_Batool_for_fit_jumpy(input,
 
     else:
         restore_models = False
-        model = model_configuration (input, data_train, data_validation, data_test, num_classes, restore_models)
+        model = model_configuration(input, data_train, data_validation, data_test, num_classes, restore_models)
         trainning_process_time = 0
         samples_shape = [0,0,0]
         top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -1573,7 +1573,7 @@ def plot_results__(type_of_input, type_of_window):
                                                                           2000,
                                                                           model)
 
-    plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title)
+    plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool')
     plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
     plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
     plot.plot_time_process_online_learning(path=path, filename=filename,  title=title)
