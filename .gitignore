@@ -1,6 +1,7 @@
 .DS_Store
 /data/
 /results/
+/analyses/
 /code/Mashhadi/lidar_test_raymobtime.npz
 /code/Mashhadi/lidar_train_raymobtime.npz
 /code/Mashhadi/lidar_validation_raymobtime.npz
