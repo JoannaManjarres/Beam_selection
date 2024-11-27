@@ -484,6 +484,33 @@ def plot_powers_comparition(predicted_A, predicted_B, predicted_C,
     plt.savefig(path + name_fig,  bbox_inches='tight', pad_inches=0.1, dpi=300) #transparent=True,
     plt.close()
 
+def plot_accum_score_top_k(pos_x, pos_y, path, title, filename, window_size=0):
+    import tools as tls
+    all_csv_data = pd.read_csv (path + filename)
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
+             'teal']  # 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    for i in range (len (top_k)):
+        top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
+        all_score_top_1 = top_1 ['score']
+        mean_accum_top_1 = tls.calculate_mean_score (all_score_top_1)
+
+        plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
+                  label='Top-' + str (top_k [i]))
+        plt.text (pos_x [i], pos_y,
+                  str (np.round (mean_accum_top_1 [-1], 3)),
+                  fontsize=8, color=color [i])
+    plt.xlabel ('Episode', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel ('Accumulative score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=14)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.legend (ncol=4, loc='lower right')
+    if window_size == 0:
+        plt.savefig(path + 'accum_score_top_k.png', dpi=300)
+    else:
+        plt.savefig(path + str(window_size)+'_accum_score_top_k.png', dpi=300)
+    plt.close ()
+
 def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, filename):
     import tools as tls
     all_csv_data = pd.read_csv (path + filename)
@@ -499,11 +526,11 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
         plt.plot (top_1 ['episode'], mean_accum_top_1, '.', color=color [i],
                   label='Top-' + str (top_k [i]))
         plt.text (pos_x [i], pos_y,
-                  str (np.round (np.mean (mean_accum_top_1), 3)),
+                  str (np.round (mean_accum_top_1[-1], 3)),
                   fontsize=8, color=color [i])
     plt.xlabel ('Episode', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
     plt.ylabel ('Accumulative score', fontsize=10)#, fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.title (title, fontsize=12)#, fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title (title, fontsize=14)#, fontweight='bold', fontname='Myanmar Sangam MN')
     plt.legend (ncol=4, loc='lower right')
     plt.savefig (path + 'top-k_score.png', dpi=300)
     plt.close()

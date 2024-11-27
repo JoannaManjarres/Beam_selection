@@ -246,6 +246,69 @@ def fit_fixed_window_top_k_novo(nro_of_episodes_test,
     path = path_result + str(rodada)
     df_all_results_top_k.to_csv(path + '_all_results_fixed_window_top_k.csv', index=False)
 
+def fit_incremental_window_top_k_novo(nro_of_episodes_test,
+                                      input_type,
+                                      rodada,
+                                      s008_data, s009_data):
+    import tools as tls
+
+    print('|  Incremental  |', input_type, '\t |')
+    episode_for_test = np.arange(0, nro_of_episodes_test, 1)
+
+    label_input_type = input_type
+
+    df_all_results_top_k = pd.DataFrame ()
+    for i in range (len (episode_for_test)):
+        if i in s009_data['Episode'].tolist():
+            if i == 0:
+
+                start_index_s008 = 0
+                input_train, label_train = tls.extract_training_data_from_s008_sliding_window (s008_data=s008_data,
+                                                                                start_index=start_index_s008,
+                                                                                input_type=label_input_type)
+
+                input_test, label_test = tls.extract_test_data_from_s009_sliding_window (episode=i,
+                                                                          label_input_type=label_input_type,
+                                                                          s009_data=s009_data)
+
+            else:
+
+                start_index_s008 = 0
+                input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(
+                    s008_data=s008_data,
+                    start_index=start_index_s008,
+                    input_type=label_input_type)
+                input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
+                    s009_data=s009_data,
+                    start_index=0,
+                    end_index=i,
+                    input_type=label_input_type)
+
+                input_train = input_for_train_s008 + input_for_train_s009
+                label_train = label_for_train_s008 + label_for_train_s009
+
+
+            df_results_top_k = beam_selection_top_k_wisard (x_train=input_train,
+                                                            x_test=input_test,
+                                                            y_train=label_train,
+                                                            y_test=label_test,
+                                                            address_of_size=44,
+                                                            input_type=label_input_type)
+            df_results_top_k ['episode'] = i
+            df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+
+        else:
+            continue
+
+    ## SAVE RESULTS
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/incremental_window/'
+    path = path_result + str (rodada)
+    df_all_results_top_k.to_csv (path + '_all_results_incremental_window_top_k.csv', index=False)
+
+
+
+
+
 
 def fit_incremental_window(nro_of_episodes, input_type):
     preprocess_resolution = 16
@@ -286,6 +349,7 @@ def fit_incremental_window(nro_of_episodes, input_type):
     all_samples_train = []
     all_samples_test = []
 
+
     for i in range (len (episode_for_test)):
         if i in s009_data ['Episode'].tolist ():
             if i == 0:
@@ -325,58 +389,17 @@ def fit_incremental_window(nro_of_episodes, input_type):
 
             index_predict, trainning_time, test_time = beam_selection_wisard (data_train=input_train,
                                                                               data_validation=input_test,
-                                                                              label_train=label_train,
-                                                                              addressSize=44)
-            score = accuracy_score(label_test, index_predict)
-            all_score.append(score)
-            all_trainning_time.append(trainning_time)
-            all_test_time.append(test_time)
-            all_episodes.append(i)
-            all_samples_train.append(len(input_train))
-            all_samples_test.append(len(input_test))
+                                                                              label_train=label_train)
+
 
         else:
             continue
 
-    average_score = []
-    for i in range(len(all_score)):
-        i = i + 1
-        average_score.append(np.mean(all_score[0:i]))
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
+    #path = path_result + str (rodada)
+    #df_all_results_top_k.to_csv (path + '_all_results_fixed_window_top_k.csv', index=False)
 
-    path_result = '../results/score/Wisard/online/' + label_input_type + '/incremental_window/'
-    plt.plot (all_episodes, all_score, 'o--', color='red', label='Accuracy per episode')
-    plt.plot(all_episodes, average_score, 'o-', color='blue', label='Cumulative average accuracy')
 
-    plt.xlabel('Episode')
-    plt.ylabel('Accuracy')
-    plt.legend(loc='lower right', bbox_to_anchor=(1.04, 0))
-    plt.title('Beam selection using WiSARD with ' + label_input_type + ' in incremental window')
-    plt.savefig(path_result + 'score_incremental_window.png')
-    plt.close()
-
-    plt.plot(all_episodes, all_trainning_time, 'o-', color='green')
-    plt.xlabel('Episode')
-    plt.ylabel('Trainning Time')
-    plt.title('Trainning Time using fit with incremental window')
-    plt.savefig(path_result + 'time_train_incremental_window.png')
-    plt.close()
-
-    plt.plot(all_episodes, all_test_time, 'o-', color='blue')
-    plt.xlabel('Episode')
-    plt.ylabel('Test Time')
-    plt.title('Test Time using fit with incremental window')
-    plt.savefig(path_result + 'time_test_incremental_window.png')
-    plt.close()
-
-    headerList = ['Episode', 'Score', 'Trainning Time', 'Test Time', 'Samples Train', 'Samples Test']
-
-    with open (path_result + 'all_results_incremental_window.csv', 'w') as f:
-        writer_results = csv.writer(f, delimiter=',')
-        writer_results.writerow(headerList)
-        writer_results.writerows(zip(all_episodes,
-                                     all_score,
-                                     all_trainning_time, all_test_time,
-                                     all_samples_train, all_samples_test))
 def fit_incremental_window_top_k(nro_of_episodes, input_type, s008_data, s009_data):
     #print(" ____________________________________________")
     #print('/ Fit a WiSARD with: INCREMENTAL window top-k /')
@@ -2288,7 +2311,7 @@ def print_of_report_input(input_type, s008_data, s009_data):
         print ('| TEST  |\t - \t |\t  -   |\t  ', data_lidar_coord_size_test, ' \t|', data_beams_test, '  |')
         print ('+------------------------------------------------+')
 def simulation_of_online_learning_top_k(input_type):
-    eposodies_for_test = 2000
+    eposodies_for_test = 2#2000
     episodes_for_train = 2086
 
     print ('+------------------------------------------------+')
@@ -2311,7 +2334,13 @@ def simulation_of_online_learning_top_k(input_type):
     print('|----------------------------|')
 
 
-    for rodada in range(10):
+    for rodada in range(1):
+
+        fit_incremental_window_top_k_novo (nro_of_episodes_test=eposodies_for_test,
+                                           input_type=input_type,
+                                           rodada=rodada,
+                                           s008_data=s008_data, s009_data=s009_data)
+
         fit_fixed_window_top_k_novo(nro_of_episodes_test=eposodies_for_test,
                                     nro_of_episodes_train=episodes_for_train,
                                     input_type=input_type,
@@ -2320,6 +2349,7 @@ def simulation_of_online_learning_top_k(input_type):
                                     s009_data=s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')
+
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
     #print('|  Deslizante   |', input_type, '\t |')
@@ -2441,7 +2471,7 @@ def plot_score(type_of_input, type_of_window):
 
         if type_of_input == 'lidar':
             filename = 'all_results_' + type_of_window + '_top_k.csv'
-            #plot.plot_score_top_k_wisard (path, filename, title, 0)
+            plot.plot_score_top_k_wisard (path, filename, title, 0)
 
             plot.plot_time_process_vs_samples_online_learning_wisard (path=path,
                                                                       filename=filename,
@@ -2498,9 +2528,9 @@ input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 
 
 #fit_fixed_window_top_k(eposodies_for_test, episodes_for_train, input_type)
-plot_score(input_type, 'fixed_window')
+#plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
-#simulation_of_online_learning_top_k(input_type)
+simulation_of_online_learning_top_k(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
