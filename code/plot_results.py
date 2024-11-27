@@ -528,9 +528,14 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_time_process_online_learning( path, title, filename):
+def plot_time_process_online_learning( path, title, filename, window_size):
     import tools as tls
     all_csv_data = pd.read_csv(path + filename)
+
+    if window_size == 0:
+        path = path
+    else:
+        path = path + str(window_size) + '_'
 
     top_1 = all_csv_data[all_csv_data ['top-k'] == 1]
     trainning_time = top_1['trainning_process_time'] * 1e-9
@@ -556,7 +561,7 @@ def plot_time_process_online_learning( path, title, filename):
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_time_process_vs_samples_online_learning( path, title, filename, ref):
+def plot_time_process_vs_samples_online_learning( path, title, filename, ref, window_size=0):
 
     sns.set_theme (style="darkgrid")
     all_csv_data = pd.read_csv (path + filename)
@@ -591,10 +596,17 @@ def plot_time_process_vs_samples_online_learning( path, title, filename, ref):
     # plt.xticks(all_results_traditional['Episode'])
     plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
     plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
-    plt.savefig (path + 'time_and_samples_train_comparation.png', dpi=300)
+    if window_size == 0:
+        plt.savefig (path + 'time_and_samples_train_comparation.png', dpi=300)
+    else:
+        plt.savefig (path + str(window_size) + '_time_and_samples_train_comparation.png', dpi=300)
     plt.close ()
-def plot_histogram_of_trainning_time(path, filename, title, graph_type):
+def plot_histogram_of_trainning_time(path, filename, title, graph_type, window_size):
     all_csv_data = pd.read_csv (path + filename)
+    if window_size == 0:
+        path = path
+    else:
+        path = path + str(window_size) + '_'
 
 
     top_k = [1]#[1, 5, 10, 15, 20, 25, 30]
@@ -716,7 +728,7 @@ def plot_score_jumpy_online_learning( pos_x, pos_y, path, title, filename):
     plt.close()
     '''
 
-def plot_score_top_k(path, filename, title):
+def plot_score_top_k(path, filename, title, window_size=0):
     all_csv_data = pd.read_csv (path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]
 
@@ -736,11 +748,14 @@ def plot_score_top_k(path, filename, title):
     plt.xlim([0, 35])
     plt.grid()
     plt.title(title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.savefig(path + 'score_top_k.png', dpi=300)
+    if window_size == 0:
+        plt.savefig(path + 'score_top_k.png', dpi=300)
+    else:
+        plt.savefig(path + str(window_size)+'_score_top_k.png', dpi=300)
     plt.close()
 
 
-def plot_score_top_1(path, filename, title):
+def plot_score_top_1(path, filename, title, window_size=0):
     all_csv_data = pd.read_csv (path + filename)
     top_k = [1, 5, 10, 15, 20, 25, 30]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon',
@@ -758,7 +773,10 @@ def plot_score_top_1(path, filename, title):
     plt.ylabel ('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
     plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
     plt.legend (ncol=4, loc='lower right')
-    plt.savefig (path + 'score_top_1.png', dpi=300)
+    if window_size == 0:
+        plt.savefig (path + 'score_top_1.png', dpi=300)
+    else:
+        plt.savefig (path + str(window_size)+'_score_top_1.png', dpi=300)
     plt.close()
 
 def plot_score_top_k_wisard(path, filename, title, window_size):
@@ -779,9 +797,9 @@ def plot_score_top_k_wisard(path, filename, title, window_size):
     plt.ylim ([0, 1.1])
     plt.xlim ([0, 35])
     plt.grid ()
-    plt.title (title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.title(title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
     plt.savefig (path + str(window_size)+'_score_top_k.png', dpi=300)
-    plt.close ()
+    plt.close()
 
 def plot_time_process_vs_samples_online_learning_wisard( path,
                                                          title,

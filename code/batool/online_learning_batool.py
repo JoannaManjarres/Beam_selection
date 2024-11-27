@@ -1511,7 +1511,8 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
 
         elif type_of_window == 'sliding_window':
-            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'+ window_size +'/'
+            #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'+ window_size +'/'
+            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + window_size + '\n Reference: Batool -' + servidor
             filename = 'all_results_sliding_window_'+ window_size +'_top_k.csv'
 
@@ -1528,7 +1529,7 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             pos_y = 0.8
 
     return path, servidor, filename, pos_x, pos_y, title
-def plot_results__(type_of_input, type_of_window):
+def plot_results__(type_of_input, type_of_window, window_size=0):
     import sys
     import os
 
@@ -1570,30 +1571,34 @@ def plot_results__(type_of_input, type_of_window):
         model = 'DNN'
     path, servidor, filename, pos_x, pos_y, title = read_results_for_plot(type_of_input,
                                                                           type_of_window,
-                                                                          2000,
+                                                                          window_size,
                                                                           model)
 
-    plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool')
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist')
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf')
-    plot.plot_time_process_online_learning(path=path, filename=filename,  title=title)
-    plot_score(type_of_input, type_of_window, model)
+
+    plot_score(type_of_input, type_of_window, model, window_size)
+    plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool', window_size=window_size)
+    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist', window_size=window_size)
+    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size)
+    plot.plot_time_process_online_learning(path=path, filename=filename,  title=title, window_size=window_size)
+
     #plot.plot_score_jumpy_online_learning (path=path, filename=filename,
                                            #pos_x=pos_x, pos_y=pos_y, title=title)
     #plot.plot_score_and_time_process_online_learning (path=path, filename=filename,
                                             #          pos_x=pos_x, pos_y=pos_y, title=title)
 
-def plot_score(type_of_input, type_of_window, model):
+def plot_score(type_of_input, type_of_window, model, window_size):
     import sys
     import os
     sys.path.append ("../")
     import plot_results as plot
     path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
                                                                            type_of_window,
-                                                                           2000,
+                                                                           window_size,
                                                                            model)
-    plot.plot_score_top_1(path, filename, title)
-    plot.plot_score_top_k(path, filename, title)
+    plot.plot_accum_score_top_k(pos_x=pos_x, pos_y=pos_y, path=path, title=title, filename=filename, window_size=window_size)
+    plot.plot_score_top_k(path, filename, title, window_size)
+    plot.plot_score_top_1(path, filename, title, window_size)
+
 
 
 
@@ -1719,7 +1724,7 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
 
 
 def main():
-    run_simulation = True
+    run_simulation = False
     input = 'lidar'
     type_of_window = 2
 
@@ -1763,7 +1768,12 @@ def main():
 
     else:
 
-        plot_results__(type_of_input=input, type_of_window=window)
+        if type_of_window == 2:
+            window_size = [100, 500, 1000]#, 1500, 2000]
+            for i in range (len (window_size)):
+                plot_results__ (type_of_input=input, type_of_window=window, window_size=window_size[i])
+        else:
+            plot_results__(type_of_input=input, type_of_window=window)
 
     # print(tf.__file__)
     # import keras
