@@ -646,6 +646,7 @@ def save_in_csv_all_metrics_top_k(path_result, file_name, episodes, score, time,
 def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                  input_type,
                                                  window_size,
+                                                 rodada,
                                                  s008_data,
                                                  s009_data):
     #print(" _____________________________________________")
@@ -657,50 +658,11 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
 
     label_input_type = input_type
 
-    all_score = []
-    all_results_top_1 =[]
-    all_results = []
-    all_episodes = []
-    all_samples_train = []
-    all_samples_test = []
-
-    all_score_top_1 = []
-    all_score_top_5 = []
-    all_score_top_10 = []
-    all_score_top_15 = []
-    all_score_top_20 = []
-    all_score_top_25 = []
-    all_score_top_30 = []
-
-    std_score_top_1 = []
-    std_score_top_5 = []
-    std_score_top_10 = []
-    std_score_top_15 = []
-    std_score_top_20 = []
-    std_score_top_25 = []
-    std_score_top_30 = []
-
-    trainning_time_top_1 = []
-    trainning_time_top_5 = []
-    trainning_time_top_10 = []
-    trainning_time_top_15 = []
-    trainning_time_top_20 = []
-    trainning_time_top_25 = []
-    trainning_time_top_30 = []
-
-    std_trainning_time_top_1 = []
-    std_trainning_time_top_5 = []
-    std_trainning_time_top_10 = []
-    std_trainning_time_top_15 = []
-    std_trainning_time_top_20 = []
-    std_trainning_time_top_25 = []
-    std_trainning_time_top_30 = []
-
     start_index_s009 = 0
 
     nro_episodes_s008 = 2085
+    df_all_results_top_k = pd.DataFrame()
     for i in range(len(episode_for_test)):
-    #for i in tqdm(range(len(episode_for_test))):
         if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
@@ -733,92 +695,26 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                     input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
                     start_index_s009 += 1
 
-            df_results_wisard_top_k_with_std = beam_selection_with_confidence_interval (input_train,
-                                                                                             input_test,
-                                                                                             label_train,
-                                                                                             label_test,
-                                                                                             label_input_type)
+            df_results_top_k = beam_selection_top_k_wisard (x_train=input_train,
+                                                            x_test=input_test,
+                                                            y_train=label_train,
+                                                            y_test=label_test,
+                                                            address_of_size=44,
+                                                            input_type=label_input_type)
+            df_results_top_k ['episode'] = i
+            df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
 
-            '''
-            top_k, all_metrics = beam_selection_top_k_wisard (x_train=input_train,
-                                                              x_test=input_test,
-                                                              y_train=label_train,
-                                                              y_test=label_test,
-                                                              address_of_size=44,
-                                                              name_of_conf_input=label_input_type)
-
-
-            '''
-            all_score.append(np.array(df_results_wisard_top_k_with_std['score_mean']))
-
-            all_score_top_1.append(df_results_wisard_top_k_with_std['score_mean'][0])
-            all_score_top_5.append(df_results_wisard_top_k_with_std['score_mean'][1])
-            all_score_top_10.append(df_results_wisard_top_k_with_std['score_mean'][2])
-            all_score_top_15.append(df_results_wisard_top_k_with_std['score_mean'][3])
-            all_score_top_20.append(df_results_wisard_top_k_with_std['score_mean'][4])
-            all_score_top_25.append(df_results_wisard_top_k_with_std['score_mean'][5])
-            all_score_top_30.append(df_results_wisard_top_k_with_std['score_mean'][6])
-
-            std_score_top_1.append(df_results_wisard_top_k_with_std['score_std'][0])
-            std_score_top_5.append(df_results_wisard_top_k_with_std['score_std'][1])
-            std_score_top_10.append(df_results_wisard_top_k_with_std['score_std'][2])
-            std_score_top_15.append(df_results_wisard_top_k_with_std['score_std'][3])
-            std_score_top_20.append(df_results_wisard_top_k_with_std['score_std'][4])
-            std_score_top_25.append(df_results_wisard_top_k_with_std['score_std'][5])
-            std_score_top_30.append(df_results_wisard_top_k_with_std['score_std'][6])
-
-            trainning_time_top_1.append(df_results_wisard_top_k_with_std['tranning_time_mean'][0])
-            trainning_time_top_5.append(df_results_wisard_top_k_with_std['tranning_time_mean'][1])
-            trainning_time_top_10.append(df_results_wisard_top_k_with_std['tranning_time_mean'][2])
-            trainning_time_top_15.append(df_results_wisard_top_k_with_std['tranning_time_mean'][3])
-            trainning_time_top_20.append(df_results_wisard_top_k_with_std['tranning_time_mean'][4])
-            trainning_time_top_25.append(df_results_wisard_top_k_with_std['tranning_time_mean'][5])
-            trainning_time_top_30.append(df_results_wisard_top_k_with_std['tranning_time_mean'][6])
-
-            std_trainning_time_top_1.append(df_results_wisard_top_k_with_std['tranning_time_std'][0])
-            std_trainning_time_top_5.append(df_results_wisard_top_k_with_std['tranning_time_std'][1])
-            std_trainning_time_top_10.append(df_results_wisard_top_k_with_std['tranning_time_std'][2])
-            std_trainning_time_top_15.append(df_results_wisard_top_k_with_std['tranning_time_std'][3])
-            std_trainning_time_top_20.append(df_results_wisard_top_k_with_std['tranning_time_std'][4])
-            std_trainning_time_top_25.append(df_results_wisard_top_k_with_std['tranning_time_std'][5])
-            std_trainning_time_top_30.append(df_results_wisard_top_k_with_std['tranning_time_std'][6])
-
-            all_episodes.append(i)
-            all_samples_train.append(len(input_train))
-            all_samples_test.append(len(input_test))
         else:
             continue
 
-
             ## SAVE RESULTS
-        #df_results_wisard_top_k_with_std['Episode'] = all_episodes
-        #df_results_wisard_top_k_with_std['Samples Train'] = all_samples_train
-        #df_results_wisard_top_k_with_std['Samples Test'] = all_samples_test
-
-        df_results_score = pd.DataFrame({"episode": all_episodes,
-                                         "score_mean_top_1": all_score_top_1, "score_std_top_1": std_score_top_1,
-                                         "score_mean_top_5": all_score_top_5, "score_std_top_5": std_score_top_5,
-                                         "score_mean_top_10": all_score_top_10, "score_std_top_10": std_score_top_10,
-                                         "score_mean_top_15": all_score_top_15, "score_std_top_15": std_score_top_15,
-                                         "score_mean_top_20": all_score_top_20, "score_std_top_20": std_score_top_20,
-                                         "score_mean_top_25": all_score_top_25, "score_std_top_25": std_score_top_25,
-                                         "score_mean_top_30": all_score_top_30, "score_std_top_30": std_score_top_30,
-                                         "samples_train": all_samples_train, "samples_test": all_samples_test})
-
-        df_results_trainning_time = pd.DataFrame({"episode": all_episodes,
-                                                  "tranning_time_mean_top_1": trainning_time_top_1, "tranning_time_std_top_1": std_trainning_time_top_1,
-                                                  "tranning_time_mean_top_5": trainning_time_top_5, "tranning_time_std_top_5": std_trainning_time_top_5,
-                                                  "tranning_time_mean_top_10": trainning_time_top_10, "tranning_time_std_top_10": std_trainning_time_top_10,
-                                                  "tranning_time_mean_top_15": trainning_time_top_15, "tranning_time_std_top_15": std_trainning_time_top_15,
-                                                  "tranning_time_mean_top_20": trainning_time_top_20, "tranning_time_std_top_20": std_trainning_time_top_20,
-                                                  "tranning_time_mean_top_25": trainning_time_top_25, "tranning_time_std_top_25": std_trainning_time_top_25,
-                                                  "tranning_time_mean_top_30": trainning_time_top_30, "tranning_time_std_top_30": std_trainning_time_top_30,
-                                                  "samples_train": all_samples_train, "samples_test": all_samples_test})
+    df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+    path_result = ('../results/score/Wisard/online/top_k/') + label_input_type + '/sliding_window/window_size_var/'
+    path_result = path_result + str (rodada)
+    df_all_results_top_k.to_csv (path_result + '_all_results_sliding_window_' + str (window_size) + '_top_k.csv',
+                                 index=False)
 
 
-        path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/sliding_window/window_size_var/results_with_std/'
-        df_results_score.to_csv(path_result + 'scores_with_std_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
-        df_results_trainning_time.to_csv(path_result + 'trainning_time_with_std_sliding_window_'+str(window_size)+'_top_k.csv', index=False)
 
 
 def fit_sliding_window_with_size_var(nro_of_episodes, input_type, window_size):
@@ -2335,6 +2231,13 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
+
+        fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
+                                                     input_type=input_type,
+                                                     window_size=100,
+                                                     rodada=rodada,
+                                                     s008_data=s008_data,
+                                                     s009_data=s009_data)
 
         fit_incremental_window_top_k_novo (nro_of_episodes_test=eposodies_for_test,
                                            input_type=input_type,
