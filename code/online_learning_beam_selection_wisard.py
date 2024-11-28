@@ -182,12 +182,12 @@ def read_s008_data(preprocess_resolution):
     return info_s008, encoding_coord_train, beams_train
 
 
-def fit_fixed_window_top_k_novo(nro_of_episodes_test,
-                                nro_of_episodes_train,
-                                input_type,
-                                rodada,
-                                s008_data,
-                                s009_data):
+def fit_fixed_window_top_k(nro_of_episodes_test,
+                           nro_of_episodes_train,
+                           input_type,
+                           rodada,
+                           s008_data,
+                           s009_data):
 
     episode_for_test = np.arange (0, nro_of_episodes_test, 1)
     episode_for_train = np.arange (0, nro_of_episodes_train, 1)
@@ -246,10 +246,10 @@ def fit_fixed_window_top_k_novo(nro_of_episodes_test,
     path = path_result + str(rodada)
     df_all_results_top_k.to_csv(path + '_all_results_fixed_window_top_k.csv', index=False)
 
-def fit_incremental_window_top_k_novo(nro_of_episodes_test,
-                                      input_type,
-                                      rodada,
-                                      s008_data, s009_data):
+def fit_incremental_window_top_k(nro_of_episodes_test,
+                                 input_type,
+                                 rodada,
+                                 s008_data, s009_data):
     import tools as tls
 
     print('|  Incremental  |', input_type, '\t |')
@@ -1087,31 +1087,73 @@ def calculate_mean_score(data):
     return average_score
 
 def plot_compare_windows_size_in_window_sliding(input_name):
-    path_result = '../results/score/Wisard/online/'+input_name+'/sliding_window/window_size_var/'
+    path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'+input_name+'/sliding_window/window_size_var/'
     window_size = [100,  500, 1000, 1500, 2000]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+    top_k = [1, 5, 10, 15, 20, 25, 30]
 
     text_pos_y = 1800
     for i in range(len(window_size)):
 
-        file_name = 'all_results_sliding_window_size_' + str(window_size[i]) + '.csv'
+        file_name = 'all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
         data = read_csv_data(path_result, file_name)
-        mean_cumulative_score = calculate_mean_score(data['Score'].tolist())
+        mean_cumulative_score = calculate_mean_score(data['score top-1'].tolist())
+        mean_top_1 = np.mean(data['score top-1'].tolist())
+        mean_top_5 = np.mean(data['score top-5'].tolist())
+        mean_top_10 = np.mean(data['score top-10'].tolist())
+        mean_top_15 = np.mean(data['score top-15'].tolist())
+        mean_top_20 = np.mean(data['score top-20'].tolist())
+        mean_top_25 = np.mean(data['score top-25'].tolist())
+        mean_top_30 = np.mean(data['score top-30'].tolist())
+
+        mean = [mean_top_1, mean_top_5, mean_top_10, mean_top_15, mean_top_20, mean_top_25, mean_top_30]
+        mean_label = [np.round(mean_top_1,3),
+                      np.round(mean_top_5,3),
+                      np.round(mean_top_10,3),
+                      np.round(mean_top_15,3),
+                      np.round(mean_top_20,3),
+                      np.round(mean_top_25,3),
+                      np.round(mean_top_30,3)]
+
         window_size_label = 'Window size: ' + str(window_size[i])
-        mean_label = 'Mean: ' + str(np.round(np.mean(mean_cumulative_score),3))
-        plt.plot(data['Episode'], mean_cumulative_score, '.', label=window_size_label, color=color[i])
-        plt.text(text_pos_y, 0.4, mean_label,
-                 color=color[i], fontname='Myanmar Sangam MN', fontweight='bold',
-                 fontdict=dict(fontsize=6, fontweight='bold'), bbox=dict(facecolor='white', edgecolor='white'))
+        #mean_label = 'Mean: ' + str(np.round(np.mean(mean_cumulative_score),3))
+        plt.plot(top_k, mean, 'o-', label=window_size_label, color=color[i])
+
+
+        var = 0.5
+        for j in range(len(top_k)):
+
+            if window_size [i] == 100:
+                var = mean[j]-0.051
+            if window_size[i] == 500:
+                var = 0.25
+            if window_size[i] == 1000:
+                var = 0.3
+            if window_size[i] == 1500:
+                var = 0.35
+            if window_size[i] == 2000:
+                var = 0.4
+
+            plt.text (top_k [j], var, mean_label [j],
+                      color=color [i],
+                      fontdict=dict (fontsize=9,))# fontweight='bold'))  # ,
+            # bbox=dict(facecolor='white', edgecolor='white'))
+
+
+
+        plt.grid()
+        plt.yticks(np.arange(0, 1.1, 0.2))
+        plt.xticks(top_k)
+
 
         text_pos_y = text_pos_y - 300
 
-    plt.xlabel('Episode')
+    plt.xlabel('Top-k')
     plt.ylabel('Accuracy')
-    plt.legend(loc='best', ncol=2, fontsize=6)
+    plt.legend(loc='best', ncol=2, fontsize=7)
     plt.title('Beam selection using WiSARD with '+ input_name + '\n in online learning with sliding window varying the window size')
     plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
-    plt.show()
+    plt.close()
 def plot_score_comparation_between_sliding_incremental_fixed_window(input_type):
     path_result = '../results/score/Wisard/online/'
     #path_result_traditional = path_result + input_type+'/traditional_fit/'
@@ -1654,17 +1696,18 @@ def simulation_of_online_learning_top_k(input_type):
                                                          s008_data=s008_data,
                                                          s009_data=s009_data)
 
-        fit_incremental_window_top_k_novo (nro_of_episodes_test=eposodies_for_test,
-                                           input_type=input_type,
-                                           rodada=rodada,
-                                           s008_data=s008_data, s009_data=s009_data)
+        fit_incremental_window_top_k(nro_of_episodes_test=eposodies_for_test,
+                                     input_type=input_type,
+                                     rodada=rodada,
+                                     s008_data=s008_data, s009_data=s009_data)
 
-        fit_fixed_window_top_k_novo(nro_of_episodes_test=eposodies_for_test,
-                                    nro_of_episodes_train=episodes_for_train,
-                                    input_type=input_type,
-                                    rodada=rodada,
-                                    s008_data=s008_data,
-                                    s009_data=s009_data)
+        fit_fixed_window_top_k(nro_of_episodes_test=eposodies_for_test,
+                               nro_of_episodes_train=episodes_for_train,
+                               input_type=input_type,
+                               rodada=rodada,
+                               s008_data=s008_data,
+                               s009_data=s009_data)
+
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')
 
@@ -1740,9 +1783,6 @@ def read_files_results(path_results, file_name, key_process_time):
                                         'samples_trainning': file_0_top_1['samples_trainning']})
 
     return all_data, mean, std, episodes, mean_std_ep_samples
-
-
-
 
 def read_files_process_results(input_type, type_of_window):
     path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'
@@ -1848,7 +1888,9 @@ input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 #fit_fixed_window_top_k(eposodies_for_test, episodes_for_train, input_type)
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
-simulation_of_online_learning_top_k(input_type)
+
+plot_compare_windows_size_in_window_sliding(input_type)
+#simulation_of_online_learning_top_k(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
