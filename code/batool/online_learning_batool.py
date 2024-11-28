@@ -1586,6 +1586,71 @@ def plot_results__(type_of_input, type_of_window, window_size=0):
     #plot.plot_score_and_time_process_online_learning (path=path, filename=filename,
                                             #          pos_x=pos_x, pos_y=pos_y, title=title)
 
+def plot_compare_score(type_of_input, type_of_window, window_size):
+    if type_of_input == 'coord':
+        model = 'MLP'
+    elif type_of_input == 'lidar':
+        model = 'DNN'
+
+    type_of_window = 'fixed_window'
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window,
+                                                                           window_size,
+                                                                           model)
+    all_results_fixed_window = pd.read_csv (path + filename)
+
+    type_of_window ='jumpy_sliding_window'
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window,
+                                                                           window_size,
+                                                                           model)
+    all_results_jumpy_sliding_window = pd.read_csv (path + filename)
+
+
+    '''
+    type_of_window = 'sliding_window'
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window,
+                                                                           window_size,
+                                                                           model)
+    
+    type_of_window = 'incremental_window'
+    path, servidor, filename, pos_x, pos_y, title = read_results_for_plot (type_of_input,
+                                                                           type_of_window,
+                                                                           window_size,
+                                                                           model)
+    '''
+
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    all_mean_score_top_k_jumpy= []
+
+    for i in range(len(top_k)):
+        score_top_k = all_results_jumpy_sliding_window[all_results_jumpy_sliding_window['top-k'] == top_k[i]]
+        mean_score_top_k = np.mean(score_top_k['score'])
+        all_mean_score_top_k_jumpy.append(mean_score_top_k)
+
+    all_mean_score_top_k_fixed = []
+    for i in range(len(top_k)):
+        score_top_k = all_results_fixed_window[all_results_fixed_window['top-k'] == top_k[i]]
+        mean_score_top_k = np.mean(score_top_k['score'])
+        all_mean_score_top_k_fixed.append(mean_score_top_k)
+
+    plt.plot(top_k, all_mean_score_top_k_jumpy, 'o-', label='Jumpy Sliding window')
+    plt.plot(top_k, all_mean_score_top_k_fixed, 'o-', label='Fixed window')
+    for i in range (len (top_k)):
+        plt.text (top_k [i], all_mean_score_top_k_jumpy [i] - 0.02, str (np.round (all_mean_score_top_k_jumpy [i], 3)), color='blue')
+        plt.text (top_k [i], all_mean_score_top_k_fixed [i] - 0.02, str (np.round (all_mean_score_top_k_fixed [i], 3)), color='orange')
+    plt.legend()
+    plt.yticks(np.arange(0, 1.1, 0.1))
+    plt.xticks(top_k)
+    plt.xlabel('Top-k')
+    plt.ylabel('Score')
+    plt.title('Comparison between types of Windows \nfor Batool Reference with '+type_of_input)
+    plt.grid()
+    plt.show()
+
+    a=0
+
 def plot_score(type_of_input, type_of_window, model, window_size):
     import sys
     import os
@@ -1724,9 +1789,16 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
 
 
 def main():
+    import sys
+    import os
+    sys.path.append ("../")
+
+    import plot_results as plot
+
     run_simulation = False
     input = 'lidar'
     type_of_window = 2
+    plot_compare_results = True
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1767,19 +1839,22 @@ def main():
                                          episodes_for_test=2)
 
     else:
-
-        if type_of_window == 2:
-            window_size = [100, 500, 1000]#, 1500, 2000]
-            for i in range (len (window_size)):
-                plot_results__ (type_of_input=input, type_of_window=window, window_size=window_size[i])
+        if plot_compare_results:
+            plot.plot_compare_windows_size_in_window_sliding(input_name=input, ref='Batool')
         else:
-            plot_results__(type_of_input=input, type_of_window=window)
+            if type_of_window == 2:
+                window_size = [1500]#, 1500, 2000]
+                for i in range (len (window_size)):
+                    plot_results__ (type_of_input=input, type_of_window=window, window_size=window_size[i])
+            else:
+                plot_results__(type_of_input=input, type_of_window=window)
 
     # print(tf.__file__)
     # import keras
     # print(keras.__version__)
 
 main()
+#plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'

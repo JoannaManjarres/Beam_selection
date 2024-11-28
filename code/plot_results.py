@@ -828,6 +828,44 @@ def plot_score_top_k_wisard(path, filename, title, window_size):
     plt.savefig (path + str(window_size)+'_score_top_k.png', dpi=300)
     plt.close()
 
+def get_scores_from_csv_results(data):
+    all_mean_score_top_k = []
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    for i in range (len (top_k)):
+        score_top_k = data [data ['top-k'] == top_k [i]]
+        mean_score_top_k = np.mean (score_top_k ['score'])
+        all_mean_score_top_k.append (mean_score_top_k)
+    return all_mean_score_top_k, top_k
+
+def plot_compare_windows_size_in_window_sliding(input_name, ref):
+    window_type = '/sliding_window/window_size_var/'
+    path_result = '../../results/score/'+ref+'/online/results_server/top_k/'+input_name + window_type
+
+    window_size = [100,  500, 1000, 1500]#, 2000]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    windows_score=[]
+    for i in range(len(window_size)):
+        file_name = 'all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
+        all_csv_data = pd.read_csv (path_result+file_name)
+        score, top_k = get_scores_from_csv_results(all_csv_data)
+        windows_score.append(score)
+
+    for j in range(len(window_size)):
+        plt.plot(top_k, windows_score[j], 'o-', label='window size '+str(window_size[j]), color=color[j])
+        score_round = np.round(windows_score[j], 3)
+
+        for i in range (len (score_round)):
+            plt.text (top_k[i], score_round[i]-0.03, str(score_round [i]), color=color[j], fontsize=8)
+    plt.legend(loc='best', ncol=2, fontsize=7)
+    plt.xticks(top_k)
+    plt.xlabel('score')
+    plt.ylabel('Top-k')
+    plt.grid()
+    plt.title('Beam selection using '+ref+' with '+ input_name + '\n in online learning with sliding window varying the window size')
+    plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
+    plt.close()
+
 def plot_time_process_vs_samples_online_learning_wisard( path,
                                                          title,
                                                          filename,
