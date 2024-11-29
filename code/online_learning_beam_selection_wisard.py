@@ -1891,8 +1891,8 @@ input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
 
-plot_compare_windows_size_in_window_sliding(input_type)
-#simulation_of_online_learning_top_k(input_type)
+#plot_compare_windows_size_in_window_sliding(input_type)
+simulation_of_online_learning_top_k(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
