@@ -1840,7 +1840,9 @@ def main():
 
     else:
         if plot_compare_results:
+            plot.plot_compare_types_of_windows (input_name=input, ref='Batool')
             plot.plot_compare_windows_size_in_window_sliding(input_name=input, ref='Batool')
+
         else:
             if type_of_window == 2:
                 window_size = [1500]#, 1500, 2000]

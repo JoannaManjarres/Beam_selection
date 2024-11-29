@@ -1663,7 +1663,7 @@ def print_of_report_input(input_type, s008_data, s009_data):
         print ('| TEST  |\t - \t |\t  -   |\t  ', data_lidar_coord_size_test, ' \t|', data_beams_test, '  |')
         print ('+------------------------------------------------+')
 def simulation_of_online_learning_top_k(input_type):
-    eposodies_for_test = 2#2000
+    eposodies_for_test = 2000
     episodes_for_train = 2086
 
     print ('+------------------------------------------------+')
@@ -1687,6 +1687,13 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
+        fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
+                                nro_of_episodes_train=episodes_for_train,
+                                input_type=input_type,
+                                rodada=rodada,
+                                s008_data=s008_data,
+                                s009_data=s009_data)
+
         window_size = [100, 500, 1000, 1500, 2000]
         for j in range(len(window_size)):
             fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
@@ -1701,12 +1708,7 @@ def simulation_of_online_learning_top_k(input_type):
                                      rodada=rodada,
                                      s008_data=s008_data, s009_data=s009_data)
 
-        fit_fixed_window_top_k(nro_of_episodes_test=eposodies_for_test,
-                               nro_of_episodes_train=episodes_for_train,
-                               input_type=input_type,
-                               rodada=rodada,
-                               s008_data=s008_data,
-                               s009_data=s009_data)
+
 
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='fixed_window')
     #print('|  Incremental  |', input_type, '\t |')

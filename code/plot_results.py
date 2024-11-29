@@ -866,6 +866,43 @@ def plot_compare_windows_size_in_window_sliding(input_name, ref):
     plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
     plt.close()
 
+def plot_compare_types_of_windows(input_name, ref):
+    window_type = 'sliding_window'
+    #window_type = 'fixed_window'
+
+    if ref == 'Batool':
+        path = '../../results/score/' + ref + '/online/results_server/top_k/' + input_name + '/'
+
+    else:
+        path = '../results/score/' + ref + '/online/results_server/top_k/' + input_name + '/'
+
+
+
+    if window_type == 'sliding_window':
+        window = '/sliding_window/window_size_var/'
+        path_result = path + window
+        file_name = 'all_results_sliding_window_1000_top_k.csv'
+
+    else:
+        path_results = path + window_type + '/'
+        file_name = 'all_results_' + window_type + '_top_k.csv'
+
+
+    all_csv_data = pd.read_csv (path_result + file_name)
+    score, top_k = get_scores_from_csv_results (all_csv_data)
+
+    window_size = [100, 500, 1000, 1500]  # , 2000]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta',
+             'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    windows_score = []
+    for i in range (len (window_size)):
+        file_name = 'all_results_sliding_window_' + str (window_size [i]) + '_top_k.csv'
+        all_csv_data = pd.read_csv (path_result + file_name)
+        score, top_k = get_scores_from_csv_results (all_csv_data)
+        windows_score.append (score)
+
+
 def plot_time_process_vs_samples_online_learning_wisard( path,
                                                          title,
                                                          filename,
