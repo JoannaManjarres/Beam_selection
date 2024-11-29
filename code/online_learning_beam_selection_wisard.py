@@ -1687,6 +1687,7 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
+        '''
         fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
                                 nro_of_episodes_train=episodes_for_train,
                                 input_type=input_type,
@@ -1702,11 +1703,12 @@ def simulation_of_online_learning_top_k(input_type):
                                                          rodada=rodada,
                                                          s008_data=s008_data,
                                                          s009_data=s009_data)
-
-        fit_incremental_window_top_k(nro_of_episodes_test=eposodies_for_test,
+        '''
+        fit_incremental_window_top_k(nro_of_episodes=eposodies_for_test,
                                      input_type=input_type,
                                      rodada=rodada,
                                      s008_data=s008_data, s009_data=s009_data)
+
 
 
 
