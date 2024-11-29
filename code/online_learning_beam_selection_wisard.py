@@ -1479,7 +1479,7 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
-        '''
+        print('|  Fixa         |', input_type, '\t |')
         fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
                                 nro_of_episodes_train=episodes_for_train,
                                 input_type=input_type,
@@ -1487,17 +1487,19 @@ def simulation_of_online_learning_top_k(input_type):
                                 s008_data=s008_data,
                                 s009_data=s009_data)
 
+        print('|  Deslizante  |', input_type, '\t |')
         window_size = [100, 500, 1000, 1500, 2000]
         for j in range(len(window_size)):
+            print('|\t -  ', window_size[j], ' \t |')
             fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
                                                          input_type=input_type,
                                                          window_size=window_size[j],
                                                          rodada=rodada,
                                                          s008_data=s008_data,
                                                          s009_data=s009_data)
-        '''
 
 
+        print('|  Incremental   |', input_type, '\t |')
         fit_incremental_window_top_k(nro_of_episodes_test=eposodies_for_test,
                                      input_type=input_type,
                                      rodada=rodada,
@@ -1679,7 +1681,7 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
+#input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
 
 
 
