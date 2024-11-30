@@ -445,9 +445,9 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                  rodada,
                                                  s008_data,
                                                  s009_data):
-    print(" _____________________________________________")
-    print('/  Fit a WiSARD with: SLIDING window top-k   /')
-    print(" _____________________________________________")
+    #print(" _____________________________________________")
+    #print('/  Fit a WiSARD with: SLIDING window top-k   /')
+    #print(" _____________________________________________")
 
     import tools as tls
     episode_for_test = np.arange(0, nro_of_episodes, 1)
@@ -485,7 +485,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                     input_train_s009, label_train_s009 = tls.extract_training_data_from_s009_sliding_window(s009_data=s009_data,
                                                                                              start_index=start_index_s009,
                                                                                              end_index=end_index_s009,
-                                                                                             input_type=label_input_type),
+                                                                                             input_type=label_input_type)
 
                     input_train = input_train_s008 + input_train_s009
                     label_train = label_train_s008 + label_train_s009
@@ -1493,13 +1493,13 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
-        print('|  Fixa         |', input_type, '\t |')
-        fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
-                                nro_of_episodes_train=episodes_for_train,
-                                input_type=input_type,
-                                rodada=rodada,
-                                s008_data=s008_data,
-                                s009_data=s009_data)
+        #print('|  Fixa         |', input_type, '\t |')
+        #fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
+        #                        nro_of_episodes_train=episodes_for_train,
+        #                        input_type=input_type,
+        #                        rodada=rodada,
+        #                        s008_data=s008_data,
+        #                        s009_data=s009_data)
 
         print('|  Deslizante  |', input_type, '\t |')
         window_size = [100, 500, 1000, 1500, 2000]
