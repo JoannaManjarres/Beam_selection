@@ -441,11 +441,11 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                  rodada,
                                                  s008_data,
                                                  s009_data):
-    #print(" _____________________________________________")
-    #print('/  Fit a WiSARD with: SLIDING window top-k   /')
-    #print(" _____________________________________________")
+    print(" _____________________________________________")
+    print('/  Fit a WiSARD with: SLIDING window top-k   /')
+    print(" _____________________________________________")
 
-
+    import tools as tls
     episode_for_test = np.arange(0, nro_of_episodes, 1)
 
     label_input_type = input_type
@@ -458,33 +458,43 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
         if i in s009_data['Episode'].tolist():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
-                input_train, label_train = extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
-                input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                input_train, label_train = tls.extract_training_data_from_s008_sliding_window (s008_data=s008_data,
+                                                                                start_index=start_index_s008,
+                                                                                input_type=label_input_type)
+
+
+                    #= extract_training_data_from_s008(s008_data, start_index_s008, label_input_type)
+                input_test, label_test = tls.extract_test_data_from_s009_sliding_window (episode=i,
+                                                                            label_input_type=label_input_type,
+                                                                            s009_data=s009_data)
+
             else:
                 start_index_s008 = (nro_episodes_s008 - window_size)+i
                 if start_index_s008 < nro_episodes_s008:
                     start_index_s009 = 0
                     end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
 
-                    input_train_s008, label_train_s008 = extract_training_data_from_s008(s008_data,
-                                                                                         start_index_s008,
-                                                                                         label_input_type)
-                    input_train_s009, label_train_s009 = extract_training_data_from_s009(s009_data,
-                                                                                         start_index_s009,
-                                                                                         end_index_s009,
-                                                                                         label_input_type)
+                    input_train_s008, label_train_s008 = tls.extract_training_data_from_s008_sliding_window (s008_data=s008_data,
+                                                                                start_index=start_index_s008,
+                                                                                input_type=label_input_type)
+
+                    input_train_s009, label_train_s009 = tls.extract_training_data_from_s009(s009_data=s009_data,
+                                                                                             start_index=start_index_s009,
+                                                                                             end_index=end_index_s009,
+                                                                                             input_type=label_input_type),
+
                     input_train = input_train_s008 + input_train_s009
                     label_train = label_train_s008 + label_train_s009
 
-                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                    input_test, label_test = tls.extract_test_data_from_s009(i, label_input_type, s009_data)
 
                 else:
                     end_index_s009 = start_index_s009 + window_size
-                    input_train, label_train = extract_training_data_from_s009(s009_data,
+                    input_train, label_train = tls.extract_training_data_from_s009(s009_data,
                                                                                start_index_s009,
                                                                                end_index_s009,
                                                                                label_input_type)
-                    input_test, label_test = extract_test_data_from_s009(i, label_input_type, s009_data)
+                    input_test, label_test = tls.extract_test_data_from_s009(i, label_input_type, s009_data)
                     start_index_s009 += 1
 
             df_results_top_k = beam_selection_top_k_wisard (x_train=input_train,
