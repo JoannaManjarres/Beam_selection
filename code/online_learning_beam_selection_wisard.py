@@ -287,6 +287,10 @@ def fit_incremental_window_top_k(nro_of_episodes_test,
                 input_train = input_for_train_s008 + input_for_train_s009
                 label_train = label_for_train_s008 + label_for_train_s009
 
+                input_test, label_test = tls.extract_test_data_from_s009_sliding_window (episode=i,
+                                                                                         label_input_type=label_input_type,
+                                                                                         s009_data=s009_data)
+
 
             df_results_top_k = beam_selection_top_k_wisard (x_train=input_train,
                                                             x_test=input_test,
@@ -478,7 +482,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                                                 start_index=start_index_s008,
                                                                                 input_type=label_input_type)
 
-                    input_train_s009, label_train_s009 = tls.extract_training_data_from_s009(s009_data=s009_data,
+                    input_train_s009, label_train_s009 = tls.extract_training_data_from_s009_sliding_window(s009_data=s009_data,
                                                                                              start_index=start_index_s009,
                                                                                              end_index=end_index_s009,
                                                                                              input_type=label_input_type),
@@ -486,15 +490,15 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                     input_train = input_train_s008 + input_train_s009
                     label_train = label_train_s008 + label_train_s009
 
-                    input_test, label_test = tls.extract_test_data_from_s009(i, label_input_type, s009_data)
+                    input_test, label_test = tls.extract_test_data_from_s009_sliding_window(i, label_input_type, s009_data)
 
                 else:
                     end_index_s009 = start_index_s009 + window_size
-                    input_train, label_train = tls.extract_training_data_from_s009(s009_data,
+                    input_train, label_train = tls.extract_training_data_from_s009_sliding_window(s009_data,
                                                                                start_index_s009,
                                                                                end_index_s009,
                                                                                label_input_type)
-                    input_test, label_test = tls.extract_test_data_from_s009(i, label_input_type, s009_data)
+                    input_test, label_test = tls.extract_test_data_from_s009_sliding_window(i, label_input_type, s009_data)
                     start_index_s009 += 1
 
             df_results_top_k = beam_selection_top_k_wisard (x_train=input_train,
