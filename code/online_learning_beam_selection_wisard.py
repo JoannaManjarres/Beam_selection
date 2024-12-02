@@ -901,7 +901,7 @@ def plot_compare_windows_size_in_window_sliding(input_name):
     text_pos_y = 1800
     for i in range(len(window_size)):
 
-        file_name = 'all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
+        file_name = '0_all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
         data = read_csv_data(path_result, file_name)
         mean_cumulative_score = calculate_mean_score(data['score top-1'].tolist())
         mean_top_1 = np.mean(data['score top-1'].tolist())
@@ -1629,62 +1629,65 @@ def plot_score(type_of_input, type_of_window):
     sys.path.append ("../")
     import plot_results as plot
 
-    path = '../results/score/Wisard/online/top_k/results_servidor/top_k/'+type_of_input+'/'+type_of_window+'/'
-    title = 'Beam Selection using WiSARD with ' + type_of_input + ' and ' + type_of_window
+    path = '../results/score/Wisard/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
 
-    if type_of_window == 'fixed_window':
-        if type_of_input == 'coord':
-            filename = '0_all_results_' + type_of_window + '_top_k.csv'
-            plot.plot_score_top_k(path, filename, title)
-            plot.plot_score_top_1(path, filename, title)
-            plot.plot_time_process_vs_samples_online_learning (path=path, filename=filename, title=title, ref='wisard')
-            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='hist')
-            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf')
-
-        if type_of_input == 'lidar':
-            filename = 'all_results_' + type_of_window + '_top_k.csv'
-            plot.plot_score_top_k_wisard (path, filename, title, 0)
-
-            plot.plot_time_process_vs_samples_online_learning_wisard (path=path,
-                                                                      filename=filename,
-                                                                      title=title,
-                                                                      ref='wisard',
-                                                                      type_window=type_of_window,
-                                                                      size_window=0)
-
-            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'hist', 0)
-            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'ecdf', 0)
-
-    if type_of_window == 'incremental_window':
-        filename = 'all_results_' + type_of_window + '_top_k.csv'
-        plot.plot_score_top_k_wisard (path, filename, title, 0)
-        plot.plot_time_process_vs_samples_online_learning_wisard (path=path,
-                                                                  filename=filename,
-                                                                  title=title,
-                                                                  ref='wisard',
-                                                                  type_window=type_of_window,
-                                                                  size_window=0)
-        plot.plot_histogram_of_trainning_time_Wisard(path, filename, title, 'hist', 0)
-        plot.plot_histogram_of_trainning_time_Wisard(path, filename, title, 'ecdf', 0)
+    plot.plot_compare_types_of_windows (input_name=type_of_input, ref='Wisard')
 
     if type_of_window == 'sliding_window':
-        path = path + 'window_size_var/'
         window_size = [100, 500, 1000, 1500, 2000]
-        for i in range(len(window_size)):
-            filename = 'all_results_' + type_of_window + '_'+str(window_size[i])+'_top_k.csv'
-            title = 'Beam Selection using WiSARD with ' + type_of_input + ' and \n' + type_of_window + ' window size: ' + str(window_size[i])
+        for i in range (len (window_size)):
+            filename = '0_all_results_' + type_of_window + '_' + str (window_size [i]) + '_top_k.csv'
+            title = 'Beam Selection using WiSARD \n with ' + type_of_input + ' and \n' + type_of_window + ' window size: ' + str (
+                window_size [i])
+            pos_x = [250, 500, 750, 1000, 1250, 1500, 1750]
+            pos_y = 0.75
+            if input_type == 'lidar':
+                pos_y = 0.6
+            plot.plot_accum_score_top_k(pos_x, pos_y, path, title, filename, window_size=window_size [i])
+            plot.plot_compare_windows_size_in_window_sliding(input_name=type_of_input, ref='Wisard')
+            plot.plot_score_top_k (path, filename, title, window_size=window_size[i])
+            plot.plot_score_top_1 (path, filename, title, window_size=window_size[i])
+            plot.plot_time_process_vs_samples_online_learning (path=path, filename=filename, title=title, ref='wisard', window_size=window_size[i])
+            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='hist', window_size=window_size[i])
+            plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size[i])
 
-            #plot.plot_score_top_k_wisard(path, filename, title, window_size[i])
+    else:
+        title = 'Beam Selection using WiSARD \n with ' + type_of_input + ' and ' + type_of_window
+        filename = '0_all_results_' + type_of_window + '_top_k.csv'
 
-            plot.plot_time_process_vs_samples_online_learning_wisard(path=path,
-                                                                     filename=filename,
-                                                                     title=title,
-                                                                     ref='wisard',
-                                                                     type_window=type_of_window,
-                                                                     size_window=window_size[i])
+        #pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+        pos_x = [250, 500, 750, 1000, 1250, 1500, 1750]
+        pos_y = 0.75
+        if input_type == 'lidar':
+            pos_y = 0.6
+        plot.plot_accum_score_top_k (pos_x, pos_y, path, title, filename)
+        plot.plot_score_top_k (path, filename, title)
+        plot.plot_score_top_1 (path, filename, title)
+        plot.plot_time_process_vs_samples_online_learning (path=path, filename=filename, title=title, ref='wisard')
+        plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='hist')
+        plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf')
 
-            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'hist', window_size[i])
-            #plot.plot_histogram_of_trainning_time_Wisard (path, filename, title, 'ecdf', window_size[i])
+def main(input_type):
+
+    run_simulation = False
+
+    if run_simulation:
+        simulation_of_online_learning_top_k(input_type)
+    else:
+
+        #plot_score(type_of_input='coord', type_of_window='fixed_window')
+        #plot_score(type_of_input='coord', type_of_window='sliding_window')
+        #plot_score(type_of_input='coord', type_of_window='incremental_window')
+
+        #plot_score (type_of_input='lidar', type_of_window='incremental_window')
+        #plot_score (type_of_input='lidar', type_of_window='fixed_window')
+        #plot_score (type_of_input='lidar', type_of_window='sliding_window')
+
+
+        plot_score (type_of_input='lidar_coord', type_of_window='fixed_window')
+        plot_score (type_of_input='lidar_coord', type_of_window='incremental_window')
+        plot_score (type_of_input='lidar_coord', type_of_window='sliding_window')
+
 
 
 eposodies_for_test = 2000
@@ -1703,8 +1706,7 @@ input_type = args.input_type
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
 
-#plot_compare_windows_size_in_window_sliding(input_type)
-simulation_of_online_learning_top_k(input_type)
+main(input_type)
 '''
 plot_score_and_time_process_online_learning(input_type, 'sliding_window')
 plot_hist_ecdf (input_type, 'sliding_window')
