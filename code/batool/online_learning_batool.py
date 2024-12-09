@@ -600,7 +600,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
                                    top_25_accuracy,
                                    top_50_accuracy,
                                    precision_m, recall_m, f1_m])
-            #model.summary()
+            model.summary()
 
             if see_trainning_progress != 0:
                 print ('***************Testing************')
@@ -680,7 +680,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
                                    recall_m,
                                    f1_m])
             '''
-            #model.summary()
+            model.summary()
             call_backs = []
             if see_trainning_progress != 0:
                 print('***************Testing************')
@@ -918,7 +918,7 @@ def fit_fixed_window_top_k(label_input_type, nro_of_episodes_for_test):
 
     nro_of_episodes = nro_of_episodes_for_test
     episodes_for_train = 2086
-    see_trainning_progress = 0 # 0: no,
+    see_trainning_progress = 1 # 0: no,
                                # 1: yes (how you an animated progress bar)
                                # 2: yes (will just mention the number of epochs completed)
 
@@ -1031,7 +1031,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
     all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
 
     episode_for_test = np.arange (0, episodes_for_test, 1)
-    see_trainning_progress = 0
+    see_trainning_progress = True
     df_all_results_top_k = pd.DataFrame ()
 
     for i in range(len(episode_for_test)):
@@ -1106,6 +1106,7 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
 
     episode_for_test = np.arange (0, episodes_for_test, 1)
     see_trainning_progress = 0
+    monitor_ep_train =0
     start_index_s009 = 0
     nro_episodes_s008 = 2086  # from 0 to 1564
 
@@ -1116,7 +1117,8 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
 
-                #print('Episodes for train s008: from', start_index_s008, 'until', nro_episodes_s008)
+                #print('------ TRAIN : ', start_index_s008 , 'To', nro_episodes_s008)
+                #print(i)
 
                 input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
                                                                                                        start_index_s008,
@@ -1152,24 +1154,13 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
 
                 #print ('Test Episode: ', i)
                 flag_fit_jumpy = True
-                '''
-                df_results = beam_selection_Batool_for_fit_jumpy(input=label_input_type,
-                                                                 data_train = [input_train, label_train],
-                                                                 data_validation = [input_validation, label_validation],
-                                                                 data_test=[input_test, label_test],
-                                                                 num_classes = num_classes,
-                                                                 episode=i,
-                                                                 see_trainning_progress=see_trainning_progress,
-                                                                 flag_fit_jumpy=True)
-                                                                 
-                '''
 
 
             else:
                 episode_monitor = episode_monitor+1
                 if episode_monitor <40:
                     #Test
-                    #print('Test episode: ', i)
+                    #print(i)
                     input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                      label_input_type,
                                                                                                      s009_data)
@@ -1179,26 +1170,16 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                         input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
                     label_test = np.array (label_for_test)
                     flag_fit_jumpy = False
-                    '''
-                    df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
-                                                                      data_train=[input_train,
-                                                                                  label_train],
-                                                                      data_validation=[input_validation,
-                                                                                       label_validation],
-                                                                      data_test=[input_test, label_test],
-                                                                      num_classes=num_classes,
-                                                                      episode=i,
-                                                                      see_trainning_progress=see_trainning_progress,
-                                                                      flag_fit_jumpy=False)
-                    '''
+
                 else:
-                    start_index_s008 = (nro_episodes_s008-window_size) + i
+                    start_index_s008 = (nro_episodes_s008-window_size) + monitor_ep_train + 1
                     if start_index_s008 < nro_episodes_s008:
                         episode_monitor=0
                         start_index_s009 = 0
                         end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
-                        #print('Train s008 from Episode: ', start_index_s008, 'until', nro_episodes_s008, '=', nro_episodes_s008-start_index_s008)
-                        #print('Train s009 from Episode: ', start_index_s009, 'until', end_index_s009, '=', end_index_s009-start_index_s009)
+
+                        #print ('------ TRAIN s008: ', start_index_s008, 'To', nro_episodes_s008, '=', nro_episodes_s008-start_index_s008)
+                        #print ('------ TRAIN s009: ', start_index_s009, 'To', end_index_s009, '=', end_index_s009-start_index_s009)
 
                         input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window (
                             all_dataset_s008,
@@ -1248,6 +1229,7 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                         #label_train = np.array(label_for_train)
                         #label_validation = np.array(label_for_validation)
                         flag_fit_jumpy = True
+                        monitor_ep_train += 1
                         '''
 
                         df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
@@ -1265,8 +1247,8 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
                         '''
                     else:
                         episode_monitor=0
-                        end_index_s009 = start_index_s009 + window_size
-                        #print('Train s009 from Episode: ', start_index_s009, 'until', end_index_s009 , '=', end_index_s009-start_index_s009)
+                        end_index_s009 = start_index_s009 + window_size + monitor_ep_train + 1
+                        #print ('------ TRAIN s009: ', start_index_s009, 'To', end_index_s009, '=', end_index_s009-start_index_s009)
 
                         input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
                             s009_data=s009_data,
@@ -1305,20 +1287,10 @@ def fit_jumpy_sliding_window_top_k(label_input_type,
 
                         start_index_s009 += 1
                         flag_fit_jumpy = True
-                        '''
+                        monitor_ep_train += 1
 
-                        df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
-                                                                          data_train=[input_train,
-                                                                                      label_train],
-                                                                          data_validation=[input_validation,
-                                                                                           label_validation],
-                                                                          data_test=[input_test, label_test],
-                                                                          num_classes=num_classes,
-                                                                          episode=i,
-                                                                          see_trainning_progress=see_trainning_progress,
-                                                                          flag_fit_jumpy=True)
-                        '''
-        print (i, end=' ', flush=True)
+        #print (i, end=' ', flush=True)
+
         df_results = beam_selection_Batool_for_fit_jumpy (input=label_input_type,
                                                           data_train=[input_train,
                                                                       label_train],
@@ -1512,7 +1484,9 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
 
         elif type_of_window == 'sliding_window':
             #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'+ window_size +'/'
-            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'
+            #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/window_size_var/' + servidor + '/window_size_var/'
+            path = '../../results/score/Batool/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
+
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + window_size + '\n Reference: Batool -' + servidor
             filename = 'all_results_sliding_window_'+ window_size +'_top_k.csv'
 
@@ -1795,10 +1769,10 @@ def main():
 
     import plot_results as plot
 
-    run_simulation = False
+    run_simulation = True
     input = 'lidar'
-    type_of_window = 2
-    plot_compare_results = True
+    type_of_window = 4
+    plot_compare_results = False
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -1837,6 +1811,10 @@ def main():
         elif type_of_window == 3:
             fit_incremental_window_top_k(label_input_type=input,
                                          episodes_for_test=2)
+        elif type_of_window == 4:
+            fit_jumpy_sliding_window_top_k(label_input_type=input,
+                                           episodes_for_test=2000,
+                                           window_size=1500)
 
     else:
         if plot_compare_results:
@@ -1845,9 +1823,9 @@ def main():
 
         else:
             if type_of_window == 2:
-                window_size = [1500]#, 1500, 2000]
+                window_size = [100, 500, 1000, 1500, 2000]
                 for i in range (len (window_size)):
-                    plot_results__ (type_of_input=input, type_of_window=window, window_size=window_size[i])
+                    plot_results__(type_of_input=input, type_of_window=window, window_size=window_size[i])
             else:
                 plot_results__(type_of_input=input, type_of_window=window)
 
@@ -1856,6 +1834,7 @@ def main():
     # print(keras.__version__)
 
 main()
+
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
 #window = 'fixed_window'

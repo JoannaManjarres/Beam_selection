@@ -90,8 +90,8 @@ X_coord_test, _, _ = process_coordinates(X_coord_test, coord_means, coord_stds)
 
 index_true, _ = get_beams_output(BEAMS_TEST_FILE)
 
-only_lidar = False
-only_coord = True
+only_lidar = True
+only_coord = False
 both = False
 
 if (only_lidar):
@@ -138,6 +138,7 @@ for i in range(len(top_k)):
     model_loss = losses.CategoricalCrossentropy()
     model.compile(loss=model_loss, optimizer = optim, metrics=model_metrics)
     model.load_weights(BEST_WEIGTHS)
+    model.summary ()
 
     tic ()
     out = model.evaluate(x=X_data, y=index_true, verbose=1)
