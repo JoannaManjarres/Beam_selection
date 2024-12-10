@@ -1027,8 +1027,8 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
     # Agora é possível importar o arquivo como um módulo
     import tools as tls
 
-    data_for_train, data_for_validation, s009_data, num_classes = read_all_data ()
-    all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+    data_for_train, data_for_validation, s009_data, num_classes = read_all_data()
+    all_dataset_s008 = pd.concat([data_for_train, data_for_validation], axis=0)
 
     episode_for_test = np.arange (0, episodes_for_test, 1)
     see_trainning_progress = True
@@ -1042,33 +1042,43 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                 input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
                                                                                                        start_index_s008,
                                                                                                        label_input_type)
-                input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
-                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
-
                 input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
-                                                                                                label_input_type,
-                                                                                                s009_data)
-                input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
                 label_test = np.array (label_for_test)
+
+                if label_input_type == 'coord':
+                    input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                if label_input_type == 'lidar':
+                    input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+
             else:
                 start_index_s008 = 0
-                input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
-                                                                                                       start_index_s008,
-                                                                                                       label_input_type)
+                input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
+                                                                                                                start_index_s008,
+                                                                                                                label_input_type)
                 input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (s009_data=s009_data,
                                                                                                                  start_index=0,
                                                                                                                  end_index=i,
                                                                                                                  input_type=label_input_type)
                 input_for_train = np.concatenate ((input_for_train_s008, input_for_train_s009), axis=0)
                 label_for_train = np.concatenate ((label_for_train_s008, label_for_train_s009), axis=0)
-                input_train, input_validation = sliding_prepare_coord_for_trainning (input_for_train)
-                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
 
-                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window(i,
-                                                                                                label_input_type,
-                                                                                                s009_data)
-                input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
-                label_test = np.array (label_for_test)
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
+                label_test = np.array(label_for_test)
+
+                if label_input_type == 'coord':
+                    input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                if label_input_type == 'lidar':
+                    input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
+                    input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
 
             print(i, end=' ', flush=True)
             df_results_top_k = beam_selection_Batool (input=label_input_type,
@@ -1083,7 +1093,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/incremental_window/'
             df_all_results_top_k.to_csv(path_result + 'all_results_incremental_window_' + '_top_k.csv', index=False)
-            a=0
+
 
 def fit_jumpy_sliding_window_top_k(label_input_type,
                                         episodes_for_test,
