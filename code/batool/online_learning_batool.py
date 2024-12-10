@@ -1046,6 +1046,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                                                                                                  label_input_type,
                                                                                                  s009_data)
                 label_test = np.array (label_for_test)
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
 
                 if label_input_type == 'coord':
                     input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
@@ -1070,6 +1071,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                                                                                                  label_input_type,
                                                                                                  s009_data)
                 label_test = np.array(label_for_test)
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
 
                 if label_input_type == 'coord':
                     input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
@@ -1078,7 +1080,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
                     input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
                     input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
 
-                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+
 
             print(i, end=' ', flush=True)
             df_results_top_k = beam_selection_Batool (input=label_input_type,
