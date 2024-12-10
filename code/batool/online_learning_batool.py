@@ -470,8 +470,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                    top_25_accuracy,
                                    top_50_accuracy,
                                    precision_m, recall_m, f1_m])
-            if see_trainning_progress != 0:
-                model.summary()
+             #model.summary()
             if train_or_test == 'train':
                 if see_trainning_progress != 0:
                     print('***************Training************')
@@ -682,7 +681,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
                                    recall_m,
                                    f1_m])
             '''
-            model.summary()
+            #model.summary()
             call_backs = []
             if see_trainning_progress != 0:
                 print('***************Testing************')
@@ -1758,9 +1757,9 @@ def main():
 
     import plot_results as plot
 
-    run_simulation = False
+    run_simulation = True
     input = 'lidar'
-    type_of_window = 4
+    type_of_window = 3
     plot_compare_results = False
 
         #1 = 'fixed_window'
@@ -1769,23 +1768,22 @@ def main():
 
     print("+-------------------------------------"
           "\n|    online learning - Batool ")
-    if type_of_window == 1 :
+    if type_of_window == 1:
         print("|          Fixed window")
         window = 'fixed_window'
-    elif type_of_window == 2 :
+    elif type_of_window == 2:
         print("|          Sliding window")
         window = 'sliding_window'
-    elif type_of_window == 3 :
+    elif type_of_window == 3:
         print("|          Incremental window")
         window = 'incremental_window'
-    elif type_of_window == 4 :
+    elif type_of_window == 4:
         print("|          Jumpy sliding window")
         window = 'jumpy_sliding_window'
 
     print("|            " + input +
           "\n+----------------------------------")
 
-    #top_k = [1, 5, 10, 15, 20, 25, 30]
 
     if run_simulation:
         if type_of_window == 1:
@@ -1799,7 +1797,7 @@ def main():
                                          window_size=window_size[i])
         elif type_of_window == 3:
             fit_incremental_window_top_k(label_input_type=input,
-                                         episodes_for_test=2)
+                                         episodes_for_test=2000)
         elif type_of_window == 4:
             fit_jumpy_sliding_window_top_k(label_input_type=input,
                                            episodes_for_test=2000,
