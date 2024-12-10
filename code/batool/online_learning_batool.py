@@ -5,6 +5,7 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import warnings
+import seaborn as sns
 
 
 import numpy as np
@@ -365,7 +366,8 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                    top_10_accuracy,
                                    top_50_accuracy,
                                    R2_metric])
-            model.summary()
+
+            #model.summary()
             if train_or_test == 'train':
                 print('***************Training************')
                 star_trainning = time.process_time_ns ()
@@ -440,7 +442,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                                               top_10_accuracy,
                                                               top_50_accuracy,
                                                               R2_metric])
-            model.summary()
+            #model.summary()
             if train_or_test == 'train':
                 print('***************Training************')
                 star_trainning = time.process_time_ns ()
@@ -1507,7 +1509,9 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
             filename = 'all_results_incremental_window_top_k.csv'
         elif type_of_window == 'jumpy_sliding_window':
-            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            path = '../../results/score/Batool/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
+
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
             filename = 'all_results_jumpy_sliding_window_top_k.csv'
             pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
@@ -1526,30 +1530,6 @@ def plot_results__(type_of_input, type_of_window, window_size=0):
     # Agora é possível importar o arquivo como um módulo
     import plot_results as plot
 
-    '''
-    #type_of_input = 'coord'
-    #type_of_window = 'fixed_window'
-    flag_servidor = 3
-    filename = 'scores_with_'+type_of_window+'_top_k.csv'
-    metric = 'time_trainning'  # 'score'
-
-
-    if flag_servidor == 1: #servidor local
-        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/'
-        servidor = 'servidor_local'
-        pos_y = 70
-        pos_x = [10, 50, 100, 150, 200, 250, 300]
-    elif flag_servidor == 2: #servidor portugal
-        servidor = 'servidor_portugal'
-        pos_y = 525
-        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
-    elif flag_servidor == 3: #servidor land
-        servidor = 'servidor_land'
-        pos_y = 51
-        pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
-        path = '../../results/score/Batool/online/top_k/'+type_of_input+'/'+type_of_window+'/' + servidor + '/'
-    '''
 
     if type_of_input == 'coord':
         model = 'MLP'
@@ -1559,18 +1539,20 @@ def plot_results__(type_of_input, type_of_window, window_size=0):
                                                                           type_of_window,
                                                                           window_size,
                                                                           model)
+    if type_of_window == 'jumpy_sliding_window':
+        plot_score (type_of_input, type_of_window, model, window_size)
+        plot.plot_analyses_time_process_jumpy_sliding (path, filename, title)
+        plot.plot_analyses_hist_of_jumpy_sliding (path=path, filename=filename, graph_type='hist', title=title)
+        plot.plot_analyses_hist_of_jumpy_sliding (path=path, filename=filename, graph_type='ecdf', title=title)
+        plot.plot_analyses_hist_of_jumpy_sliding (path=path, filename=filename, graph_type='kde', title=title)
 
+    else:
+        plot_score(type_of_input, type_of_window, model, window_size)
+        plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool', window_size=window_size)
+        plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist', window_size=window_size)
+        plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size)
+        plot.plot_time_process_online_learning(path=path, filename=filename,  title=title, window_size=window_size)
 
-    plot_score(type_of_input, type_of_window, model, window_size)
-    plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool', window_size=window_size)
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist', window_size=window_size)
-    plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size)
-    plot.plot_time_process_online_learning(path=path, filename=filename,  title=title, window_size=window_size)
-
-    #plot.plot_score_jumpy_online_learning (path=path, filename=filename,
-                                           #pos_x=pos_x, pos_y=pos_y, title=title)
-    #plot.plot_score_and_time_process_online_learning (path=path, filename=filename,
-                                            #          pos_x=pos_x, pos_y=pos_y, title=title)
 
 def plot_compare_score(type_of_input, type_of_window, window_size):
     if type_of_input == 'coord':
@@ -1649,11 +1631,6 @@ def plot_score(type_of_input, type_of_window, model, window_size):
     plot.plot_accum_score_top_k(pos_x=pos_x, pos_y=pos_y, path=path, title=title, filename=filename, window_size=window_size)
     plot.plot_score_top_k(path, filename, title, window_size)
     plot.plot_score_top_1(path, filename, title, window_size)
-
-
-
-
-
 
 
 
@@ -1781,9 +1758,9 @@ def main():
 
     import plot_results as plot
 
-    run_simulation = True
+    run_simulation = False
     input = 'lidar'
-    type_of_window = 3
+    type_of_window = 4
     plot_compare_results = False
 
         #1 = 'fixed_window'
@@ -1848,7 +1825,6 @@ def main():
 main()
 
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
-#fit_jumpy_sliding_window_top_k(label_input_type='lidar', episodes_for_test=2000, window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')

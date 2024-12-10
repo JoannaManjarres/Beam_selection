@@ -630,6 +630,88 @@ def plot_time_process_vs_samples_online_learning( path, title, filename, ref, wi
     else:
         plt.savefig (path + str(window_size) + '_time_and_samples_train_comparation.png', dpi=300)
     plt.close ()
+
+def plot_analyses_time_process_jumpy_sliding(path, filename, title):
+
+    all_csv_data = pd.read_csv (path + filename)
+    data_with_valid_train_time = all_csv_data [all_csv_data ['trainning_process_time'] != 0]
+
+    top_1 = data_with_valid_train_time [all_csv_data ['top-k'] == 1]
+    trainning_time = top_1 ['trainning_process_time'] * 1e-9
+    max_time = np.max (trainning_time)
+    min_time = np.min (trainning_time)
+    offset = 0
+
+    sns.set_theme (style="darkgrid")
+    fig, ax1 = plt.subplots (figsize=(15, 7))
+    plt.plot (top_1 ['episode'], trainning_time)  # , color='purple')
+    plt.text (1750, max_time - offset, 'Max: ' + str (np.round (max_time, 3)) + ' seg', fontsize=10, color='red')
+    plt.text (5, max_time - offset, 'Min: ' + str (np.round (min_time, 3)) + ' seg', fontsize=10, color='red')
+    plt.text (np.mean (top_1 ['episode']), max_time - 2,
+              'Mean: ' + str (np.round (np.mean (trainning_time), 3)) + 'seg', fontsize=10, color='red')
+
+    ax1.set_ylabel ('Trainning time [s]', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    ax1.set_xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+
+    # Criando um segundo eixo
+    ax2 = ax1.twinx ()
+    plt.plot (top_1 ['episode'], top_1 ['samples_trainning'], 'o',
+              color='red')  # , alpha=0.3)#, label='fixed window')
+
+    ax2.set_ylabel ('Training samples', fontsize=12, color='black', labelpad=12,
+                    fontweight='bold')  # , color='red')
+
+    # Adicionando título e legendas
+    plt.title (title, fontsize=15, color='black', fontweight='bold')
+    # plt.xticks(all_results_traditional['Episode'])
+    plt.xlabel ('Episode', fontsize=12, color='black', labelpad=10, fontweight='bold')
+    plt.legend (loc='best', ncol=3)  # loc=(0,-0.4), ncol=3)#loc='best')
+    plt.savefig (path + 'time_and_samples_train_comparation.png', dpi=300)
+    plt.close ()
+
+def plot_analyses_hist_of_jumpy_sliding(path, filename, graph_type, title):
+    all_csv_data = pd.read_csv (path + filename)
+    data_with_valid_train_time = all_csv_data [all_csv_data ['trainning_process_time'] != 0]
+
+    top_1 = data_with_valid_train_time [all_csv_data ['top-k'] == 1]
+    trainning_time = top_1 ['trainning_process_time'] * 1e-9
+    top_k = [1]
+
+    if graph_type == 'ecdf':
+        #sns.set_style ('whitegrid', {'axes.edgecolor': '.6', 'grid.color': '.6'})
+        sns.ecdfplot(trainning_time, label='Top-' + str (top_k[0]))
+
+        plt.title(title + ' \n Trainning Time with ECDF')
+        plt.grid(True)
+        plt.savefig(path + 'ecdf_of_trainning_time.png', dpi=300)
+        plt.close()
+
+
+    if graph_type == 'hist':
+        fig, ax1 = plt.subplots ()
+        sns.kdeplot(trainning_time, label='kde density')
+        ax2 = ax1.twinx()
+        plt.grid (True)
+        plt.hist(trainning_time, bins=60, alpha=0.3, label='Top-' + str (top_k [0]))
+        ax2.set_ylabel('Counts')
+        ax1.set_xlabel('Trainning Time [s]')
+        ax1.legend(loc='upper right')
+        plt.title(title)
+        plt.grid(True)
+        #ax2.legend (loc='upper right')
+        plt.savefig (path + 'histogram_of_trainning_time.png', dpi=300)
+        plt.close()
+        #sns.reset_orig ()
+
+    if graph_type == 'kde':
+        sns.kdeplot(trainning_time, label='kde density', shade=True, alpha=0.3)
+        plt.title(title)
+        plt.grid()
+        plt.savefig(path + 'kde_of_trainning_time.png', dpi=300)
+        plt.close()
+        #sns.reset_orig ()
+
+
 def plot_histogram_of_trainning_time(path, filename, title, graph_type, window_size=0):
     all_csv_data = pd.read_csv (path + filename)
     if window_size == 0:
@@ -639,6 +721,7 @@ def plot_histogram_of_trainning_time(path, filename, title, graph_type, window_s
 
 
     top_k = [1]#[1, 5, 10, 15, 20, 25, 30]
+
 
     for i in range(len(top_k)):
         top_1 = all_csv_data [all_csv_data ['top-k'] == top_k [i]]
