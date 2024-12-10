@@ -1031,7 +1031,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
     all_dataset_s008 = pd.concat([data_for_train, data_for_validation], axis=0)
 
     episode_for_test = np.arange (0, episodes_for_test, 1)
-    see_trainning_progress = True
+    see_trainning_progress = False
     df_all_results_top_k = pd.DataFrame ()
 
     for i in range(len(episode_for_test)):
@@ -1094,7 +1094,7 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
 
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
             path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/incremental_window/'
-            df_all_results_top_k.to_csv(path_result + 'all_results_incremental_window_' + '_top_k.csv', index=False)
+            df_all_results_top_k.to_csv(path_result + 'all_results_incremental_window' + '_top_k.csv', index=False)
 
 
 def fit_jumpy_sliding_window_top_k(label_input_type,
@@ -1783,7 +1783,7 @@ def main():
 
     run_simulation = True
     input = 'lidar'
-    type_of_window = 4
+    type_of_window = 3
     plot_compare_results = False
 
         #1 = 'fixed_window'
