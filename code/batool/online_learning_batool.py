@@ -1017,7 +1017,7 @@ def sliding_prepare_label_for_trainning(label_for_train):
     label_train = new_form_for_label[:size_of_train]
     label_validation = new_form_for_label[size_of_train:]
     return label_train, label_validation
-def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
+def fit_incremental_window_top_k(label_input_type, episodes_for_test, start_epi = 0):
     import sys
     import os
 
@@ -1035,7 +1035,10 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test,):
     see_trainning_progress = False
     df_all_results_top_k = pd.DataFrame ()
 
-    for i in range(len(episode_for_test)):
+
+    stop_epi = len(episode_for_test)
+
+    for i in range(start_epi, stop_epi, 1):
 
         if i in s009_data['Episode'].tolist():
             if i == 0:
@@ -1797,7 +1800,8 @@ def main():
                                          window_size=window_size[i])
         elif type_of_window == 3:
             fit_incremental_window_top_k(label_input_type=input,
-                                         episodes_for_test=2000)
+                                         episodes_for_test=2000,
+                                         start_epi = 5)
         elif type_of_window == 4:
             fit_jumpy_sliding_window_top_k(label_input_type=input,
                                            episodes_for_test=2000,

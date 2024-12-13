@@ -310,10 +310,6 @@ def fit_incremental_window_top_k(nro_of_episodes_test,
     df_all_results_top_k.to_csv (path + '_all_results_incremental_window_top_k.csv', index=False)
 
 
-
-
-
-
 def fit_incremental_window(nro_of_episodes, input_type):
     preprocess_resolution = 16
     th = 0.15
@@ -402,9 +398,6 @@ def fit_incremental_window(nro_of_episodes, input_type):
     path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
     #path = path_result + str (rodada)
     #df_all_results_top_k.to_csv (path + '_all_results_fixed_window_top_k.csv', index=False)
-
-
-
 
 
 
