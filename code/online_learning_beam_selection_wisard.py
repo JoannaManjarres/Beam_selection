@@ -1660,6 +1660,148 @@ def plot_score(type_of_input, type_of_window):
         plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='hist')
         plot.plot_histogram_of_trainning_time (path=path, filename=filename, title=title, graph_type='ecdf')
 
+
+def read_data_for_plot_time_train_comparision():
+    path_result = '../results/score/Wisard/servidor_land/online/' + input_type + '/sliding_window/'
+    window_size = [100, 500, 1000, 1500, 2000]
+    title = 'Trainning Time using WiSARD with ' + input_type + ' in online learning'
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'olive', 'magenta']
+
+    file_name = '0_all_results_sliding_window_100_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+
+    top_1_100 = all_data [all_data ['top-k'] == 1]
+    trainning_time_100 = top_1_100 ['trainning_process_time'] * 1e-9
+    mean_100 = np.mean (trainning_time_100)
+
+    file_name = '0_all_results_sliding_window_500_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_500 = all_data [all_data ['top-k'] == 1]
+    trainning_time_500 = top_1_500 ['trainning_process_time'] * 1e-9
+    mean_500 = np.mean (trainning_time_500)
+
+    file_name = '0_all_results_sliding_window_1000_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_1000 = all_data [all_data ['top-k'] == 1]
+    trainning_time_1000 = top_1_1000 ['trainning_process_time'] * 1e-9
+    mean_1000 = np.mean (trainning_time_1000)
+
+    file_name = '0_all_results_sliding_window_1500_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_1500 = all_data [all_data ['top-k'] == 1]
+    trainning_time_1500 = top_1_1500 ['trainning_process_time'] * 1e-9
+    mean_1500 = np.mean (trainning_time_1500)
+
+    file_name = '0_all_results_sliding_window_2000_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_2000 = all_data [all_data ['top-k'] == 1]
+    trainning_time_2000 = top_1_2000 ['trainning_process_time'] * 1e-9
+    mean_2000 = np.mean (trainning_time_2000)
+
+    path_result = '../results/score/Wisard/servidor_land/online/' + input_type + '/fixed_window/'
+    file_name = '0_all_results_fixed_window_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_fixed = all_data [all_data ['top-k'] == 1]
+    trainning_time_fixed = top_1_fixed ['trainning_process_time'] * 1e-9
+    mean_fixed = np.mean (trainning_time_fixed)
+
+    path_result = '../results/score/Wisard/servidor_land/online/' + input_type + '/incremental_window/'
+    file_name = '0_all_results_incremental_window_top_k.csv'
+    all_data = pd.read_csv (path_result + file_name)
+    top_1_incremental = all_data [all_data ['top-k'] == 1]
+    trainning_time_incremental = top_1_incremental ['trainning_process_time'] * 1e-9
+    mean_incremental = np.mean (trainning_time_incremental)
+
+    x_labels = [mean_100, mean_500, mean_1000, mean_1500, mean_2000]#, mean_fixed, mean_incremental]
+    episodes = top_1_2000['episode']
+
+    return trainning_time_100, trainning_time_500, trainning_time_1000, trainning_time_1500, trainning_time_2000, trainning_time_fixed, trainning_time_incremental, x_labels, episodes
+def plot_time_train_between_size_windows_sliding(input_type):
+
+    path_result = '../results/score/Wisard/servidor_land/online/' + input_type + '/sliding_window/'
+
+    trainning_time_100, trainning_time_500, trainning_time_1000, trainning_time_1500, trainning_time_2000, trainning_time_fixed, trainning_time_incremental, x_labels, episodes = read_data_for_plot_time_train_comparision()
+
+    option = 1
+    if option == 1:
+        SMALL_SIZE = 12
+        MEDIUM_SIZE = 12
+        BIGGER_SIZE = 12
+
+        plt.rc ('font', size=SMALL_SIZE)  # controls default text sizes
+        plt.rc ('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+        plt.rc ('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+        plt.rc ('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc ('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+        plt.rc ('legend', fontsize=SMALL_SIZE)  # legend fontsize
+        plt.rc ('figure', titlesize=BIGGER_SIZE)
+
+        color = ['blue', 'red', 'green', 'purple', 'orange', 'olive', 'magenta']
+        sns.set_style("darkgrid", {"grid.color": ".6", "grid.linestyle": ":"})
+        fig, ax1 = plt.subplots (figsize=(10, 4))
+        sns.histplot (trainning_time_100, kde=True, color=color[0], label='sliding 100', stat="density", bins=60, alpha=0.6)
+        sns.histplot (trainning_time_500, kde=True, color=color[1], label='sliding 500', stat="density", bins=60, alpha=0.6)
+        sns.histplot (trainning_time_1000, kde=True, color=color[2], label='sliding 1000', stat="density", bins=60, alpha=0.6)
+        sns.histplot(trainning_time_1500, kde=True, color=color[3], label='sliding 1500', stat="density", bins=60, alpha=0.6)
+        sns.histplot(trainning_time_2000, kde=True, color=color[4], label='sliding 2000', stat="density", bins=60, alpha=0.6)
+        #sns.histplot(trainning_time_fixed, kde=True, color=color[5], label='fixed', stat="density", bins=60, alpha=0.6)
+        #sns.histplot(trainning_time_incremental, kde=True, color=color[6], label='incremental', stat="density", bins=60, alpha=0.6)
+        legend = plt.legend(loc='upper right', ncol=2)
+        legend.get_frame().set_facecolor('none')
+        legend.get_frame().set_linewidth(0.0)
+        plt.xticks (x_labels)
+        plt.xlabel ('Trainning Time [s]')
+        plt.title ('Trainning Time Comparison between window size  using WiSARD - ' + input_type + ' in online learning')
+        plt.savefig (path_result + 'histogram_comparition_of_trainning_time.png', dpi=300, bbox_inches='tight', pad_inches=0)
+        #plt.show ()
+
+    else:
+        ax= plt.figure(figsize=(10, 4))
+        plt.plot(trainning_time_100,  color='blue', marker=',', label='sliding 100')
+        plt.plot(trainning_time_500,  color='red', marker=',', label='sliding 500')
+        plt.plot( trainning_time_1000,  color='green', marker=',', label='sliding 1000')
+        plt.plot(trainning_time_1500,  color='purple', marker=',', label='sliding 1500')
+        plt.plot(trainning_time_2000,  color='orange', marker=',', label='sliding 2000')
+        #plt.plot(trainning_time_fixed, color='olive', marker=',', label='fixed')
+        #plt.plot(trainning_time_incremental,  color='magenta', marker=',', label='incremental')
+        plt.xlabel('Episode')
+        plt.ylabel('Trainning Time [s]')
+        plt.legend(loc='upper right', ncol=5)
+        a = 0
+
+
+    '''
+    fig, ax1 = plt.subplots(figsize=(10, 4))
+    plt.hist (trainning_time_100, bins=60, alpha=0.3, label='sliding 100', color=color [0])
+    plt.hist (trainning_time_500, bins=60, alpha=0.3, label='sliding 500', color=color [1])
+    plt.hist (trainning_time_1000, bins=60, alpha=0.3, label='sliding 1000', color=color [2])
+    plt.hist (trainning_time_1500, bins=60, alpha=0.3, label='sliding 1500', color=color [3])
+    plt.hist (trainning_time_2000, bins=60, alpha=0.3, label='sliding 2000', color=color [4])
+    plt.hist (trainning_time_fixed, bins=60, alpha=0.3, label='fixed', color='olive')
+    plt.hist (trainning_time_incremental, bins=60, alpha=0.3, label='incremental', color='magenta')
+    plt.grid()
+    ax2 = ax1.twinx()
+    sns.kdeplot(trainning_time_100, label='sliding 100', color=color[0])
+    sns.kdeplot(trainning_time_500, label='sliding 500', color=color[1])
+    sns.kdeplot(trainning_time_1000, label='sliding 1000', color=color[2])
+    sns.kdeplot(trainning_time_1500, label='sliding 1500', color=color[3])
+    sns.kdeplot(trainning_time_2000, label='sliding 2000', color=color[4])
+    sns.kdeplot(trainning_time_fixed, label='fixed', color='olive')
+    sns.kdeplot(trainning_time_incremental, label='incremental', color='magenta')
+
+    ax1.set_ylabel ('Counts')
+    ax1.set_xlabel ('Trainning Time [s]')
+    plt.grid()
+    plt.legend(loc='upper right', ncol=4)
+    plt.xticks(x_labels)
+    plt.title('Trainning Time using WiSARD with '+input_type+' in online learning')
+    plt.savefig(path_result + 'histogram_comparition_of_trainning_time.png', dpi=300)
+    '''
+    a =0
+
+
+
+
 def main(input_type):
 
     run_simulation = False
@@ -1691,7 +1833,7 @@ parser.add_argument('--input_type', type=str, default='coord', help='type of inp
 args = parser.parse_args()
 
 input_type = args.input_type
-#input_type = 'lidar' #'lidar_coord' #'lidar' #'coord'
+input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 
 
 
@@ -1699,32 +1841,5 @@ input_type = args.input_type
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
 
-main(input_type)
-'''
-plot_score_and_time_process_online_learning(input_type, 'sliding_window')
-plot_hist_ecdf (input_type, 'sliding_window')
-
-plot_hist_ecdf(input_type, 'fixed_window')
-plot_hist_ecdf(input_type, 'incremental_window')
-#plot_hist_ecdf(input_type, 'sliding_window')
-read_file_results_fixed_window(input_type)
-#simulation_of_online_learning_top_k(input_type)
-
-for rodada in range(10):
-    print('Rodada: ', rodada)
-    fit_fixed_window(nro_of_episodes_test=2000,
-                     nro_of_episodes_train=2086,
-                     input_type=input_type,
-                     rodada=rodada)
-
-plot_std = False
-if plot_std:
-    top_k = [1, 5, 10, 15, 20, 25, 30]
-    #top_k =[1, 5, 10]
-    for i in range(len(top_k)):
-            #plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, top_k[i])
-        plot_comparition_top_k_with_standar_desviation(input_type, top_k[i])
-
-#plot_top_K_time_and_score_comparition_sliding_incremental_fixed_window(input_type, 10)
-#plot_comparition_top_k_with_standar_desviation(input_type, 10)
-'''
+#main(input_type)
+plot_time_train_between_size_windows_sliding(input_type)

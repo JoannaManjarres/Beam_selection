@@ -1495,7 +1495,9 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
         elif type_of_input == 'lidar':
             pos_y = 0.6
         if type_of_window == 'fixed_window':
-            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            path = '../../results/score/Batool/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
+            filename = 'all_results_fixed_window_top_k.csv'
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
 
         elif type_of_window == 'sliding_window':
@@ -1507,7 +1509,9 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
             filename = 'all_results_sliding_window_'+ window_size +'_top_k.csv'
 
         elif type_of_window == 'incremental_window':
-            path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
+            path = '../../results/score/Batool/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
+
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
             filename = 'all_results_incremental_window_top_k.csv'
         elif type_of_window == 'jumpy_sliding_window':
@@ -1760,9 +1764,9 @@ def main():
 
     import plot_results as plot
 
-    run_simulation = True
+    run_simulation = False
     input = 'lidar'
-    type_of_window = 3
+    type_of_window = 1
     plot_compare_results = False
 
         #1 = 'fixed_window'
