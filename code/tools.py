@@ -19,7 +19,10 @@ def extract_test_data_from_s009_sliding_window(episode, label_input_type, s009_d
     elif label_input_type == 'lidar':
         input_test = s009_data [s009_data ['Episode'] == episode] ['lidar'].tolist ()
     elif label_input_type == 'lidar_coord':
-        input_test = s009_data [s009_data ['Episode'] == episode] ['lidar_coord'].tolist ()
+        input_test_coord = s009_data [s009_data ['Episode'] == episode] ['coord'].tolist ()
+        input_test_lidar = s009_data [s009_data ['Episode'] == episode] ['lidar'].tolist ()
+        input_test = [input_test_coord, input_test_lidar]
+
     else:
         print ('error: deve especificar o tipo de entrada')
 
@@ -37,7 +40,9 @@ def extract_training_data_from_s008_sliding_window(s008_data, start_index, input
     elif input_type == 'lidar':
         input_train = initial_data_for_trainning ['lidar'].tolist ()
     elif input_type == 'lidar_coord':
-        input_train = initial_data_for_trainning ['lidar_coord'].tolist ()
+        input_coord_train = initial_data_for_trainning ['coord'].tolist ()
+        input_lidar_train = initial_data_for_trainning ['lidar'].tolist ()
+        input_train = [input_lidar_train, input_coord_train,]
     else:
         print('error: deve especificar o tipo de entrada')
 
@@ -56,6 +61,8 @@ def extract_training_data_from_s009_sliding_window(s009_data, start_index, end_i
     elif input_type == 'lidar':
         input_train = data_for_trainnig['lidar'].tolist()
     elif input_type == 'lidar_coord':
-        input_train = data_for_trainnig['lidar_coord'].tolist()
+        input_coord_train = data_for_trainnig ['coord'].tolist ()
+        input_lidar_train = data_for_trainnig ['lidar'].tolist ()
+        input_train = [input_lidar_train, input_coord_train, ]
 
     return input_train, label_train
