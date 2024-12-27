@@ -330,6 +330,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                           validation_data=(x_validation, y_validation),
                           epochs=epochs,
                           batch_size=bs,
+                          verbose=0,
                           callbacks=[tf.keras.callbacks.ModelCheckpoint (model_folder + 'best_weights.coord_lidar.h5',
                                                                          monitor='val_loss',
                                                                          verbose=0, save_best_only=True, mode='auto'),
@@ -538,7 +539,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
         y_test = data_test[1]
         print ('***************Testing************')
         model.load_weights (model_folder + 'best_weights.coord_lidar.h5', by_name=True)
-        scores = model.evaluate (x_test, y_test)
+        scores = model.evaluate (x_test, y_test, verbose=0)
         if see_trainning_progress != 0:
             print ("----------------------------------")
             print ("Test results:", model.metrics_names, scores)
@@ -557,7 +558,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
 
             ### Testing
             star_test = time.process_time_ns ()
-            out = model.evaluate (x_test, y_test)
+            out = model.evaluate (x_test, y_test, verbose=0)
             end_test = time.process_time_ns ()
             delta_time = end_test - star_test
             accuracy_top_k.append(out[2])
@@ -614,7 +615,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
             if see_trainning_progress != 0:
                 print ('***************Testing************')
             model.load_weights (model_folder + 'best_weights.lidar.h5', by_name=True)  # to be added
-            scores = model.evaluate (X_lidar_test, y_test)
+            scores = model.evaluate (X_lidar_test, y_test, verbose=0)
             #print ("############ ----------------------------- ")
 
             #print ("Test results", model.metrics_names, scores)
@@ -767,8 +768,16 @@ def beam_selection_Batool(input,
 
 
     if flag_fast_experiment:
-        if episode == 0 or episode == 3:
-            print(episode)
+
+        if episode == 0 or episode == 200 or episode == 400 or episode == 600 or episode == 800  or episode == 1000  or episode == 1200 \
+                or episode == 1400 or episode == 1600 or episode == 1800:
+            '''
+            print('train - test', episode)
+            print('data train: ', np.shape(data_train[0][0])[0], 'data test', np.shape(data_test[0][0])[0])
+            df_results_top_k['episode'] = episode
+            df_results_top_k['trainning_process_time'] = 0
+            df_results_top_k['samples_trainning'] = np.shape(data_train[0][0])[0]
+            df_results_top_k['samples_test'] = np.shape(data_test[0][0])[0]
             '''
             model = model_configuration (input, data_train, data_validation, data_test, num_classes, restore_models)
             trainning_process_time, samples_shape = train_model (input, model,
@@ -776,9 +785,15 @@ def beam_selection_Batool(input,
                                                                  see_trainning_progress)
             top_k = [1, 5, 10, 15, 20, 25, 30]
             df_results_top_k = test_model (input, model, data_test, top_k, see_trainning_progress)
-            '''
+
         else:
-            print(episode)
+            '''
+            print('just test' , episode)
+            print ('data test', np.shape(data_test[0][0])[0])
+            df_results_top_k ['episode'] = episode
+            df_results_top_k ['trainning_process_time'] = 0
+            df_results_top_k ['samples_trainning'] =0
+            df_results_top_k ['samples_test'] = np.shape(data_test[0][0])[0]
             '''
             restore_models = False
             model = model_configuration (input, data_train, data_validation,
@@ -787,7 +802,7 @@ def beam_selection_Batool(input,
             samples_shape = [0, 0, 0]
             top_k = [1, 5, 10, 15, 20, 25, 30]
             df_results_top_k = test_model (input, model, data_test, top_k, see_trainning_progress)
-            '''
+
 
         ''''
         monitor_for_train = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800]
@@ -820,11 +835,11 @@ def beam_selection_Batool(input,
         top_k = [1, 5, 10, 15, 20, 25, 30]
         df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
 
-    #df_results_top_k['episode'] = episode
-    #df_results_top_k['trainning_process_time'] = trainning_process_time
-    #df_results_top_k['samples_trainning'] = samples_shape[0]
+    df_results_top_k['episode'] = episode
+    df_results_top_k['trainning_process_time'] = trainning_process_time
+    df_results_top_k['samples_trainning'] = samples_shape[0]
 
-    #return df_results_top_k
+    return df_results_top_k
 
 def beam_selection_Batool_for_fit_jumpy(input,
                           data_train,
@@ -990,19 +1005,20 @@ def fit_fixed_window_top_k(label_input_type, episodes_for_test):
     see_trainning_progress = 0
     nro_episodes_s008 = 2086  # from 0 to 1564
 
+    start_index_s008 = 0
+    input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
+                                                                                           start_index_s008,
+                                                                                           label_input_type)
+    label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+
     df_all_results_top_k = pd.DataFrame()
-    for i in range (len (episode_for_test)):
+    for i in range(len(episode_for_test)):
         # i=101
         if i in s009_data['Episode'].tolist ():
-            start_index_s008 = 0
-            input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
-                                                                                                   start_index_s008,
-                                                                                                   label_input_type)
-
             input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                              label_input_type,
                                                                                              s009_data)
-            label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+
             label_test = np.array (label_for_test)
 
             if label_input_type == 'coord':
@@ -1020,10 +1036,9 @@ def fit_fixed_window_top_k(label_input_type, episodes_for_test):
                 input_lidar_test = np.array (input_for_test [1]).reshape (len (input_for_test [1]), 20, 200, 10)
                 input_test = [input_lidar_test, input_coord_test]
 
-
             print(i, end=' ', flush=True)
 
-            df_all_results_top_k = beam_selection_Batool(input=label_input_type,
+            df_results_top_k = beam_selection_Batool(input=label_input_type,
                                                  data_train=[input_train, label_train],
                                                  data_validation=[input_validation, label_validation],
                                                  data_test=[input_test, label_test],
@@ -1032,10 +1047,10 @@ def fit_fixed_window_top_k(label_input_type, episodes_for_test):
                                                  see_trainning_progress=see_trainning_progress,
                                                  restore_models=False,
                                                  flag_fast_experiment=True)
-            #df_all_results_top_k = pd.concat([df_all_results_top_k, df_all_results_top_k], ignore_index=True)
-            #path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
-            #df_all_results_top_k.to_csv(path_result + 'all_results_fixed_window_top_k.csv', index=False)
-
+            df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
+            path_result = ('../../results/score/Batool/online/top_k/') + label_input_type + '/fixed_window/'
+            df_all_results_top_k.to_csv(path_result + 'all_results_fixed_window_top_k.csv', index=False)
+    a=0
 
 
 def fit_fixed_window_top_k_old(label_input_type, nro_of_episodes_for_test):
@@ -1956,7 +1971,7 @@ def main():
 
     if run_simulation:
         if type_of_window == 1:
-                fit_fixed_window_top_k(input, episodes_for_test=5)#2000)
+                fit_fixed_window_top_k(input, episodes_for_test=2000)
         elif type_of_window == 2:
             window_size = [100]#, 500, 1000, 1500, 2000]
             for i in range(len(window_size)):
