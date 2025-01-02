@@ -7,8 +7,11 @@ def read_results(input_type, window_type, ref):
     # Read the data
     path ='../../results/score/'+ref+'/servidor_land/online/'+input_type+'/'+window_type+'/'
     filename = 'all_results_fixed_window_top_k.csv'
+    if ref =='Batool':
+        if window_type == 'sliding_window':
+            filename = 'all_results_'+window_type+'_1000_top_k.csv'
     if ref =='Wisard':
-        filename = '0_all_results_fixed_window_top_k.csv'
+        filename = '0_all_results_'+window_type+'_top_k.csv'
     data = pd.read_csv(path+filename)
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -87,6 +90,75 @@ def plot_compare_inputs_in_fixed_wind_wisard():
         plt.title('compare of inputs in fixed window - WiSARD')
         plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_inputs_WiSARD_by_fixed_window.png',
                      dpi=300, bbox_inches='tight')
+
+    # plot in lines
+    else:
+        plt.clf ()
+        plt.plot(top_k, coord_mean_score_top_k, '--s', markersize=8, color=colors[0], label='coord')
+        #plt.fill_between(top_k, np.array(coord_mean_score_top_k) - np.array(coord_std_score_top_k), np.array(coord_mean_score_top_k) + np.array(coord_std_score_top_k), alpha=0.1, color='red')
+        plt.plot(top_k, lidar_mean_score_top_k, '--o', markersize=8, color=colors[1], label='LiDAR')
+        #plt.fill_between(top_k, np.array(lidar_mean_score_top_k) - np.array(lidar_std_score_top_k), np.array(lidar_mean_score_top_k) + np.array(lidar_std_score_top_k), alpha=0.1, color='teal')
+        plt.plot(top_k, coordLidar_mean_score_top_k, '--x', markersize=8, color=colors[2], label='coord+LiDAR')
+        #plt.fill_between(top_k, np.array(coordLidar_mean_score_top_k) - np.array(coordLidar_std_score_top_k), np.array(coordLidar_mean_score_top_k) + np.array(coordLidar_std_score_top_k), alpha=0.1, color='blue')
+
+        #plt.errorbar (top_k, coord_mean_score_top_k, yerr=coord_std_score_top_k,
+        #              fmt='--s',  markersize=8, capsize=5, color=colors[0], label='coord')
+        #plt.errorbar(top_k, lidar_mean_score_top_k, yerr=lidar_std_score_top_k,
+        #                fmt='o-', markersize=8, capsize=5, color=colors[1], label='lidar')
+        #plt.errorbar(top_k, coordLidar_mean_score_top_k, yerr=coordLidar_std_score_top_k,
+        #                fmt='b--x', markersize=8, capsize=5, color=colors[2], label='coordLidar')
+        values = False
+        if values:
+            for i in range(len(top_k)):
+                plt.text(top_k[i]+0.2, coord_mean_score_top_k[i] - 0.03,
+                          str(np.round(coord_mean_score_top_k[i], 2)), color='red')
+                plt.text(top_k[i]+0.2, lidar_mean_score_top_k[i] + 0.02,
+                          str(np.round(lidar_mean_score_top_k[i], 2)), color='teal')
+                plt.text(top_k[i]+0.2, coordLidar_mean_score_top_k[i] - 0.03,
+                          str(np.round(coordLidar_mean_score_top_k[i], 2)), color='blue')
+        plt.xlabel('Top-K', fontsize=10)
+        plt.ylabel('Score', fontsize=10)
+        plt.title('compare of inputs in fixed window', fontsize=12)
+        plt.grid()
+        plt.legend(loc='lower right', frameon=False)
+        plt.show ()
+
+def plot_compare_inputs_in_incremental_wind_wisard():
+    coord_data, coord_mean_score_top_k, coord_std_score_top_k, top_k = read_results(input_type='coord',
+                                                                          window_type='incremental_window',
+                                                                          ref='Wisard')
+    lidar_data, lidar_mean_score_top_k, lidar_std_score_top_k, top_k = read_results (input_type='lidar',
+                                                                               window_type='incremental_window',
+                                                                               ref='Wisard')
+    coordLidar_data, coordLidar_mean_score_top_k, coordLidar_std_score_top_k, top_k = read_results (input_type='lidar_coord',
+                                                                                                  window_type='incremental_window',
+                                                                                                  ref='Wisard')
+    colors = ['peachpuff', 'lightsteelblue', 'gainsboro']
+    plot_barras = True
+    if plot_barras:
+        inputs = ['coord', 'lidar', 'coord+Lidar']
+        heigh_bar = 1
+
+        offset = np.ones(len(top_k))
+
+        fig, ax = plt.subplots (figsize=(6, 8))
+
+        plt.barh(top_k-offset, coord_mean_score_top_k, height=heigh_bar,
+                 color=colors[0], label='coord', xerr=coord_std_score_top_k, ecolor='gray')
+        plt.barh(top_k, lidar_mean_score_top_k, height=heigh_bar,
+                 color=colors[1], label='LiDAR', xerr=lidar_std_score_top_k, ecolor='gray')
+        plt.barh(top_k+offset, coordLidar_mean_score_top_k, height=heigh_bar,
+                 color=colors[2], label='coord+LiDAR', xerr=coordLidar_std_score_top_k, ecolor='gray')
+        ax.spines ['top'].set_visible (False)
+        ax.spines ['right'].set_visible (False)
+        plt.yticks(top_k, top_k)
+        plt.xlabel('Score')
+        plt.ylabel('Top-K')
+        plt.ylim([-1, 35])
+        plt.legend(loc='upper right', ncols=3, frameon=False)
+        plt.title('compare of inputs in incremental window - WiSARD')
+        plt.savefig ('../../results/score/plot_for_jornal/incremental_window/compare_inputs_WiSARD_by_incremental_window.png',
+                     dpi=300, bbox_inches='tight', pad_inches=0)
 
     # plot in lines
     else:
@@ -296,12 +368,19 @@ def plot_compare_times_by_ref():
 
     a =0
 
-def calculate_statis(input_type, window_type, ref):
+def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
     data, _, _, top_k = read_results(input_type=input_type, window_type=window_type, ref=ref)
     data_top_1 = data[data['top-k'] == 1]
     time_train = data_top_1['trainning_process_time']* 1e-9
 
     statistics = time_train.describe()
+
+    if flag_fast_experiment:
+        data_time_with_valid_train_time = data [data ['trainning_process_time'] != 0]
+
+        top_1 = data_time_with_valid_train_time [data_time_with_valid_train_time ['top-k'] == 1]
+        time_train = top_1 ['trainning_process_time'] * 1e-9
+        statistics = time_train.describe ()
 
     print('statistics of time trainning for ', input_type, ' with ', ref)
     print(statistics)
@@ -309,8 +388,15 @@ def calculate_statis(input_type, window_type, ref):
 
     return statistics
 
-
-calculate_statis('lidar', 'fixed_window', 'Wisard')
-calculate_statis('lidar', 'fixed_window', 'Batool')
-calculate_statis('coord', 'fixed_window', 'Wisard')
+calculate_statis('lidar_coord', 'sliding_window', 'Batool', flag_fast_experiment=True)
 calculate_statis('lidar_coord', 'fixed_window', 'Wisard')
+calculate_statis('coord', 'fixed_window', 'Wisard')
+calculate_statis('lidar', 'fixed_window', 'Wisard')
+
+calculate_statis('lidar_coord', 'fixed_window', 'Batool', flag_fast_experiment=True)
+
+calculate_statis('lidar', 'fixed_window', 'Batool')
+
+
+plot_compare_inputs_in_incremental_wind_wisard()
+

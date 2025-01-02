@@ -590,12 +590,19 @@ def plot_time_process_online_learning( path, title, filename, window_size):
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_time_process_vs_samples_online_learning( path, title, filename, ref, window_size=0):
+def plot_time_process_vs_samples_online_learning( path, title, filename, ref, window_size=0, flag_fast_experiment=False):
 
     sns.set_theme (style="darkgrid")
     all_csv_data = pd.read_csv (path + filename)
-    top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
-    trainning_time = top_1 ['trainning_process_time'] * 1e-9
+
+    if flag_fast_experiment:
+        data_time_with_valid_train_time = all_csv_data [all_csv_data ['trainning_process_time'] != 0]
+
+        top_1 = data_time_with_valid_train_time [data_time_with_valid_train_time ['top-k'] == 1]
+        trainning_time = top_1 ['trainning_process_time'] * 1e-9
+    else:
+        top_1 = all_csv_data [all_csv_data ['top-k'] == 1]
+        trainning_time = top_1 ['trainning_process_time'] * 1e-9
     max_time = np.max (trainning_time)
     min_time = np.min (trainning_time)
 
