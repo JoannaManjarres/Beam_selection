@@ -495,10 +495,10 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                                                              mode='auto')])
                 end_trainning = time.process_time_ns()
                 trainning_process_time = (end_trainning - star_trainning)
-                if see_trainning_progress == False:
+                if see_trainning_progress != 0:
                     print("trainning Time: ", trainning_process_time)
                     print(hist.history.keys())
-                if see_trainning_progress == False:
+                if see_trainning_progress != 0:
                     print('loss',hist.history['loss'],
                           'val_loss',hist.history['val_loss'],
                           'categorical_accuracy', hist.history['categorical_accuracy'],
