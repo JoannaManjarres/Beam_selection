@@ -233,7 +233,7 @@ def fit_fixed_window_top_k(nro_of_episodes_test,
                                                            x_test=input_test,
                                                            y_train=label_train,
                                                            y_test=label_test,
-                                                           address_of_size=44,
+                                                           address_of_size=54,
                                                            input_type=label_input_type)
             df_results_top_k['episode'] = i
             df_all_results_top_k = pd.concat([df_all_results_top_k, df_results_top_k], ignore_index=True)
@@ -242,7 +242,7 @@ def fit_fixed_window_top_k(nro_of_episodes_test,
         else:
             continue
 
-    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/'
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/fixed_window/res_8_add_54/'
     path = path_result + str(rodada)
     df_all_results_top_k.to_csv(path + '_all_results_fixed_window_top_k.csv', index=False)
 
@@ -296,7 +296,7 @@ def fit_incremental_window_top_k(nro_of_episodes_test,
                                                             x_test=input_test,
                                                             y_train=label_train,
                                                             y_test=label_test,
-                                                            address_of_size=44,
+                                                            address_of_size=54,
                                                             input_type=label_input_type)
             df_results_top_k ['episode'] = i
             df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
@@ -305,7 +305,7 @@ def fit_incremental_window_top_k(nro_of_episodes_test,
             continue
 
     ## SAVE RESULTS
-    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/incremental_window/'
+    path_result = '../results/score/Wisard/online/top_k/' + label_input_type + '/incremental_window/res_8_add_54/'
     path = path_result + str (rodada)
     df_all_results_top_k.to_csv (path + '_all_results_incremental_window_top_k.csv', index=False)
 
@@ -498,7 +498,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
                                                             x_test=input_test,
                                                             y_train=label_train,
                                                             y_test=label_test,
-                                                            address_of_size=44,
+                                                            address_of_size=54,
                                                             input_type=label_input_type)
             df_results_top_k ['episode'] = i
             df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
@@ -508,7 +508,7 @@ def fit_sliding_window_with_size_variation_top_k(nro_of_episodes,
 
             ## SAVE RESULTS
     df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
-    path_result = ('../results/score/Wisard/online/top_k/') + label_input_type + '/sliding_window/window_size_var/'
+    path_result = ('../results/score/Wisard/online/top_k/') + label_input_type + '/sliding_window/window_size_var/res_8_add_54/'
     path_result = path_result + str (rodada)
     df_all_results_top_k.to_csv (path_result + '_all_results_sliding_window_' + str (window_size) + '_top_k.csv',
                                  index=False)
@@ -695,7 +695,7 @@ def extract_training_data_from_s009(s009_data, start_index, end_index, input_typ
 
 
 def prepare_data_for_simulation():
-    preprocess_resolution = 16
+    preprocess_resolution = 8
     th = 0.15
     all_info_s009, encoding_coord_s009, beams_s009 = read_s009_data (preprocess_resolution)
     all_info_s008, encoding_coord_s008, beams_s008 = read_s008_data (preprocess_resolution)
@@ -1486,13 +1486,13 @@ def simulation_of_online_learning_top_k(input_type):
 
 
     for rodada in range(1):
-        #print('|  Fixa         |', input_type, '\t |')
-        #fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
-        #                        nro_of_episodes_train=episodes_for_train,
-        #                        input_type=input_type,
-        #                        rodada=rodada,
-        #                        s008_data=s008_data,
-        #                        s009_data=s009_data)
+        print('|  Fixa         |', input_type, '\t |')
+        fit_fixed_window_top_k (nro_of_episodes_test=eposodies_for_test,
+                                nro_of_episodes_train=episodes_for_train,
+                                input_type=input_type,
+                                rodada=rodada,
+                                s008_data=s008_data,
+                                s009_data=s009_data)
 
         print('|  Deslizante  |', input_type, '\t |')
         window_size = [100, 500, 1000, 1500, 2000]
@@ -1521,17 +1521,6 @@ def simulation_of_online_learning_top_k(input_type):
     #fit_incremental_window_top_k(eposodies_for_test, input_type, s008_data, s009_data)
     #plot_top_k_score_comparation_between_sliding_incremental_fixed_window(input_type, simulation_type='incremental_window')
     #print('|  Deslizante   |', input_type, '\t |')
-    '''
-    window_size = [100, 500, 1000, 1500, 2000]
-    for i in range(len(window_size)):
-        print('|\t -  ', window_size[i], ' \t |')
-
-        fit_sliding_window_with_size_variation_top_k(nro_of_episodes=eposodies_for_test,
-                                                     input_type=input_type,
-                                                     window_size=window_size[i],
-                                                     s008_data=s008_data,
-                                                     s009_data=s009_data)
-   '''
 
 
     print('+----------------------------+')
@@ -1804,7 +1793,7 @@ def plot_time_train_between_size_windows_sliding(input_type):
 
 def main(input_type):
 
-    run_simulation = False
+    run_simulation = True
 
     if run_simulation:
         simulation_of_online_learning_top_k(input_type)
@@ -1841,5 +1830,5 @@ input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
 
-#main(input_type)
-plot_time_train_between_size_windows_sliding(input_type)
+main(input_type)
+#plot_time_train_between_size_windows_sliding(input_type)

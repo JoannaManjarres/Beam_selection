@@ -13,6 +13,12 @@ import matplotlib.pyplot as plt
 import csv
 import random
 import pca
+import wisardpkg as wp
+import pandas as pd
+from operator import itemgetter
+from sklearn.metrics import accuracy_score
+import beam_selection_wisard as bsw
+import seaborn as sns
 
 random.seed(0)
 
@@ -540,7 +546,7 @@ def beam_selection_wisard_lidar_2D():
 
         input_train = data_lidar_2D_without_variance_train
         input_test = data_lidar_2D_without_variance_test
-        size_of_address = 64
+        size_of_address = 58
 
 
     if lidar_rx_2D_like_thermometer:
@@ -597,7 +603,7 @@ def beam_selection_wisard_lidar_2D():
                                     address_of_size=size_of_address)
     else:
 
-        select_best_beam (input_train=input_train,
+        acuracia, address_of_size = select_best_beam (input_train=input_train,
                           input_validation=input_test,
                           label_train=label_train,
                           label_validation=label_test,
@@ -606,6 +612,12 @@ def beam_selection_wisard_lidar_2D():
                           type_of_input=input_type,
                           titulo_figura=title_of_figure,
                           user='all')
+        path = '../results/score/Wisard/lidar/'
+        df = pd.DataFrame ({"addres_size": address_of_size, "accuracy": acuracia})
+        file_name = 'accuracy_lidar_variation_of_size_address.csv'
+        file_name = input_type + '.csv'
+        df.to_csv (path + file_name, index=False)
+
 def beam_selection_wisard_lidar_3D_rx_therm_2D():
     top_k_accuracy = False
     input_type = 'lidar_3D_rx_therm_2D'
@@ -1215,8 +1227,203 @@ def main():
             beam_selection_wisard_with_lidar_and_coord(input_type_comb=6, top_k=top_k)
 
 
+
+#--------- Jan 13 de 2025-----
+def beam_selection_with_all_size_add(input_type='coord'):
+    # ------- Get Beams
+    index_beams_train, index_beam_validation, _, _ = analyse_s008.read_beams_output_from_baseline ()
+    index_beams_test = analyse_s009.read_beam_output_generated_by_raymobtime_baseline ()
+
+    label_train = np.concatenate ((index_beams_train, index_beam_validation), axis=0)
+    label_test = index_beams_test
+    path_csv = '../results/score/Wisard/'+input_type+'/'
+
+    if input_type == 'coord':
+        preprocess_resolution = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+        for i in range (len (preprocess_resolution)):
+            _, _, encoding_coord_train = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s008 (
+                escala=preprocess_resolution[i])
+            encoding_coord_test = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s009 (
+                escala=preprocess_resolution[i])
+
+            input_train = encoding_coord_train
+            input_test = encoding_coord_test
+
+            acuracia, address_of_size = select_best_beam(input_train=input_train,
+                                                         input_validation=input_test,
+                                                         label_train=label_train,
+                                                         label_validation=label_test,
+                                                         figure_name='coord',
+                                                         antenna_config='8x32',
+                                                         type_of_input='coord',
+                                                         titulo_figura='Accuracy [Train: s008 - Test: s009] \n - Input[coord] -',
+                                                         user='all')
+
+            df = pd.DataFrame({"addres_size": address_of_size, "accuracy": acuracia})
+            file_name = 'accuracy_'+input_type+ '_res_' + str (preprocess_resolution[i]) + '.csv'
+            df.to_csv (path_csv + file_name, index=False)
+
+def select_best_beam(input_train,
+                     input_validation,
+                     label_train,
+                     label_validation,
+                     figure_name,
+                     antenna_config,
+                     type_of_input,
+                     titulo_figura,
+                     user,
+                     enableDebug=False,
+                     plot_confusion_matrix_enable=False):
+
+    # config parameters
+    if (enableDebug):
+        address_size = [28]
+        numero_experimentos = 2
+    else:
+        address_size = [6,12,18,24,28,34,38,44,48,54,58,64]
+
+
+        numero_experimentos = 1
+
+    vector_time_train_media = []
+    vector_time_test_media = []
+    vector_acuracia_media = []
+
+    vector_acuracia_desvio_padrao = []
+    vector_time_train_desvio_padrao = []
+    vector_time_test_desvio_padrao = []
+
+    path_result = "../results"
+
+    vector_acuracia = []
+    vector_time_test = []
+    vector_time_train = []
+
+    for j in range(len(address_size)):  # For encargado de variar el tamano de la memoria
+        for i in range(numero_experimentos):  # For encargado de ejecutar el numero de rodadas (experimentos)
+
+
+            # -----------------USA LA RED WIZARD -------------------
+            out_red, time_train, time_test = bsw.redWizard(input_train,
+                                                       label_train,
+                                                       input_validation,
+                                                       address_size[j])
+
+            vector_time_train.append(time_train)
+            vector_time_test.append(time_test)
+
+            acuracia = accuracy_score(label_validation, out_red)
+            vector_acuracia.append(acuracia)
+
+        # ----------------- CALCULA ESTADISTICAS -----------------------
+        [acuracia_media, acuracia_desvio_padrao] = bsw.calculoDesvioPadrao(vector_acuracia)
+        [time_train_media, time_train_desvio_padrao] = bsw.calculoDesvioPadrao(vector_time_train)
+        [time_test_media, time_test_desvio_padrao] = bsw.calculoDesvioPadrao(vector_time_test)
+
+        # ----------------- GUARDA VECTORES DE ESTADISTICAS -----------------------
+        vector_acuracia_media.append(acuracia_media)
+        vector_acuracia_desvio_padrao.append(acuracia_desvio_padrao)
+
+        vector_time_train_media.append(time_train_media)
+        vector_time_train_desvio_padrao.append(time_train_desvio_padrao)
+
+        vector_time_test_media.append(time_test_media)
+        vector_time_test_desvio_padrao.append(time_test_desvio_padrao)
+
+    save_results = False
+    if save_results:
+        # ----------------- GUARDA EM CSV VECTORES DE ESTADISTICAS  -----------------------
+        #print ("-------------------------------------------")
+        #print('\n Saving results files ...')
+        #print ("-------------------------------------------")
+
+        #with open(path_result + '/accuracy/'+antenna_config+'/'+type_of_input+'/'+user+'/acuracia_' + figure_name + '.csv', 'w') as f:
+        with open (path_result + '/score/Wisard/' + figure_name + '/acuracia_' + figure_name + '.csv', 'w') as f:
+            writer_acuracy = csv.writer(f, delimiter='\t')
+            writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
+
+        #with open(path_result + '/score/Wisard/'+type_of_input+'/'+user+'/score_' + figure_name + '.csv', 'w') as f:
+        #    writer_acuracy = csv.writer(f, delimiter='\t')
+        #    writer_acuracy.writerows(zip(address_size, vector_acuracia_media, vector_acuracia_desvio_padrao))
+
+        #with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user + '/time_train_' + figure_name + '.csv', 'w') as f:
+        with open(path_result + '/processingTime/Wisard/' + figure_name + '/time_train_' + figure_name + '.csv', 'w') as f:
+            writer_time_train = csv.writer(f, delimiter='\t')
+            writer_time_train.writerows(zip(address_size, vector_time_train_media, vector_time_train_desvio_padrao))
+
+        #with open(path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_' + figure_name + '.csv', 'w') as f:
+        with open(path_result + '/processingTime/Wisard/' + figure_name + '/time_test_' + figure_name + '.csv', 'w') as f:
+            writer_time_test = csv.writer(f, delimiter='\t')
+            writer_time_test.writerows(zip(address_size, vector_time_test_media, vector_time_test_desvio_padrao))
+
+    plot_results = False
+    if plot_results:
+        # ----------------- PLOT DE RESULTADOS  ------------------------------
+        titulo = titulo_figura
+        nombre_curva = "Dado com desvio padrão"
+
+        bsw.plotarResultados(address_size,
+                         vector_acuracia_media,
+                         vector_acuracia_desvio_padrao,
+                         titulo,
+                         nombre_curva,
+                         "Tamanho da memória",
+                         "Acuracia Média",
+                         ruta=path_result + '/accuracy/'+antenna_config+'/'+type_of_input + '/' + user +'/acuracia_'+figure_name+'.png')
+
+
+        bsw.plotarResultados(address_size,
+                         vector_time_train_media,
+                         vector_time_train_desvio_padrao,
+                         titulo,
+                         nombre_curva,
+                         "Tamanho da memória",
+                         "Tempo de treinamento Médio (s)",
+                         ruta=path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_train_'+figure_name+'.png''')
+
+        bsw.plotarResultados(address_size,
+                         vector_time_test_media,
+                         vector_time_test_desvio_padrao,
+                         titulo,
+                         nombre_curva,
+                         "Tamanho da memória",
+                         "Tempo de Teste Médio (s)",
+                         ruta=path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_'+figure_name+'.png')
+
+
+    return vector_acuracia, address_size
+
+def plot_accuracy_vs_address_size_with_one_resultion(input_label='lidar'):
+
+    if input_label == 'coord':
+        path_csv = '../results/score/Wisard/coord/'
+        resolution = 8
+        file_name = 'accuracy_coord_res_' + str(resolution) + '.csv'
+    else:
+        path_csv ='../results/score/Wisard/'+input_label+'/'
+        file_name = 'accuracy_'+input_label+'_variation_of_size_address.csv'
+
+    df = pd.read_csv(path_csv + file_name, delimiter=',')
+
+    sns.set_theme(style="darkgrid")
+    g = sns.lineplot(x=df['addres_size'], y=df['accuracy'], marker='o')
+    plt.xticks(df['addres_size'])
+    plt.xlabel('Tamanho do Endereço', font='Times New Roman', fontsize=14)
+    plt.ylabel('Acurácia', font='Times New Roman', fontsize=14)
+    if input_label=='coord':
+        plt.savefig(path_csv+'accuracy_vs_address_size_res_'+str(resolution)+'.png',
+                dpi=300, bbox_inches='tight')
+    else:
+        plt.savefig (path_csv + 'accuracy_vs_address_'+input_label + '.png',
+                     dpi=300, bbox_inches='tight')
+    #plt.show()
+
+
+
 #beam_selection_wisard_using_pca_with_lidar_2D()
-#beam_selection_wisard_with_lidar_and_coord()
-main()
+#beam_selection_wisard_lidar_2D()
+plot_accuracy_vs_address_size_with_one_resultion()
+print('Termine')
+#main()
 #beam_selection_wisard_with_s008_and_s009_from_ray_tracing()
 

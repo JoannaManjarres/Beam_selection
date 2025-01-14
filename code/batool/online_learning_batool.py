@@ -1717,7 +1717,7 @@ def read_results_for_plot(type_of_input, type_of_window, window_size, model):
         if type_of_window == 'fixed_window':
             #path = '../../results/score/Batool/online/top_k/' + type_of_input + '/' + type_of_window + '/' + servidor + '/'
             path = '../../results/score/Batool/servidor_land/online/' + type_of_input + '/' + type_of_window + '/'
-            filename = 'all_results_fixed_window_top_k.csv'
+            filename = 'all_results_'+type_of_window+'_top_k.csv'
             title = 'Beam Selection using ' + model + ' with ' + type_of_input + ' and ' + type_of_window + '\n Reference: Batool -' + servidor
 
         elif type_of_window == 'sliding_window':
@@ -1983,10 +1983,11 @@ def main():
     sys.path.append ("../")
 
     import plot_results as plot
+    #import plots_for_jornal_paper/plot_by_window_type as plot_1
 
-    run_simulation = True
+    run_simulation = False
     input = 'lidar_coord'
-    type_of_window = 4
+    type_of_window = 2
     plot_compare_results = False
 
         #1 = 'fixed_window'
@@ -2035,10 +2036,11 @@ def main():
         if plot_compare_results:
             plot.plot_compare_types_of_windows (input_name=input, ref='Batool')
             plot.plot_compare_windows_size_in_window_sliding(input_name=input, ref='Batool')
+            #plot_1.calculate_statis(input=input, window_type=window, ref='Batool')
 
         else:
             if type_of_window == 2:
-                window_size = [100, 500, 1000, 1500, 2000]
+                window_size = [1000]#[100, 500, 1000, 1500, 2000]
                 for i in range (len (window_size)):
                     plot_results__(type_of_input=input, type_of_window=window, window_size=window_size[i])
             else:

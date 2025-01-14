@@ -6,7 +6,7 @@ import seaborn as sns
 def read_results(input_type, window_type, ref):
     # Read the data
     path ='../../results/score/'+ref+'/servidor_land/online/'+input_type+'/'+window_type+'/'
-    filename = 'all_results_fixed_window_top_k.csv'
+    filename = 'all_results_'+window_type+'_top_k.csv'
     if ref =='Batool':
         if window_type == 'sliding_window':
             filename = 'all_results_'+window_type+'_1000_top_k.csv'
@@ -385,18 +385,19 @@ def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
     print('statistics of time trainning for ', input_type, ' with ', ref)
     print(statistics)
     print('---------------------------------')
+    file = pd.DataFrame(data=statistics)
+    file.to_csv('../../results/score/plot_for_jornal/'+window_type+'/stats/'+input_type+'_'+ref+'_'+window_type+'_statistics.csv')
 
     return statistics
 
-calculate_statis('lidar_coord', 'sliding_window', 'Batool', flag_fast_experiment=True)
-calculate_statis('lidar_coord', 'fixed_window', 'Wisard')
-calculate_statis('coord', 'fixed_window', 'Wisard')
-calculate_statis('lidar', 'fixed_window', 'Wisard')
-
-calculate_statis('lidar_coord', 'fixed_window', 'Batool', flag_fast_experiment=True)
-
-calculate_statis('lidar', 'fixed_window', 'Batool')
+input = 'lidar_coord'
+window_type = 'fixed_window' # 'incremental_window' 'sliding_window'
+ref = 'Batool' # 'Wisard'
+calculate_statis(input, window_type, ref)
 
 
-plot_compare_inputs_in_incremental_wind_wisard()
+
+
+
+#plot_compare_inputs_in_incremental_wind_wisard()
 

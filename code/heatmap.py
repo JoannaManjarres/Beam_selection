@@ -1,12 +1,36 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import pandas as pd
 import csv
 
 
 
+def read_data_for_plot_head_map(input='coord'):
 
+    path = '../results/score/Wisard/'+input+'/'
+    resolution = [1,2,4,8,16,32,64,128,256,512]
+    all_accuracy =[]
+    for i in resolution:
+        filename = 'accuracy_'+input+'_res_'+str(i)+'.csv'
+        df = pd.read_csv (path + filename)
+
+        data = df['accuracy'].to_numpy()
+        all_accuracy.append(data)
+
+    from matplotlib.font_manager import get_font_names
+
+    print (get_font_names ())
+
+    plot_headmap(all_data=all_accuracy,
+                 x_axis_labels_vector=df['addres_size'].to_numpy(),
+                 y_axis_labels_vector= resolution,
+                 x_label='Tamanho da memoria',
+                 y_label='Resolução',
+                 path=path,
+                 folder=input)
+    a=0
 
 def plot_headmap(all_data,
                  x_axis_labels_vector,
@@ -22,21 +46,24 @@ def plot_headmap(all_data,
     plt.figure (figsize=(6, 4), dpi=200)
 
     annot_kws = {'fontsize': 10,
-                 'fontstyle': 'italic',
-                 'color': "k"}
+                 #'fontstyle': 'italic',
+                 'color': "w",
+                 "family":"Times New Roman"}
 
     hm = sns.heatmap (data=all_data,
                       annot=True,
+                      annot_kws=annot_kws,
                       cmap="YlGnBu",
                       xticklabels=x_axis_labels,
                       yticklabels=y_axis_labels,
+                      fmt='.3f',
                       )
-    hm.set_xlabel (x_label, color='steelblue', size=14, fontweight='bold')
-    hm.set_ylabel (y_label, color='steelblue', size=14, fontweight='bold')
+    hm.set_xlabel (x_label, color='steelblue', size=14, font='Times New Roman')
+    hm.set_ylabel (y_label, color='steelblue', size=14, font='Times New Roman')
 
     # displaying the plotted heatmap
     plt.subplots_adjust (right=1, left=0.09)
-    plt.savefig (path + 'headmap_' + folder)
+    plt.savefig (path + 'headmap_' + folder, dpi=300, bbox_inches='tight')
     plt.show ()
 
 
@@ -253,4 +280,4 @@ def read_data_lidar_2D_dilated():
     a=0
 
 
-read_data_lidar_2D_dilated()
+read_data_for_plot_head_map()

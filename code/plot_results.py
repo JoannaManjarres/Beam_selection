@@ -968,10 +968,11 @@ def plot_compare_types_of_windows(input_name, ref):
 
     window_type = 'incremental_window'
     path_result = path + window_type + '/'
+    file_name = 'all_results_' + window_type + '_top_k.csv'
     if ref == 'Wisard':
         file_name = flag + file_name
-    #incremental_data = pd.read_csv (path_result + file_name)
-    #score_incremental_window, top_k = get_scores_from_csv_results (incremental_data)
+    incremental_data = pd.read_csv (path_result + file_name)
+    score_incremental_window, top_k = get_scores_from_csv_results (incremental_data)
 
     window = 'sliding_window'
     path_result = path + window + '/'
@@ -988,14 +989,14 @@ def plot_compare_types_of_windows(input_name, ref):
     plt.figure()
     plt.clf()
     plt.plot(top_k, score_fixed_window, 'o-', label='fixed window', color=color[0])
-    #plt.plot(top_k, score_incremental_window, 'o-', label='incremental window', color=color[1])
+    plt.plot(top_k, score_incremental_window, 'o-', label='incremental window', color=color[1])
     plt.plot(top_k, score_sliding_window, 'o-', label='sliding window 1000', color=color[2])
 
     for i in range(len(score_fixed_window)):
         plt.text(top_k[i]+1, score_fixed_window[i]-0.02,
                  str(np.round(score_fixed_window[i], 3)), fontsize=10, color=color[0])
-        #plt.text(top_k[i], score_incremental_window[i]+0.04,
-        #         str(np.round(score_incremental_window [i], 3)), fontsize=10, color=color[1])
+        plt.text(top_k[i], score_incremental_window[i]+0.04,
+                 str(np.round(score_incremental_window [i], 3)), fontsize=10, color=color[1])
         plt.text(top_k[i]+1, score_sliding_window[i]+0.02,
                  str(np.round(score_sliding_window [i], 3)), fontsize=10, color=color[2])
 
