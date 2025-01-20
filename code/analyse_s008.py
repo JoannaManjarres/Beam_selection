@@ -11,6 +11,91 @@ import random
 random.seed(0)
 
 
+def read_beams_raymobtime_using_batool_method():
+    data_path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    y, num_classes = getBeamOutput (output_file=data_path)
+    best_beam_index = []
+    num_antennas_rx = 8
+    for sample in range (y.shape [0]):
+        best_beam_index.append (np.argmax (y [sample, :]))
+
+    beam_index_rx = np.array (best_beam_index)
+
+    tx_index = np.zeros ((y.shape [0]), dtype=int)
+    rx_index = np.zeros ((y.shape [0]), dtype=int)
+
+    for sample in range (len (beam_index_rx)):
+        index_tx = best_beam_index [sample] // int (num_antennas_rx)
+        index_rx = best_beam_index [sample] % int (num_antennas_rx)
+        tx_index [sample] = index_tx
+        rx_index [sample] = index_rx
+
+    plot_distribution_beams_displot (tx_index, rx_index)
+def read_beams_raymobtime(num_antennas_rx, path_of_data):
+
+    #config_antenna = num_antennas_rx+'x'+num_antennas_tx
+    #data_path = '/Users/Joanna/git/beam_selection_wisard/data/beams/Ailton/beam_output/beams_output_'+config_antenna+'.npz'
+    #data_path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    data_path = path_of_data
+    beams = np.load(data_path)['output_classification']
+
+    best_beam_index = []
+    for sample in range(beams.shape[0]):
+        best_beam_index.append(np.argmax(beams[sample, :]))
+
+    beam_index_rx = np.array(best_beam_index)
+
+    tx_index = np.zeros((beams.shape[0]), dtype=int)
+    rx_index = np.zeros((beams.shape[0]), dtype=int)
+
+    for sample in range(len(beam_index_rx)):
+        index_tx = best_beam_index[sample] // int(num_antennas_rx)
+        index_rx = best_beam_index[sample] % int(num_antennas_rx)
+        tx_index[sample] = index_tx
+        rx_index[sample] = index_rx
+
+    return tx_index, rx_index, best_beam_index
+
+def plot_distribution_beams_displot(beams_tx,
+                                    beams_rx,
+                                    path):
+                                    #pp_folder, connection, set):
+
+    #path = pp_folder + 'histogram/'+connection + '/'
+    #plt.Figure(figsize=(32, 8))
+    #sns.set_style('darkgrid')
+    plot = sns.displot(x=beams_tx,
+                y=beams_rx,
+                row_order=range(2),
+                col_order=range(32),
+                binwidth=(2, 2),
+                cmap='Blues',
+                aspect=2.9, #10.67,
+                height=3,#2.5,
+                       cbar=True,
+                       #cbar_kws={'panchor':(0.5,1.0)}
+                )
+
+    #plt.title("Beams distribuition (Tx-Rx) ["+set+"]")
+    plt.xlabel("Indices dos feixes no Tx", font='Times New Roman', fontsize=14)
+    plt.ylabel("Indices dos feixes no Rx", font='Times New Roman', fontsize=14)
+    plt.gca().invert_yaxis()
+
+    plt.subplots_adjust(left=0.08)
+    #plt.subplots_adjust(right=5)
+    plt.subplots_adjust(bottom=0.179)
+    plt.subplots_adjust(top=0.879)
+    #plot.fig.set_figwidth(10)
+    #plot.fig.set_figheight(6)
+    #name = path+"Beams_distribution_"+set+".png"
+    #print(name)
+    plt.savefig(path, transparent=False, dpi=300, bbox_inches='tight')
+    plt.clf()
+    plt.cla ()
+    plt.close()
+
+    #plt.show()
+
 def generated_beams_output_from_ray_tracing():
 
     inputPath = '../data/beams_output/dataset_s008/beam_output_generate_rt_s008/ray_tracing_data_s008_carrier60GHz/rosslyn_mobile_60GHz_ts0.1s_V_Lidar_e'
@@ -463,6 +548,131 @@ def analyse_index_beams_s008():
     plt.show()
 
 
+def getBeamOutput(output_file):
+    thresholdBelowMax = 6
+    print("Reading dataset...", output_file)
+    output_cache_file = np.load(output_file)
+    yMatrix = output_cache_file['output_classification']
+
+    yMatrix = np.abs(yMatrix)
+    yMatrix /= np.max(yMatrix)
+    yMatrixShape = yMatrix.shape
+    num_classes = yMatrix.shape[1] * yMatrix.shape[2]
+
+    y = yMatrix.reshape(yMatrix.shape[0],num_classes)
+    y = beamsLogScale(y, thresholdBelowMax)
+
+
+    return y,num_classes
+
+def beamsLogScale(y, thresholdBelowMax):
+    y_shape = y.shape  # shape is (#,256)
+
+    for i in range (0, y_shape [0]):
+        thisOutputs = y [i, :]
+        logOut = 20 * np.log10 (thisOutputs + 1e-30)
+        minValue = np.amax (logOut) - thresholdBelowMax
+        zeroedValueIndices = logOut < minValue
+        thisOutputs [zeroedValueIndices] = 0
+        thisOutputs = thisOutputs / sum (thisOutputs)
+        y [i, :] = thisOutputs
+    return y
+
+def plot_distribution_of_beams():
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+    data_path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_validation.npz'
+    tx_index_val, rx_index_val, best_beam_index_val = read_beams_raymobtime (num_antennas_rx=8, path_of_data=data_path)
+
+    tx_index = np.concatenate ((tx_index_train, tx_index_val), axis=0)
+    rx_index = np.concatenate ((rx_index_train, rx_index_val), axis=0)
+
+    path_to_save = '../analyses/histogram_s008.png'
+    plot_distribution_beams_displot (tx_index, rx_index, path_to_save)
+
+    data_path = '../data/beams_output/beam_output_baseline_raymobtime_s009/beams_output_test.npz'
+    tx_index_s009, rx_index_s009, best_beam_index_s009 = read_beams_raymobtime (num_antennas_rx=8, path_of_data=data_path)
+
+    path_to_save = '../analyses/histogram_s009.png'
+    plot_distribution_beams_displot (tx_index_s009, rx_index_s009, path_to_save)
+
+def plot_beams_with_coord():
+    type_connection = 'NLOS'
+    filename = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
+    limit_ep_train = 1564
+    data = pd.read_csv(filename)
+    valid_data = data[data['Val'] == 'V']
+    train_data = valid_data[valid_data['EpisodeID'] <= limit_ep_train]
+
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+
+    train_data.insert(6, 'index_beams', best_beam_index_train)
+    train_data.insert(7, 'tx_index', tx_index_train)
+    train_data.insert(8, 'rx_index', rx_index_train)
+
+    train_data_LOS = train_data [train_data ['LOS'] == 'LOS=1']
+    train_data_NLOS = train_data [train_data ['LOS'] == 'LOS=0']
+    type_index = 'tx_index'
+
+    if type_connection == 'LOS':
+        data_plot = train_data_LOS
+    if type_connection == 'NLOS':
+        data_plot = train_data_NLOS
+    if type_connection == 'ALL':
+        data_plot = train_data
+
+    name = type_index + '_'+type_connection
+
+
+
+    sns.set (style='darkgrid')
+    sns.set (font_scale=1.3)
+    #sns.set_context ("paper", rc={"font.size": 14, "axes.titlesize": 14, "axes.labelsize": 14})
+    #fig, ax = plt.subplots(figsize=(11.7, 8.27))
+    #fig.set_size_inches (11.7, 8.27)
+
+    sns.scatterplot(data=(745,550))
+    g = sns.relplot (data=data_plot,
+                        x='x',
+                        y='y',
+                        kind='scatter',
+                        hue=type_index,
+                        # size='combinedBeams',
+                        # sizes=(12,200),
+                        alpha=0.5,
+                        palette='dark',
+                        legend=False)
+                        #aspect=15/23)
+    plt.scatter (745, 550, color='red', s=200, marker='v')
+    plt.text (744.5, 555, 'Tx', fontsize=16, color='red')
+    g.figure.set_size_inches (7.5, 10.5)
+    plt.savefig('../analyses/'+name+'_distribution_with_position_s008.png', dpi=300, bbox_inches='tight')
+    #plt.show()
+
+    g = sns.relplot (data=train_data,
+                     x='x',
+                     y='y',
+                     kind='scatter',
+                     hue='tx_index',
+                     # size='combinedBeams',
+                     # sizes=(12,200),
+                     alpha=0.5,
+                     palette='dark',
+                     legend=True)
+    # aspect=15/23)
+    plt.scatter (745, 550, color='red', s=200, marker='v')
+    plt.text (744.5, 555, 'Tx', fontsize=16, color='red')
+    g.figure.set_size_inches (7.5, 10.5)
+    plt.savefig ('../analyses/tx_beam_distribution_with_position_s008.png', dpi=300, bbox_inches='tight')
+
+
 #compare_beamoutput_matrices_from_RT()
 #generated_beams_output_from_ray_tracing()
 #stats_index_beams_article()
+#plot_distribution_of_beams()
+plot_beams_with_coord()
+
+
+
+
