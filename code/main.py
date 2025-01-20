@@ -1422,6 +1422,7 @@ def plot_accuracy_vs_address_size_with_one_resultion(input_label='lidar'):
 
 #beam_selection_wisard_using_pca_with_lidar_2D()
 #beam_selection_wisard_lidar_2D()
+beam_selection_with_all_size_add()
 plot_accuracy_vs_address_size_with_one_resultion()
 print('Termine')
 #main()
