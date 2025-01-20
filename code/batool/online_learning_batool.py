@@ -1974,8 +1974,21 @@ def plot_comparition_time_process(type_of_input, type_of_window, model):
     plt.savefig (path_result + input_type + '/time_test_comparation.png', dpi=300)
     plt.close ()
     '''
-    a=0
 
+
+def read_incremental_data_results_lidar():
+    path = '../../results/score/Batool/servidor_land/online/lidar/incremental_window/'
+
+
+    for i in range(1,46,1):
+        file = 'all_results_incremental_window_top_k_parte_'+str(i)+'.csv'
+        data = pd.read_csv(path + file)
+        if i == 1:
+            all_data = data
+        else:
+            all_data = pd.concat([all_data, data], axis=0)
+
+    all_data.to_csv(path + 'all_results_incremental_window_top_k.csv', index=False)
 
 def main():
     import sys
@@ -2050,8 +2063,8 @@ def main():
     # import keras
     # print(keras.__version__)
 
-main()
-
+#main()
+read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
