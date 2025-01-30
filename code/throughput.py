@@ -97,7 +97,7 @@ def calculate_best_beam_index_wt_wr(index_beams, num_antennas_rx):
 def read_beams_output_generated_by_ray_tracing():
     print ("\t\tRead Beams output generated from Ray-tracing ")
     path = '../data/beams_output/beams_generate_by_me/'
-    beam_output_train = np.load (path + "beams_output_8x32_train.npz", allow_pickle=True) ['output_classification']
+    beam_output_train = np.load (path + "beams_output_8x32_train.npz", allow_pickle=True)['output_classification']
 
     path = '../data/beams_output/beams_generate_by_me/'
     beam_output_test = np.load(path + "beams_output_8x32_test.npz", allow_pickle=True)['output_classification']
@@ -458,7 +458,7 @@ def test_calculo_rt():
 
 
 
-throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
+#throughput_ratio_for_all_techniques('lidar_coord') # 'lidar_coord' 'coord' 'lidar'
 #throughput_ratio_for_all_techniques()
 #throughput_ratio()
 #read_index_beams_estimated()

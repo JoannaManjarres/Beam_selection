@@ -390,6 +390,8 @@ def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
 
     return statistics
 
+
+
 input = 'lidar_coord'
 window_type = 'fixed_window' # 'incremental_window' 'sliding_window'
 ref = 'Batool' # 'Wisard'

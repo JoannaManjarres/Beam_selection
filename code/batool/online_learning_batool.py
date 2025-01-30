@@ -1777,7 +1777,7 @@ def plot_results__(type_of_input, type_of_window, window_size=0):
         plot.plot_time_process_vs_samples_online_learning(path=path, filename=filename, title=title, ref='batool', window_size=window_size, flag_fast_experiment=True)
         plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist', window_size=window_size)
         plot.plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size)
-        plot.plot_time_process_online_learning(path=path, filename=filename,  title=title, window_size=window_size)
+        plot.plot_time_process_online_learning(path=path, filename=filename,  title=title, window_size=window_size, window_type=type_of_window)
 
 
 def plot_compare_score(type_of_input, type_of_window, window_size):
@@ -1999,8 +1999,8 @@ def main():
     #import plots_for_jornal_paper/plot_by_window_type as plot_1
 
     run_simulation = False
-    input = 'lidar_coord'
-    type_of_window = 2
+    input = 'lidar'
+    type_of_window = 3
     plot_compare_results = False
 
         #1 = 'fixed_window'
@@ -2063,8 +2063,8 @@ def main():
     # import keras
     # print(keras.__version__)
 
-#main()
-read_incremental_data_results_lidar()
+main()
+#read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'

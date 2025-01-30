@@ -557,7 +557,7 @@ def plot_score_and_time_process_online_learning( pos_x, pos_y, path, title, file
     plt.savefig(path + 'trainning_time.png', dpi=300)
     plt.close()
 
-def plot_time_process_online_learning( path, title, filename, window_size):
+def plot_time_process_online_learning( path, title, filename, window_size, window_type):
     import tools as tls
     all_csv_data = pd.read_csv(path + filename)
 
@@ -571,8 +571,8 @@ def plot_time_process_online_learning( path, title, filename, window_size):
     mean_accum_time = tls.calculate_mean_score (trainning_time)
     max_time = np.max(trainning_time)
     min_time = np.min(trainning_time)
-    plt.plot(top_1['episode'], trainning_time, marker=',', label='fixed window')
-    plt.plot(top_1['episode'], mean_accum_time, marker='.', label='fixed window mean', color='red')
+    plt.plot(top_1['episode'], trainning_time, marker=',', label=window_type)
+    plt.plot(top_1['episode'], mean_accum_time, marker='.', label=window_type+' mean', color='red')
     plt.text(np.mean(top_1['episode']), np.mean(mean_accum_time)+2,
               'Mean: ' + str(np.round(np.mean(trainning_time), 3)),
              bbox={'facecolor': 'white',

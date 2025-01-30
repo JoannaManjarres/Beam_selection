@@ -201,7 +201,7 @@ def get_lidar_preprocess(connection_type):
     train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data_s008 ()
 
     data_lidar_2D_with_rx_termomether_train, data_lidar_2D_with_rx_termomether_test = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
-    th_variance = 0.24
+    th_variance = 0.1
     data_lidar_2D_without_variance_train, data_lidar_2D_without_variance_test = pre_process_lidar.data_lidar_2D_binary_without_variance (
         data_lidar_2D_with_rx_termomether_train, data_lidar_2D_with_rx_termomether_test, th_variance)
 
@@ -233,7 +233,7 @@ def get_lidar_preprocess(connection_type):
 def beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL'):
     train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data_s009()
     train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data_s008()
-
+    print('Beam selection with: '+input_type+' and '+connection_type)
     if input_type == 'coord':
         preprocess_resolution = 8
         input_train, input_test, label_train, label_test = get_coord_preprocess(connection_type, preprocess_resolution)
@@ -241,7 +241,7 @@ def beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL'):
 
     elif input_type == 'lidar':
         input_train, input_test, label_train, label_test = get_lidar_preprocess(connection_type)
-        file_name = 'accuracy_' + input_type + '_' + connection_type + '.csv'
+        file_name = 'accuracy_' + input_type + '_' + connection_type +'_thr_01' +'.csv'
 
     elif input_type == 'lidar_coord':
         preprocess_resolution = 8
@@ -253,8 +253,9 @@ def beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL'):
         input_test = np.concatenate((input_test_coord, input_test_lidar), axis=1)
         label_train = label_train_coord
         label_test = label_test_coord
-        file_name = 'accuracy_' + input_type + '_res_' + str(preprocess_resolution) + '_' + connection_type + '.csv'
+        file_name = 'accuracy_' + input_type + '_res_' + str(preprocess_resolution) + '_' + connection_type + '_thr_01' +'.csv'
 
+    print('input_train', len(input_train[0]))
     vector_acuracia, address_size = select_best_beam (input_train,
                                                           input_test,
                                                           label_train,
@@ -449,31 +450,31 @@ def plot_all_performance_WiSARD():
 
     input_type = 'lidar'
     path = '../results/score/Wisard/' + input_type + '/'
-    file = 'accuracy_' + input_type + '_'+connection_type[0]+'.csv'
+    file = 'accuracy_' + input_type + '_'+connection_type[0]+'_thr_01'+'.csv'
     data_LOS_lidar = pd.read_csv (path + connection_type[0] + '/' + file, delimiter=',')
-    file = 'accuracy_' + input_type + '_'+connection_type[1]+'.csv'
+    file = 'accuracy_' + input_type + '_'+connection_type[1]+'_thr_01'+'.csv'
     data_NLOS_lidar = pd.read_csv (path + connection_type[1] + '/' + file, delimiter=',')
-    file = 'accuracy_' + input_type + '_'+connection_type[2]+'.csv'
+    file = 'accuracy_' + input_type + '_'+connection_type[2]+'_thr_01'+'.csv'
     data_ALL_lidar = pd.read_csv (path + connection_type[2] + '/' + file, delimiter=',')
 
     input_type = 'lidar_coord'
     path = '../results/score/Wisard/' + input_type + '/'
-    file = 'accuracy_' + input_type + '_res_8_'+connection_type[0]+'.csv'
+    file = 'accuracy_' + input_type + '_res_8_'+connection_type[0]+'_thr_01'+'.csv'
     data_LOS_lidar_coord = pd.read_csv (path + connection_type[0] + '/' + file, delimiter=',')
-    file = 'accuracy_' + input_type + '_res_8_'+connection_type[1]+'.csv'
+    file = 'accuracy_' + input_type + '_res_8_'+connection_type[1]+'_thr_01'+'.csv'
     data_NLOS_lidar_coord = pd.read_csv (path + connection_type[1] + '/' + file, delimiter=',')
-    file = 'accuracy_' + input_type + '_res_8_'+connection_type[2]+'.csv'
+    file = 'accuracy_' + input_type + '_res_8_'+connection_type[2]+'_thr_01'+'.csv'
     data_ALL_lidar_coord = pd.read_csv (path + connection_type[2] + '/' + file, delimiter=',')
 
     fig, ax = plt.subplots(1, 3, figsize=(14, 6), sharey=True)
     plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
-
+    size_of_font = 16
     ax[0].plot(data_LOS_coord['addres_size'], data_LOS_coord['accuracy'], label='Coord LOS', marker='o')
     ax[0].plot(data_NLOS_coord['addres_size'], data_NLOS_coord['accuracy'], label='Coord NLOS', marker='o')
     ax[0].plot(data_ALL_coord['addres_size'], data_ALL_coord['accuracy'], label='Coord ALL', marker='o')
     ax[0].grid ()
     ax[0].set_xticks (data_LOS_coord ['addres_size'])
-    ax[0].set_xlabel ('Tamanho da memória \n Coordenadas', font='Times New Roman', fontsize=14)
+    ax[0].set_xlabel ('Tamanho da memória \n Coordenadas', font='Times New Roman', fontsize=size_of_font)
 
 
     ax[1].plot (data_LOS_lidar['addres_size'], data_LOS_lidar['accuracy'], label='Lidar LOS', marker='o')
@@ -481,24 +482,27 @@ def plot_all_performance_WiSARD():
     ax[1].plot (data_ALL_lidar['addres_size'], data_ALL_lidar['accuracy'], label='Lidar ALL', marker='o')
     ax[1].grid()
     ax[1].set_xticks (data_LOS_coord ['addres_size'])
-    ax[1].set_xlabel ('Tamanho da memória \n Lidar', font='Times New Roman', fontsize=14)
+    ax[1].set_xlabel ('Tamanho da memória \n Lidar', font='Times New Roman', fontsize=size_of_font)
 
     ax[2].plot (data_LOS_lidar_coord['addres_size'], data_LOS_lidar_coord['accuracy'], label='Lidar Coord LOS', marker='o')
     ax[2].plot (data_NLOS_lidar_coord['addres_size'], data_NLOS_lidar_coord['accuracy'], label='Lidar Coord NLOS', marker='o')
     ax[2].plot (data_ALL_lidar_coord['addres_size'], data_ALL_lidar_coord['accuracy'], label='Lidar Coord ALL', marker='o')
     ax[2].grid ()
     ax[2].set_xticks (data_LOS_coord ['addres_size'])
-    ax[2].set_xlabel ('Tamanho da memória \n Lidar e Coordenadas', font='Times New Roman', fontsize=14)
+    ax[2].set_xlabel ('Tamanho da memória \n Lidar e Coordenadas', font='Times New Roman', fontsize=size_of_font)
 
-    ax[0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=14)
+    ax[0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
     ax[1].legend ()
 
 
     #plt.show()
-    plt.savefig('../results/score/Wisard/performance_accuracy_all_LOS_NLOS.png', dpi=300, bbox_inches='tight')
+    plt.savefig('../results/score/Wisard/performance_accuracy_all_LOS_NLOS'+'_thr_01'+'.png', dpi=300, bbox_inches='tight')
     a = 0
 
 
 #plot_performance_WiSARD_LOS_NLOS_connection('lidar_coord')
-#beam_selection_LOS_NLOS()
+#beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL')
+#beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='LOS')
+#beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='NLOS')
+
 plot_all_performance_WiSARD()
