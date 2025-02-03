@@ -169,6 +169,10 @@ def main():
     parser.add_argument('--input_type', type=str, default='coord')
     episodes_for_test = 2
     args = parser.parse_args()
+
+    print('---------------------')
+    print('|     Fixed Window      |')
+    print('|   input = '+args.input_type)
     fixed_window_top_k(args.input_type, episodes_for_test)
 
 main()

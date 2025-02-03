@@ -583,11 +583,11 @@ def test_model(type_input, X_data, index_true, episode):
     for i in range (len (all_index_predict)):
         all_index_predict_order[i] = np.flip(np.argsort(all_index_predict [i]))
 
-    if save_index_predict:
-        path_index_predict = '../../results/index_beams_predict/ruseckas/top_k/' + type_input + '/'
-        file_name = 'index_beams_predict_' + type_input + '_top_k.npz'
-        npz_index_predict = path_index_predict + file_name
-        np.savez (npz_index_predict, index_predict=all_index_predict_order)
+    #if save_index_predict:
+        #path_index_predict = '../../results/index_beams_predict/ruseckas/top_k/' + type_input + '/'
+        #file_name = 'index_beams_predict_' + type_input + '_top_k.npz'
+        #npz_index_predict = path_index_predict + file_name
+        #np.savez (npz_index_predict, index_predict=all_index_predict_order)
 
     df_results_top_k = pd.DataFrame ({"top-k": top_k,
                                       "score": all_score,
