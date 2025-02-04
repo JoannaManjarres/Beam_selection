@@ -11,6 +11,11 @@ sys.path.append ("../")
 # Agora é possível importar o arquivo como um módulo
 import tools as tls
 
+import os
+import tensorflow as tf
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+
 
 
 
@@ -95,8 +100,8 @@ def fixed_window_top_k(label_input_type, episodes_for_test):
 
     BATCH_SIZE = 32
     start_index_s008 = 0
-    label_input_type = 'coord'
-    train= False
+
+    train = True
 
     input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
                                                                                           start_index_s008,
@@ -130,7 +135,7 @@ def fixed_window_top_k(label_input_type, episodes_for_test):
                                                     BATCH_SIZE, shuffle=True)
         input_train_shape = input_train.shape[1:]
 
-    episodes_for_test = 2
+
     episode_for_test = np.arange(0, episodes_for_test, 1)
     df_all_results_top_k = pd.DataFrame ()
     df_all_index_predict = pd.DataFrame()
