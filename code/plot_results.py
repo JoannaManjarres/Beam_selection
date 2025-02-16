@@ -37,7 +37,7 @@ def read_and_plot_results_lidar_without_variance(path, title, dataset_size, name
 
     Thresh = scores['Threshold'].values
     Acc = scores['Accuracy'].values
-    plot_results_without_variance(Thresh, Acc, dataset_size, title, path, name_result)
+    plot_results_without_variance(Thresh, Acc, dataset_size, title, principal_path, name_result)
 
 
     return Thresh, Acc
@@ -46,27 +46,35 @@ def plot_results_without_variance(threshold, acc, dataset_size, title, path, nam
     fig, ax = plt.subplots()
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
+    size_of_font = 16
 
     y_pos = np.arange(len(threshold))
-
+    plot_accuracy = False
     accuracy = acc*100 # --> Percentual
 
     ax.barh (y_pos, accuracy,  align='center')
     for i, v in enumerate (accuracy):
-        ax.text(v - 35, i , 'Dataset size = '+str(dataset_size[i]), color='white', fontsize=12)
-
-    for i, v in enumerate (accuracy):
-        ax.text(v + 0.5, i - 0.05, str(round(v,2)), color='red', fontsize=12, fontweight='bold')
+        ax.text(v-10, i , str(dataset_size[i])+' *',
+                color='white',
+                fontsize=size_of_font,
+                font='Times New Roman')
+    ax.text(40,y_pos.min()-0.8, '* Tamanho da entrada')
+    if plot_accuracy:
+        for i, v in enumerate (accuracy):
+            ax.text(v + 0.5, i - 0.05, str(round(v,2)),
+                    color='red', fontsize=size_of_font,
+                    fontweight='bold',
+                    font='Times New Roman')
 
     ax.set_yticks(y_pos, labels=threshold)
     ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel('Accuracy [%]', fontsize=12)
-    ax.set_ylabel('Threshold', fontsize=12)
-    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.set_xlabel('Acurácia (%)', fontsize=size_of_font, font='Times New Roman')
+    ax.set_ylabel('Limiar', fontsize=size_of_font, font='Times New Roman')
+    #ax.set_title(title, fontsize=14, fontweight='bold')
 
     plt.show()
 
-    fig.savefig(path+name_result, transparent=True, bbox_inches='tight', pad_inches=0.1)
+    fig.savefig(path+name_result, transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=300)
     plt.close(fig)
 
 
@@ -863,17 +871,17 @@ def plot_score_top_k(path, filename, title, window_size=0):
     plt.plot(top_k, all_mean_score_top_k, 'o-', color='blue')
     for i in range(len(top_k)):
         plt.text(top_k[i], all_mean_score_top_k[i] - 0.08, str(np.round(all_mean_score_top_k[i], 3)))
-    plt.xlabel('Top-K', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.ylabel('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.xlabel('Top-K', fontsize=16, font='Times New Roman')  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel('Acurácia', fontsize=16, font='Times New Roman')  # , fontweight='bold', fontname='Myanmar Sangam MN')
     plt.xticks(top_k)
     plt.ylim([0, 1.1])
     plt.xlim([0, 35])
     plt.grid()
-    plt.title(title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    #plt.title(title, fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
     if window_size == 0:
         plt.savefig(path + 'score_top_k.png', dpi=300)
     else:
-        plt.savefig(path + str(window_size)+'_score_top_k.png', dpi=300)
+        plt.savefig(path + str(window_size)+'_score_top_k_without_title.png', dpi=300)
     plt.close()
     plt.clf()
 
@@ -927,7 +935,7 @@ def plot_compare_windows_size_in_window_sliding(input_name, ref):
 
     windows_score=[]
     for i in range(len(window_size)):
-        file_name = 'all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
+        file_name = '0_all_results_sliding_window_' + str(window_size[i]) + '_top_k.csv'
         all_csv_data = pd.read_csv (path_result+file_name)
         score, top_k = get_scores_from_csv_results(all_csv_data)
         windows_score.append(score)
@@ -935,18 +943,18 @@ def plot_compare_windows_size_in_window_sliding(input_name, ref):
     plt.clf ()
     for j in range(len(window_size)):
 
-        plt.plot(top_k, windows_score[j], 'o-', label='window size '+str(window_size[j]), color=color[j])
+        plt.plot(top_k, windows_score[j], 'o-', label='Tamanho da Janela '+str(window_size[j]), color=color[j])
         score_round = np.round(windows_score[j], 3)
 
-        for i in range (len (score_round)):
-            plt.text (top_k[i], score_round[i]-0.03, str(score_round [i]), color=color[j], fontsize=8)
+        #for i in range (len (score_round)):
+        #    plt.text (top_k[i], score_round[i]-0.03, str(score_round [i]), color=color[j], fontsize=8)
     plt.legend(loc='best', ncol=2, fontsize=7)
     plt.xticks(top_k)
-    plt.xlabel('score')
-    plt.ylabel('Top-k')
+    plt.xlabel('k', font='Times New Roman', fontsize=16)
+    plt.ylabel('Acurácia top-k', font='Times New Roman', fontsize=16)
     plt.grid()
-    plt.title('Beam selection using '+ref+' with '+ input_name + '\n in online learning with sliding window varying the window size')
-    plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
+    #plt.title('Beam selection using '+ref+' with '+ input_name + '\n in online learning with sliding window varying the window size')
+    plt.savefig(path_result + 'score_comparation_window_size_without_title.png', dpi=300)
     plt.close()
 
 def plot_compare_types_of_windows(input_name, ref):
@@ -1063,4 +1071,5 @@ def plot_time_process_vs_samples_online_learning_wisard( path,
 
 #plot_results_lidar_with_coord_top_k()
 #plot_of_bars()
-
+#results_lidar_2D_binary_without_variance()
+plot_compare_windows_size_in_window_sliding('coord', 'Wisard')

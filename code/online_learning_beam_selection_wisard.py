@@ -885,8 +885,10 @@ def calculate_mean_score(data):
         average_score.append (np.mean (data [0:i]))
     return average_score
 
-def plot_compare_windows_size_in_window_sliding(input_name):
+def plot_compare_windows_size_in_window_sliding(input_name='coord'):
     path_result = '../results/score/Wisard/online/top_k/results_servidor/top_k/'+input_name+'/sliding_window/window_size_var/'
+    #path_result = '../results/score/Wisard/servidor_land/online/' + input_name + '/sliding_window/'
+
     window_size = [100,  500, 1000, 1500, 2000]
     color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta', 'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
     top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -947,11 +949,11 @@ def plot_compare_windows_size_in_window_sliding(input_name):
 
         text_pos_y = text_pos_y - 300
 
-    plt.xlabel('Top-k')
-    plt.ylabel('Accuracy')
+    plt.xlabel('Top-k', fontsize=16, font='Times New Roman')
+    plt.ylabel('Acurácia', fontsize=16, font='Times New Roman')
     plt.legend(loc='best', ncol=2, fontsize=7)
-    plt.title('Beam selection using WiSARD with '+ input_name + '\n in online learning with sliding window varying the window size')
-    plt.savefig(path_result + 'score_comparation_window_size.png', dpi=300)
+    #plt.title('Beam selection using WiSARD with '+ input_name + '\n in online learning with sliding window varying the window size')
+    plt.savefig(path_result + 'score_comparation_window_size_without_title.png', dpi=300)
     plt.close()
 def plot_score_comparation_between_sliding_incremental_fixed_window(input_type):
     path_result = '../results/score/Wisard/online/'
@@ -1705,7 +1707,7 @@ def read_data_for_plot_time_train_comparision():
     episodes = top_1_2000['episode']
 
     return trainning_time_100, trainning_time_500, trainning_time_1000, trainning_time_1500, trainning_time_2000, trainning_time_fixed, trainning_time_incremental, x_labels, episodes
-def plot_time_train_between_size_windows_sliding(input_type):
+def plot_time_train_between_size_windows_sliding(input_type='coord'):
 
     path_result = '../results/score/Wisard/servidor_land/online/' + input_type + '/sliding_window/'
 
@@ -1728,20 +1730,21 @@ def plot_time_train_between_size_windows_sliding(input_type):
         color = ['blue', 'red', 'green', 'purple', 'orange', 'olive', 'magenta']
         sns.set_style("darkgrid", {"grid.color": ".6", "grid.linestyle": ":"})
         fig, ax1 = plt.subplots (figsize=(10, 4))
-        sns.histplot (trainning_time_100, kde=True, color=color[0], label='sliding 100', stat="density", bins=60, alpha=0.6)
-        sns.histplot (trainning_time_500, kde=True, color=color[1], label='sliding 500', stat="density", bins=60, alpha=0.6)
-        sns.histplot (trainning_time_1000, kde=True, color=color[2], label='sliding 1000', stat="density", bins=60, alpha=0.6)
-        sns.histplot(trainning_time_1500, kde=True, color=color[3], label='sliding 1500', stat="density", bins=60, alpha=0.6)
-        sns.histplot(trainning_time_2000, kde=True, color=color[4], label='sliding 2000', stat="density", bins=60, alpha=0.6)
+        sns.histplot (trainning_time_100, kde=True, color=color[0], label='Janela 100', stat="density", bins=60, alpha=0.6)
+        sns.histplot (trainning_time_500, kde=True, color=color[1], label='Janela 500', stat="density", bins=60, alpha=0.6)
+        sns.histplot (trainning_time_1000, kde=True, color=color[2], label='Janela 1000', stat="density", bins=60, alpha=0.6)
+        sns.histplot(trainning_time_1500, kde=True, color=color[3], label='Janela 1500', stat="density", bins=60, alpha=0.6)
+        sns.histplot(trainning_time_2000, kde=True, color=color[4], label='Janela 2000', stat="density", bins=60, alpha=0.6)
         #sns.histplot(trainning_time_fixed, kde=True, color=color[5], label='fixed', stat="density", bins=60, alpha=0.6)
         #sns.histplot(trainning_time_incremental, kde=True, color=color[6], label='incremental', stat="density", bins=60, alpha=0.6)
         legend = plt.legend(loc='upper right', ncol=2)
         legend.get_frame().set_facecolor('none')
         legend.get_frame().set_linewidth(0.0)
         plt.xticks (x_labels)
-        plt.xlabel ('Trainning Time [s]')
-        plt.title ('Trainning Time Comparison between window size  using WiSARD - ' + input_type + ' in online learning')
-        plt.savefig (path_result + 'histogram_comparition_of_trainning_time.png', dpi=300, bbox_inches='tight', pad_inches=0)
+        plt.xlabel ('Tempo de treinamento [s]', fontsize=16, font='Times New Roman')
+        plt.ylabel('Densidade', fontsize = 16, font='Times New Roman')
+        #plt.title ('Trainning Time Comparison between window size  using WiSARD - ' + input_type + ' in online learning')
+        plt.savefig (path_result + 'histogram_comparition_of_trainning_time_without_title.png', dpi=300, bbox_inches='tight', pad_inches=0)
         #plt.show ()
 
     else:
@@ -1793,14 +1796,14 @@ def plot_time_train_between_size_windows_sliding(input_type):
 
 def main(input_type):
 
-    run_simulation = True
+    run_simulation = False
 
     if run_simulation:
         simulation_of_online_learning_top_k(input_type)
     else:
 
         #plot_score(type_of_input='coord', type_of_window='fixed_window')
-        #plot_score(type_of_input='coord', type_of_window='sliding_window')
+        plot_score(type_of_input='coord', type_of_window='sliding_window')
         #plot_score(type_of_input='coord', type_of_window='incremental_window')
 
         #plot_score (type_of_input='lidar', type_of_window='incremental_window')
@@ -1829,6 +1832,6 @@ input_type = 'coord' #'lidar_coord' #'lidar' #'coord'
 #fit_fixed_window_top_k(eposodies_for_test, episodes_for_train, input_type)
 #plot_score(input_type, 'fixed_window')
 #read_files_process_results(input_type, 'fixed_window')
-
+#plot_compare_windows_size_in_window_sliding()
 main(input_type)
 #plot_time_train_between_size_windows_sliding(input_type)

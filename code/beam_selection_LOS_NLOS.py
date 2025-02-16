@@ -429,8 +429,8 @@ def plot_performance_WiSARD_LOS_NLOS_connection(input_type):
     plt.legend()
     plt.xticks(data['addres_size'])
     plt.grid()
-    plt.xlabel('Tamanho da memoria', font='Times New Roman', fontsize=14)
-    plt.ylabel('Acuracia',  font='Times New Roman', fontsize=14)
+    plt.xlabel('Tamanho da memoria', font='Times New Roman', fontsize=16)
+    plt.ylabel('Acurácia',  font='Times New Roman', fontsize=16)
     path_to_save = '../results/score/Wisard/'+input_type+'/'
     file_name = 'performance_accuracy_'+input_type+'LOS_NLOS_ALL.png'
     plt.savefig(path_to_save+file_name, dpi=300, bbox_inches='tight')
@@ -468,13 +468,13 @@ def plot_all_performance_WiSARD():
 
     fig, ax = plt.subplots(1, 3, figsize=(14, 6), sharey=True)
     plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
-    size_of_font = 16
+    size_of_font = 18
     ax[0].plot(data_LOS_coord['addres_size'], data_LOS_coord['accuracy'], label='Coord LOS', marker='o')
     ax[0].plot(data_NLOS_coord['addres_size'], data_NLOS_coord['accuracy'], label='Coord NLOS', marker='o')
     ax[0].plot(data_ALL_coord['addres_size'], data_ALL_coord['accuracy'], label='Coord ALL', marker='o')
     ax[0].grid ()
     ax[0].set_xticks (data_LOS_coord ['addres_size'])
-    ax[0].set_xlabel ('Tamanho da memória \n Coordenadas', font='Times New Roman', fontsize=size_of_font)
+    ax[0].set_xlabel ('Coordenadas \n Tamanho da memória  ', font='Times New Roman', fontsize=size_of_font)
 
 
     ax[1].plot (data_LOS_lidar['addres_size'], data_LOS_lidar['accuracy'], label='Lidar LOS', marker='o')
@@ -482,14 +482,14 @@ def plot_all_performance_WiSARD():
     ax[1].plot (data_ALL_lidar['addres_size'], data_ALL_lidar['accuracy'], label='Lidar ALL', marker='o')
     ax[1].grid()
     ax[1].set_xticks (data_LOS_coord ['addres_size'])
-    ax[1].set_xlabel ('Tamanho da memória \n Lidar', font='Times New Roman', fontsize=size_of_font)
+    ax[1].set_xlabel ('Lidar \n Tamanho da memória  ', font='Times New Roman', fontsize=size_of_font)
 
     ax[2].plot (data_LOS_lidar_coord['addres_size'], data_LOS_lidar_coord['accuracy'], label='Lidar Coord LOS', marker='o')
     ax[2].plot (data_NLOS_lidar_coord['addres_size'], data_NLOS_lidar_coord['accuracy'], label='Lidar Coord NLOS', marker='o')
     ax[2].plot (data_ALL_lidar_coord['addres_size'], data_ALL_lidar_coord['accuracy'], label='Lidar Coord ALL', marker='o')
     ax[2].grid ()
     ax[2].set_xticks (data_LOS_coord ['addres_size'])
-    ax[2].set_xlabel ('Tamanho da memória \n Lidar e Coordenadas', font='Times New Roman', fontsize=size_of_font)
+    ax[2].set_xlabel ('Lidar e Coordenadas \n Tamanho da memória  ', font='Times New Roman', fontsize=size_of_font)
 
     ax[0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
     ax[1].legend ()

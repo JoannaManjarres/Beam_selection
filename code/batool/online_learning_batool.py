@@ -2063,13 +2063,13 @@ def main():
     # import keras
     # print(keras.__version__)
 
-main()
+#main()
 #read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')
-
+plot_results__('lidar', 'jumpy_sliding_window')
 
 
 

@@ -94,7 +94,7 @@ def beam_selection_ruseckas(type_of_input,
 
 
 
-def fixed_window_top_k(label_input_type, episodes_for_test):
+def fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2000):
     data_for_train, data_for_validation, data_for_test, num_classes = prepare.read_all_data()
     all_dataset_s008 = pd.concat([data_for_train, data_for_validation], axis=0)
 
@@ -139,7 +139,7 @@ def fixed_window_top_k(label_input_type, episodes_for_test):
     episode_for_test = np.arange(0, episodes_for_test, 1)
     df_all_results_top_k = pd.DataFrame ()
     df_all_index_predict = pd.DataFrame()
-    for i in range (len (episode_for_test)):
+    for i in range(start_epi_test, stop_epi_test, 1):
         if i in data_for_test['Episode'].tolist ():
             input_test, label_test = tls.extract_test_data_from_s009_sliding_window(i,
                                                                                     label_input_type,
@@ -169,16 +169,19 @@ def fixed_window_top_k(label_input_type, episodes_for_test):
             df_all_results_top_k.to_csv (path_result + 'all_results_fixed_window_top_k.csv', index=False)
             df_all_index_predict.to_csv (path_result + 'all_index_predict_fixed_window_top_k.csv', index=False)
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_type', type=str, default='coord')
-    episodes_for_test = 2
+    episodes_for_test = 2000
     args = parser.parse_args()
 
     print('---------------------')
     print('|     Fixed Window      |')
     print('|   input = '+args.input_type)
-    fixed_window_top_k(args.input_type, episodes_for_test)
+    fixed_window_top_k(args.input_type, start_epi_test=0, stop_epi_test=episodes_for_test)
+
+
 
 main()
 

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.patches as mpatches
 import csv
-import cv2
+#import cv2
 from scipy import ndimage
 from sklearn.feature_selection import VarianceThreshold
 from skimage.transform import rescale, resize, downscale_local_mean

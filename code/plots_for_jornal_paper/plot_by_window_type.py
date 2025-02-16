@@ -2,10 +2,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+#import plottools as pt
 
 def read_results(input_type, window_type, ref):
     # Read the data
-    path ='../../results/score/'+ref+'/servidor_land/online/'+input_type+'/'+window_type+'/'
+    if ref == 'ruseckas':
+        path = '../../results/score/' + ref + '/online/' + 'top_k/'+ input_type +'/' + window_type + '/'
+    else:
+            path ='../../results/score/'+ref+'/servidor_land/online/'+input_type+'/'+window_type+'/'
     filename = 'all_results_'+window_type+'_top_k.csv'
     if ref =='Batool':
         if window_type == 'sliding_window':
@@ -32,26 +36,33 @@ def plot_compare_refe_in_fixed_window():
     data_wisard, wisard_mean_score_top_k, wisard_std_score_top_k, top_k = read_results(input_type='lidar', window_type='fixed_window', ref='Wisard')
     data_batool, batool_mean_score_top_k, batool_std_score_top_k, _ = read_results(input_type='lidar', window_type='fixed_window', ref='Batool')
 
+    plot_with_title = False
+
     plt.clf ()
     plt.errorbar (top_k, wisard_mean_score_top_k, yerr=wisard_std_score_top_k,
                   fmt='o-',  markersize=8, capsize=5, color='red', label='Wisard')
     plt.errorbar(top_k, batool_mean_score_top_k, yerr=batool_std_score_top_k,
                  fmt='o-', markersize=8, capsize=5, color='teal', label='Batool')
-    for i in range(len(top_k)):
-        plt.text(top_k[i]+0.2, wisard_mean_score_top_k[i] - 0.03,
-                  str(np.round(wisard_mean_score_top_k[i], 2)), color='red')
-        plt.text(top_k[i]+0.2, batool_mean_score_top_k[i] + 0.02,
-                  str(np.round(batool_mean_score_top_k[i], 2)), color='teal')
+    if plot_with_title:
+        for i in range(len(top_k)):
+            plt.text(top_k[i]+0.2, wisard_mean_score_top_k[i] - 0.03,
+                      str(np.round(wisard_mean_score_top_k[i], 2)), color='red')
+            plt.text(top_k[i]+0.2, batool_mean_score_top_k[i] + 0.02,
+                      str(np.round(batool_mean_score_top_k[i], 2)), color='teal')
 
     plt.xticks(top_k)
     plt.ylim([0, 1.1])
     plt.xlim([0, 35])
     plt.legend(loc='lower right')
     plt.grid()
-    plt.xlabel('Top-K', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.ylabel('Score', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.title ('comparition of references in fixed window with LiDAR', fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
-    plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_ref_by_fixed_window.png',
+    plt.xlabel('Top-K', fontsize=16,  font='Times New Roman')  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    plt.ylabel('Acurácia', fontsize=16,  font='Times New Roman')  # , fontweight='bold', fontname='Myanmar Sangam MN')
+    if plot_with_title:
+        plt.title ('comparition of references in fixed window with LiDAR', fontsize=12)  # , fontweight='bold', fontname='Myanmar Sangam MN')
+        plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_ref_by_fixed_window.png',
+                     dpi=300, bbox_inches='tight')
+    else:
+        plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_ref_by_fixed_window_without_title.png',
                  dpi=300, bbox_inches='tight')
 
 def plot_compare_inputs_in_fixed_wind_wisard():
@@ -83,12 +94,12 @@ def plot_compare_inputs_in_fixed_wind_wisard():
         ax.spines ['top'].set_visible (False)
         ax.spines ['right'].set_visible (False)
         plt.yticks(top_k, top_k)
-        plt.xlabel('Score')
-        plt.ylabel('Top-K')
+        plt.xlabel('Acurácia', fontsize=16, font='Times New Roman')
+        plt.ylabel('Top-K', fontsize=16, font='Times New Roman')
         plt.ylim([-1, 35])
         plt.legend(loc='upper right', ncols=3, frameon=False)
-        plt.title('compare of inputs in fixed window - WiSARD')
-        plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_inputs_WiSARD_by_fixed_window.png',
+        #plt.title('compare of inputs in fixed window - WiSARD')
+        plt.savefig ('../../results/score/plot_for_jornal/fixed_window/compare_inputs_WiSARD_by_fixed_window_without_title.png',
                      dpi=300, bbox_inches='tight')
 
     # plot in lines
@@ -152,12 +163,12 @@ def plot_compare_inputs_in_incremental_wind_wisard():
         ax.spines ['top'].set_visible (False)
         ax.spines ['right'].set_visible (False)
         plt.yticks(top_k, top_k)
-        plt.xlabel('Score')
-        plt.ylabel('Top-K')
+        plt.xlabel('Acurácia', fontsize=16, font='Times New Roman')
+        plt.ylabel('Top-K', fontsize=16, font='Times New Roman')
         plt.ylim([-1, 35])
         plt.legend(loc='upper right', ncols=3, frameon=False)
-        plt.title('compare of inputs in incremental window - WiSARD')
-        plt.savefig ('../../results/score/plot_for_jornal/incremental_window/compare_inputs_WiSARD_by_incremental_window.png',
+        #plt.title('compare of inputs in incremental window - WiSARD')
+        plt.savefig ('../../results/score/plot_for_jornal/incremental_window/compare_inputs_WiSARD_by_incremental_window_without_title.png',
                      dpi=300, bbox_inches='tight', pad_inches=0)
 
     # plot in lines
@@ -191,6 +202,8 @@ def plot_compare_inputs_in_incremental_wind_wisard():
         plt.grid()
         plt.legend(loc='lower right', frameon=False)
         plt.show ()
+
+#def plot_comparacao_dos_tempo_de_train_entre_ref():
 
 def plot_times_by_ref():
     data_wisard_lidar, _, _, top_k = read_results (input_type='lidar', window_type='fixed_window', ref='Wisard')
@@ -371,7 +384,11 @@ def plot_compare_times_by_ref():
 def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
     data, _, _, top_k = read_results(input_type=input_type, window_type=window_type, ref=ref)
     data_top_1 = data[data['top-k'] == 1]
-    time_train = data_top_1['trainning_process_time']* 1e-9
+
+    if ref == 'ruseckas':
+        time_train = data_top_1 ['trainning_process_time']
+    else:
+        time_train = data_top_1['trainning_process_time']* 1e-9
 
     statistics = time_train.describe()
 
@@ -391,11 +408,198 @@ def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
     return statistics
 
 
+def read_all_results_wisard(input):
+    path_results_data = '../../results/score/Wisard/servidor_land/online/' + input + '/'
+    lasted_results = '/res_8_add_54/'
 
-input = 'lidar_coord'
+    window_type = 'fixed_window'
+    if input=='lidar' or input=='lidar_coord':
+        path_results_data_1 = path_results_data + window_type+ '/'
+    else:
+        path_results_data_1 = path_results_data + window_type + lasted_results
+    file_name = '0_all_results_' + window_type + '_top_k.csv'
+    fixed_window_results = pd.read_csv (path_results_data_1 + file_name)
+
+    window_type = 'incremental_window'
+    if input=='lidar' or input=='lidar_coord':
+        path_results_data_2 = path_results_data + window_type+ '/'
+    else:
+        path_results_data_2 = path_results_data + window_type + lasted_results
+    file_name = '0_all_results_' + window_type + '_top_k.csv'
+    incremental_window_results = pd.read_csv (path_results_data_2 + file_name)
+
+    window_type = 'sliding_window'
+    if input=='lidar'or input=='lidar_coord':
+        path_results_data_3 = path_results_data + window_type+ '/'
+    else:
+        path_results_data_3 = path_results_data + window_type + lasted_results
+    file_name = '0_all_results_' + window_type + '_1000_top_k.csv'
+    sliding_window_results = pd.read_csv (path_results_data_3 + file_name)
+
+    return fixed_window_results, incremental_window_results, sliding_window_results
+
+def plot_comparition_trainning_time_between_types_of_windows_wisard(input):
+    fixed_window_results, incremental_window_results, sliding_window_results = read_all_results_wisard(input)
+
+    time_trainning_sliding_window = sliding_window_results[sliding_window_results['top-k'] == 1]['trainning_process_time'] * 1e-9
+    time_trainning_fixed_window = fixed_window_results [fixed_window_results['top-k'] == 1]['trainning_process_time'] * 1e-9
+    time_trainning_incremental_window = incremental_window_results[incremental_window_results['top-k'] == 1]['trainning_process_time'] * 1e-9
+
+    plot_all_times_train = True
+    # sns.violinplot(data=[time_trainning_fixed_window, time_trainning_incremental_window, time_trainning_sliding_window], ax=ax1,
+
+    sequencial_color = sns.color_palette ("Blues", 2)
+    size_font = 18
+    font = 'Times New Roman'
+
+
+    if plot_all_times_train:
+        fig, ax1 = plt.subplots (figsize=(6, 8))
+        sns.boxplot ( data=[time_trainning_incremental_window, time_trainning_sliding_window, time_trainning_fixed_window], palette=sequencial_color)
+        # palette=sequencial_color, label='WiSARD', fill=False)
+
+        ax1.set_ylabel ('Tempo [s]', fontsize=size_font, font=font)
+        ax1.tick_params (axis='y')
+        ax1.set_xticklabels (['Janela \n incremental', 'Janela \n deslizante', 'Janela \n fixa'],
+                             fontsize=size_font, font=font)
+        plt.savefig ('../../results/score/plot_for_jornal/compare_wisard_time_trainning_' + input + '.png',
+                     dpi=300, bbox_inches='tight')
+        # ax1.legend ()
+    else:
+        fig, ax1 = plt.subplots (figsize=(6, 8))
+        ax1.spines ['top'].set_visible (False)
+        ax1.spines ['right'].set_visible (False)
+        sequencial_color = sns.color_palette ("Blues", 2)
+        sns.boxplot (data=[time_trainning_fixed_window], palette=sequencial_color)
+        ax1.set_xticklabels (['Janela \n Fixa'])
+        plt.savefig ('../../results/score/plot_for_jornal/fixed_window_wisard_time_trainning_' + input + '.png',
+                     dpi=300, bbox_inches='tight')
+
+
+def plot_comparition_socore_top_k_between_types_of_windows_wisard(input):
+
+    fixed_window_results, incremental_window_results, sliding_window_results = read_all_results_wisard(input='coord')
+    fixed_wind_results_lidar, incremental_wind_results_lidar, sliding_wind_results_lidar = read_all_results_wisard(input='lidar')
+    fixed_wind_results_coord_lidar, incremental_wind_results_coord_lidar, sliding_wind_results_coord_lidar = read_all_results_wisard(input='lidar_coord')
+
+    means_score_top_k_sliding_window = calculate_mean_of_all_episodes(sliding_window_results)
+    means_score_top_k_fixed_window = calculate_mean_of_all_episodes(fixed_window_results)
+    means_score_top_k_incremental_window = calculate_mean_of_all_episodes(incremental_window_results)
+
+    means_score_top_k_fixed_window_lidar = calculate_mean_of_all_episodes(fixed_wind_results_lidar)
+    means_score_top_k_incremental_window_lidar = calculate_mean_of_all_episodes(incremental_wind_results_lidar)
+    means_score_top_k_sliding_window_lidar = calculate_mean_of_all_episodes(sliding_wind_results_lidar)
+
+    means_score_top_k_fixed_window_coord_lidar = calculate_mean_of_all_episodes(fixed_wind_results_coord_lidar)
+    means_score_top_k_incremental_window_coord_lidar = calculate_mean_of_all_episodes(incremental_wind_results_coord_lidar)
+    means_score_top_k_sliding_window_coord_lidar = calculate_mean_of_all_episodes(sliding_wind_results_coord_lidar)
+
+    size_font = 18
+    font = 'Times New Roman'
+
+    english_plot = False
+    if english_plot:
+        fig_labels = ['Fixed window', 'Incremental window', 'Sliding window']
+        y_label = 'Accuracy top-k'
+        input_label_coord = 'Coordinates'
+    else:
+        fig_labels = ['Janela fixa', 'Janela incremental', 'Janela deslizante']
+        y_label = 'Acurácia top-k'
+        input_label_coord = 'Coordenadas'
+
+    top_k = means_score_top_k_fixed_window['top-k']
+    color_fixed_window = 'steelblue'
+    color_incremental_window = "goldenrod"
+    color_sliding_window = 'red'
+
+    plt.rcParams ["font.size"] = 13
+    plt.rcParams ["font.family"] = "Times New Roman"
+
+    fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
+    plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
+    size_of_font = 16
+    ax [0].plot(top_k, means_score_top_k_fixed_window['mean_score'], '-o',label=fig_labels[0], color=color_fixed_window)
+    ax [0].plot(top_k, means_score_top_k_incremental_window['mean_score'], '-o', label=fig_labels[1], color=color_incremental_window)
+    ax [0].plot(top_k, means_score_top_k_sliding_window['mean_score'], '-o', label=fig_labels[2], color=color_sliding_window)
+    ax [0].grid()
+    # ax [0].set_xticks (coord_wisard['Top-K'])
+    ax [0].set_xlabel ('K \n '+input_label_coord, font='Times New Roman', fontsize=size_of_font)
+
+    ax [1].plot (top_k, means_score_top_k_fixed_window_lidar['mean_score'], '-o', label=fig_labels[0], color=color_fixed_window)
+    ax [1].plot (top_k, means_score_top_k_incremental_window_lidar['mean_score'], '-o', label=fig_labels[1], color=color_incremental_window)
+    ax [1].plot (top_k, means_score_top_k_sliding_window_lidar['mean_score'], '-o', label=fig_labels[2], color=color_sliding_window)
+    ax [1].grid ()
+    # ax [1].set_xticks(coord_wisard['Top-K'])
+    ax [1].set_xlabel ('K \n LiDAR', font='Times New Roman', fontsize=size_of_font)
+
+    ax[2].plot(top_k, means_score_top_k_fixed_window_coord_lidar['mean_score'], '-o', label=fig_labels[0], color=color_fixed_window)
+    ax[2].plot(top_k, means_score_top_k_incremental_window_coord_lidar['mean_score'],'-o', label=fig_labels[1], color=color_incremental_window)
+    ax[2].plot(top_k, means_score_top_k_sliding_window_coord_lidar['mean_score'], '-o', label=fig_labels[2], color=color_sliding_window)
+
+    ax[2].grid(axis='both', linestyle='--', linewidth=0.5, color='gray')
+    # ax [2].set_xticks(coord_wisard['Top-K'])
+    ax[2].set_xlabel ('K \n Coordenadas + LiDAR', font='Times New Roman', fontsize=size_of_font)
+
+    ax[0].set_ylabel (y_label, font='Times New Roman', fontsize=size_of_font)
+    ax[1].legend ()
+
+    #plt.show()
+
+    path = '../../results/score/plot_for_jornal/'
+    file_name = 'compare_wisard_score_of_all_windows.png'
+    plt.savefig (path + file_name, dpi=300, bbox_inches='tight')
+    a=0
+
+
+
+
+
+
+    plt.clf ()
+    plt.plot(means_score_top_k_fixed_window['top-k'],
+             means_score_top_k_fixed_window['mean_score'], '-o', markersize=8, color='red', label=fig_labels[0])
+    plt.plot(means_score_top_k_incremental_window['top-k'],
+             means_score_top_k_incremental_window['mean_score'], '-o', markersize=8, color='blue', label=fig_labels[1])
+    plt.plot(means_score_top_k_sliding_window['top-k'],
+             means_score_top_k_sliding_window['mean_score'], '-o', markersize=8, color='green', label=fig_labels[2])
+    plt.xlabel('K', fontsize=size_font, font=font)
+    plt.ylabel(y_label, fontsize=size_font, font=font)
+    plt.grid(axis='both', linestyle='--', linewidth=0.5, color='gray')
+    plt.legend()
+    path = '../../results/score/plot_for_jornal/'
+    file_name = 'compare_wisard_score_of_all_windows.png'
+    plt.savefig(path+file_name, dpi=300, bbox_inches='tight')
+
+
+
+
+
+def calculate_mean_of_all_episodes(dataFrame):
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    all_results_mean = []
+    for i in range (len (top_k)):
+        results_of_top_k = dataFrame[dataFrame['top-k']==top_k[i]]
+        score_results = results_of_top_k['score']
+        mean_score_results = score_results.mean()
+        all_results_mean.append(mean_score_results)
+
+    df = pd.DataFrame(top_k, columns=['top-k'])
+    df['mean_score'] = all_results_mean
+
+    return df
+
+
+
+
+
+
+
+input = 'coord'
+#plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
 window_type = 'fixed_window' # 'incremental_window' 'sliding_window'
-ref = 'Batool' # 'Wisard'
+ref = 'ruseckas'#'Batool' # 'Wisard'
 calculate_statis(input, window_type, ref)
+plot_compare_inputs_in_incremental_wind_wisard()
 
 
 

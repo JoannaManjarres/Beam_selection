@@ -31,20 +31,20 @@ def plot_results_with_conventional_evaluation():
 
     fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
     plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
-    size_of_font = 16
+    size_of_font = 18
     ax [0].plot (coord_wisard['Top-K'], coord_wisard ['Acuracia'], label='WiSARD',  color='red', marker='o')
     ax [0].plot (coord_ruseckas['Top-K'], coord_ruseckas['Acuracia'], label='Ruseckas',  color='teal', marker='o')
     ax [0].plot (coord_batool['Top-K'], coord_batool['Acuracia'], label='Batool',  color='purple', marker='o')
     ax [0].grid ()
     #ax [0].set_xticks (coord_wisard['Top-K'])
-    ax [0].set_xlabel ('Top-K \n Coordenadas', font='Times New Roman', fontsize=size_of_font)
+    ax [0].set_xlabel ('Coordenadas \n K  ', font='Times New Roman', fontsize=size_of_font)
 
     ax [1].plot (lidar_wisard ['Top-K'], lidar_wisard['Acuracia'], label='WiSARD', color='red', marker='o')
     ax [1].plot (lidar_ruseckas['Top-K'], lidar_ruseckas['Acuracia'], label='Ruseckas', color='teal', marker='o')
     ax [1].plot (lidar_batool['Top-K'], lidar_batool['Acuracia'], label='Batool', color='purple', marker='o')
     ax [1].grid ()
     #ax [1].set_xticks(coord_wisard['Top-K'])
-    ax [1].set_xlabel ('Top-K \n LiDAR', font='Times New Roman', fontsize=size_of_font)
+    ax [1].set_xlabel ('LiDAR \n K  ', font='Times New Roman', fontsize=size_of_font)
 
     ax [2].plot (coord_lidar_wisard['Top-K'], coord_lidar_wisard['Acuracia'], label='WiSARD',color='red', marker='o')
     ax [2].plot (coord_lidar_ruseckas ['Top-K'], coord_lidar_ruseckas['Acuracia'], label='Ruseckas', color='teal', marker='o')
@@ -52,9 +52,9 @@ def plot_results_with_conventional_evaluation():
 
     ax [2].grid ()
     #ax [2].set_xticks(coord_wisard['Top-K'])
-    ax [2].set_xlabel ('Top-K \n Coordenadas + LiDAR', font='Times New Roman', fontsize=size_of_font)
+    ax [2].set_xlabel ('Coordenadas + LiDAR \n K', font='Times New Roman', fontsize=size_of_font)
 
-    ax [0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
+    ax [0].set_ylabel ('Acurácia top-k', font='Times New Roman', fontsize=size_of_font)
     ax [1].legend ()
 
     #plt.show()
@@ -192,6 +192,67 @@ def power_of_sinal_rx():
 
     return true_all_power_norm, all_possible_power_norm, true_beam_index
 
+
+def plot_time_train_one_axis():
+    data_batool = [19.3647, 1310.276, 2301.6973]
+    data_ruseckas = [19.744, 2187.7453, 2180.0649]
+    data_wisard = [1.8348, 0.8296, 2.8824]
+    name = ['Coordenadas', 'LiDAR', 'Coordenadas + LiDAR']
+
+    barWidth = 0.3
+    position = [1, 2,3]
+    position2 = [x + barWidth for x in position]
+    position3 = [x + barWidth for x in position]
+    batool = np.array (data_batool)
+    ruseckas = np.array (data_ruseckas)
+    wisard = np.array (data_wisard)
+
+    plt.rcParams ["font.family"] = "Times"
+    plt.rcParams ["font.size"] = "18"
+    fig, ax1 = plt.subplots (figsize=(13, 7))
+
+    ax1.spines ["top"].set_visible (False)
+    ax1.spines ["right"].set_visible (False)
+
+    only_wisard = False
+    if only_wisard:
+        position = [1, 1.5, 2]
+        barWidth = 0.3
+        plt.bar (position, data_wisard, width=0.2, color='red', label='WiSARD')
+        for i in range (len (position)):
+            plt.text (position [i], data_wisard [i], str (round (data_wisard [i], 1)), ha='center', va='bottom')
+        ax1.set_ylabel ('Tempo de Treinamento [seg]', font='Times New Roman') #fontsize=16
+        fig.legend (loc='outside upper center', frameon=False, ncol=3, )
+        plt.xticks (position,
+                    ['Coordenadas', 'LiDAR', 'Coord+LiDAR'], font='Times New Roman')
+        plt.savefig ('../../results/score/plot_for_jornal/comparacao_tempo_treinamento_um_eixo_wisard.png', dpi=300, bbox_inches='tight')
+
+    else:
+        plt.bar (position, data_batool, width=0.3, color='purple', label='Batool')
+        plt.bar (position2, data_ruseckas, width=0.3, color='teal', label='Ruseckas')
+        for i in range (len (position)):
+            plt.text (position [i], data_batool [i], str (round (data_batool [i], 1)), ha='center', va='bottom')
+            plt.text (position2 [i], data_ruseckas [i], str (round (data_ruseckas [i], 1)), ha='center', va='bottom')
+
+        ax1.set_ylabel ('Tempo de Treinamento [seg]', fontsize=16, font='Times New Roman')
+        #fig.legend()#, columnspacing=0.5, numcolumns=2)
+        # plt.grid()
+
+        #ax2 = ax1.twinx ()
+        #ax2.spines ["top"].set_visible (False)
+        # ax2.spines ["right"].set_visible (False)
+        #plt.bar (position3, data_wisard, width=0.3, color='red', label='WiSARD')
+        #for i in range (len (position)):
+        #    plt.text (position3 [i], data_wisard [i], str (round (data_wisard [i], 1)), ha='center', va='bottom')
+        ax1.set_ylabel ('Tempo de Treinamento [seg]', fontsize=16, font='Times New Roman')
+        fig.legend (loc='outside upper center', frameon=False, ncol=3, )
+        plt.xticks (position2,
+                    ['Coordenadas', 'LiDAR', 'Coord+LiDAR'], fontsize=16, font='Times New Roman')
+        #plt.grid()
+        plt.savefig ('../../results/score/plot_for_jornal/comparacao_tempo_treinamento_um_eixo.png', dpi=300, bbox_inches='tight')
+
+    a = 0
+
 def plot_time_train():
     data_batool = [19.3647, 1310.276, 2301.6973]
     data_ruseckas= [ 19.744, 2187.7453, 2180.0649]
@@ -207,11 +268,71 @@ def plot_time_train():
     wisard = np.array(data_wisard)
 
     plt.rcParams["font.family"] = "Times"
-    plt.rcParams["font.size"] = "16"
+    plt.rcParams["font.size"] = "18"
     fig, ax1 = plt.subplots (figsize=(13, 7))
+
+    ax1.spines ["top"].set_visible (False)
+    ax1.spines ["right"].set_visible (False)
 
     plt.bar(position, data_batool, width=0.3, color='purple', label='Batool')
     plt.bar(position2, data_ruseckas, width=0.3, color='teal', label='Ruseckas')
+    for i in range(len(position)):
+        plt.text(position[i], data_batool[i], str(round(data_batool[i],1)), ha='center', va='bottom')
+        plt.text(position2[i], data_ruseckas[i], str(round(data_ruseckas[i],1)), ha='center', va='bottom')
+
+    ax1.set_ylabel ('Tempo de Treinamento [seg]', fontsize=16, font='Times New Roman')
+    #fig.legend (loc='outside upper center', ncol=2, frameon=False)#, columnspacing=0.5, numcolumns=2)
+    #plt.grid()
+
+    ax2 = ax1.twinx ()
+    ax2.spines ["top"].set_visible (False)
+    #ax2.spines ["right"].set_visible (False)
+    plt.bar(position3, data_wisard, width=0.3, color='red', label='WiSARD')
+    for i in range(len(position)):
+        plt.text(position3[i], data_wisard[i], str(round(data_wisard[i],1)), ha='center', va='bottom')
+    ax2.set_ylabel ('Tempo de Treinamento [seg]', fontsize=16, font='Times New Roman', color='red')
+    fig.legend( loc='outside upper center', frameon=False, ncol=3, )
+    plt.xticks (position2,
+                ['Coordenadas', 'LiDAR', 'Coord+LiDAR'], fontsize=16, font='Times New Roman')
+    #plt.grid()
+    plt.savefig('../../results/score/plot_for_jornal/comparacao_tempo_treinamento.png', dpi=300, bbox_inches='tight')
+
+    a=0
+
+def plot_time_train_log_scale():
+    data_batool = [19.3647, 1310.276, 2301.6973]
+    data_ruseckas= [ 19.744, 2187.7453, 2180.0649]
+    data_wisard =[1.8348, 0.8296, 2.8824]
+    name = ['Coordenadas', 'LiDAR', 'Coordenadas + LiDAR']
+
+    barWidth = 0.3
+    position = [1, 3, 5]
+    position2 = [x + barWidth for x in position]
+    position3 = [x + barWidth for x in position2]
+    batool = np.array(data_batool)
+    ruseckas = np.array(data_ruseckas)
+    wisard = np.array(data_wisard)
+
+    plt.rcParams["font.family"] = "Times"
+    plt.rcParams["font.size"] = "16"
+    fig, ax = plt.subplots (figsize=(13, 7))
+
+    plt.bar(position, data_batool, width=0.3, color='purple', label='Batool')
+    plt.bar(position2, data_ruseckas, width=0.3, color='teal', label='Ruseckas')
+    #plt.yscale("log")
+
+    for i in range (3):
+        ax.text(i, position[i], f"{data_batool [i]}", ha='center', fontsize=16, color='white', fontweight='bold',
+                 fontfamily='Arial')
+        ax.text(i, position2[i] * (3 + i), f"{data_ruseckas [i]}", ha='center', fontsize=14, fontweight='bold',
+                 fontfamily='Arial')
+
+    plt.xticks (position2,
+                ['Coordenadas', 'LiDAR', 'Coord+LiDAR'], fontsize=16, font='Times New Roman')
+
+
+    plt.show()
+
     for i in range(len(position)):
         plt.text(position[i], data_batool[i], str(round(data_batool[i],1)), ha='center', va='bottom')
         plt.text(position2[i], data_ruseckas[i], str(round(data_ruseckas[i],1)), ha='center', va='bottom')
@@ -231,9 +352,9 @@ def plot_time_train():
     plt.grid()
     plt.savefig('../../results/score/plot_for_jornal/comparacao_tempo_treinamento.png', dpi=300, bbox_inches='tight')
 
-    a=0
-
 
 #plot_results_with_conventional_evaluation()
 #plot_througput_of_all_techniques()
-plot_time_train()
+#plot_time_train()
+plot_time_train_one_axis()
+#plot_time_train()
