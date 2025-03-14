@@ -35,23 +35,32 @@ def read_results(input_type, window_type, ref):
 def plot_compare_refe_in_fixed_window():
     data_wisard, wisard_mean_score_top_k, wisard_std_score_top_k, top_k = read_results(input_type='lidar', window_type='fixed_window', ref='Wisard')
     data_batool, batool_mean_score_top_k, batool_std_score_top_k, _ = read_results(input_type='lidar', window_type='fixed_window', ref='Batool')
-
+    data_ruseckas, ruseckas_mean_score_top_k, ruseckas_std_score_top_k, _ = read_results (input_type='lidar',
+                                                                                    window_type='fixed_window',
+                                                                                    ref='ruseckas')
     plot_with_title = False
 
     plt.clf ()
-    plt.errorbar (top_k, wisard_mean_score_top_k, yerr=wisard_std_score_top_k,
-                  fmt='o-',  markersize=8, capsize=5, color='red', label='Wisard')
-    plt.errorbar(top_k, batool_mean_score_top_k, yerr=batool_std_score_top_k,
-                 fmt='o-', markersize=8, capsize=5, color='teal', label='Batool')
+    #plt.errorbar (top_k, wisard_mean_score_top_k, yerr=wisard_std_score_top_k,
+    #              fmt='o-',  markersize=8, capsize=5, color='red', label='Wisard')
+    #plt.errorbar(top_k, batool_mean_score_top_k, yerr=batool_std_score_top_k,
+    #             fmt='o-', markersize=8, capsize=5, color='teal', label='Batool')
+    #plt.errorbar(top_k, ruseckas_mean_score_top_k, yerr=ruseckas_std_score_top_k,
+    #             fmt='o-', markersize=8, capsize=5, color='blue', label='Ruseckas')
+    plt.plot(top_k, wisard_mean_score_top_k, 'o-', color='red', label='Wisard')
+    plt.plot(top_k, batool_mean_score_top_k, 'o-', color='teal', label='Batool')
+    plt.plot(top_k, ruseckas_mean_score_top_k, 'o-', color='purple', label='Ruseckas')
     if plot_with_title:
         for i in range(len(top_k)):
             plt.text(top_k[i]+0.2, wisard_mean_score_top_k[i] - 0.03,
                       str(np.round(wisard_mean_score_top_k[i], 2)), color='red')
             plt.text(top_k[i]+0.2, batool_mean_score_top_k[i] + 0.02,
                       str(np.round(batool_mean_score_top_k[i], 2)), color='teal')
+            plt.text(top_k[i]+0.2, ruseckas_mean_score_top_k[i] - 0.03,
+                      str(np.round(ruseckas_mean_score_top_k[i], 2)), color='blue')
 
     plt.xticks(top_k)
-    plt.ylim([0, 1.1])
+    plt.ylim([0.4, 1])
     plt.xlim([0, 35])
     plt.legend(loc='lower right')
     plt.grid()
@@ -594,10 +603,11 @@ def calculate_mean_of_all_episodes(dataFrame):
 
 
 
-input = 'coord'
+input = 'lidar'
 #plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
 window_type = 'fixed_window' # 'incremental_window' 'sliding_window'
 ref = 'ruseckas'#'Batool' # 'Wisard'
+plot_compare_refe_in_fixed_window()
 calculate_statis(input, window_type, ref)
 plot_compare_inputs_in_incremental_wind_wisard()
 

@@ -94,7 +94,7 @@ def plot_score_top_1(path, filename, title, window_size=0):
     plt.clf ()
     plt.plot (top_1 ['episode'], all_score_top_1, '.', color=color [0],
               label='Top-' + str (top_k [0]))
-    plt.text(1750, 0.8, str(np.round(np.mean(all_score_top_1), 3)),
+    plt.text(1250, 0.8, str(np.round(np.mean(all_score_top_1), 3)),
                   fontsize=10, color=color[1],
                 bbox=dict(facecolor='yellow', edgecolor='none'))
     plt.xlabel ('Episode', fontsize=10)  # , fontweight='bold', fontname='Myanmar Sangam MN')
@@ -154,19 +154,43 @@ def plot_histogram_of_trainning_time(path, filename, title, graph_type, window_s
 
     sns.reset_orig ()
 
+def read_fixed_data_results_lidar():
+    path = '../../results/score/ruseckas/online/top_k/lidar/fixed_window/'
 
+
+    for i in range(1,3,1):
+        file = 'all_results_fixed_window_top_k_parte_'+str(i)+'.csv'
+        data = pd.read_csv(path + file)
+        if i == 1:
+            all_data = data
+        else:
+            all_data = pd.concat([all_data, data], axis=0)
+
+    all_data.to_csv(path + 'all_results_fixed_window_top_k.csv', index=False)
+
+
+    pos_x = [10, 250, 500, 750, 1000, 1250, 1500]
+    pos_y = 0.8
+    filename = 'all_results_fixed_window_top_k.csv'
+    metric =  'score'
+    servidor = 'vm_land'
+    title = 'Beam Selection using with LiDAR and fixed window \n Reference: Ruseckas -' + servidor
+
+
+    return path, pos_x, pos_y, all_data, filename, metric, servidor, title
 
 input = 'coord'
 window = 'fixed_window'#'fixed_window' #'jumpy_sliding_window' # 'sliding_window' or 'jumpy_sliding_window'
 window_size = 0
 
-path, servidor, filename, pos_x, pos_y, title, data = read_results_for_plot (input,
-                                                                           window)
+path, pos_x, pos_y, all_data, filename, metric, servidor, title= read_fixed_data_results_lidar()
+
+#path, servidor, filename, pos_x, pos_y, title, data = read_results_for_plot (input,window)
 
 plot_score_top_k(path=path, filename=filename, title=title, window_size=0)
 
 plot_accum_score_top_k(pos_x, pos_y, path, title, filename, window_size=0)
-plot_score_top_k(path, filename, title, window_size)
+#plot_score_top_k(path, filename, title, window_size)
 plot_score_top_1(path, filename, title, window_size)
 plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='hist', window_size=window_size)
 plot_histogram_of_trainning_time(path=path, filename=filename, title=title, graph_type='ecdf', window_size=window_size)

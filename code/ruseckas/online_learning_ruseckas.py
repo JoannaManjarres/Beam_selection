@@ -136,7 +136,7 @@ def fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2000):
         input_train_shape = input_train.shape[1:]
 
 
-    episode_for_test = np.arange(0, episodes_for_test, 1)
+    #episode_for_test = np.arange(0, episodes_for_test, 1)
     df_all_results_top_k = pd.DataFrame ()
     df_all_index_predict = pd.DataFrame()
     for i in range(start_epi_test, stop_epi_test, 1):
