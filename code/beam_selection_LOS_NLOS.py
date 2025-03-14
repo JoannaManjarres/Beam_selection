@@ -274,7 +274,55 @@ def beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL'):
 
 
 
+def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='ALL'):
+    print ('Beam selection with: ' + input_type + ' and ' + connection_type)
+    if input_type == 'coord':
+        preprocess_resolution = 8
+        input_train, input_test, label_train, label_test = get_coord_preprocess (connection_type, preprocess_resolution)
+        file_name = 'accuracy_' + input_type + '_res_' + str (preprocess_resolution) + '_' + connection_type + '.csv'
 
+    elif input_type == 'lidar':
+        input_train, input_test, label_train, label_test = get_lidar_preprocess (connection_type)
+        file_name = 'accuracy_' + input_type + '_' + connection_type + '_thr_01' + '.csv'
+
+    elif input_type == 'lidar_coord':
+        preprocess_resolution = 8
+        print (input_type)
+        input_train_coord, input_test_coord, label_train_coord, label_test_coord = get_coord_preprocess (
+            connection_type, preprocess_resolution)
+        input_train_lidar, input_test_lidar, label_train_lidar, label_test_lidar = get_lidar_preprocess (
+            connection_type)
+
+        input_train = np.concatenate ((input_train_coord, input_train_lidar), axis=1)
+        input_test = np.concatenate ((input_test_coord, input_test_lidar), axis=1)
+        label_train = label_train_coord
+        label_test = label_test_coord
+        file_name = 'accuracy_' + input_type + '_res_' + str (
+            preprocess_resolution) + '_' + connection_type + '_thr_01' + '.csv'
+
+    print('input_train', len (input_test), len(input_test[0]))
+    print('input_test', len (input_train), len(input_train[0]))
+    vector_acuracia, address_size = select_best_beam (#input_train=input_train,
+                                                      #input_validation=input_test,
+                                                      #label_train=label_train,
+                                                      #label_validation=label_test,
+
+                                                      input_train=input_test,
+                                                      input_validation=input_train,
+                                                      label_train=label_test,
+                                                      label_validation=label_train,
+
+                                                      figure_name='coord_' + connection_type + '_s008_s009',
+                                                      antenna_config='8x8',
+                                                      type_of_input='coord',
+                                                      titulo_figura='Coordenadas',
+                                                      user='s008_s009',
+                                                      enableDebug=False,
+                                                      plot_confusion_matrix_enable=False)
+
+    path_csv = '../results/inverter_dataset/score/Wisard/' + input_type + '/' + connection_type + '/'
+    df = pd.DataFrame ({"addres_size": address_size, "accuracy": vector_acuracia})
+    df.to_csv (path_csv + file_name, index=False)
 
 
 def select_best_beam(input_train,
@@ -435,12 +483,15 @@ def plot_performance_WiSARD_LOS_NLOS_connection(input_type):
     file_name = 'performance_accuracy_'+input_type+'LOS_NLOS_ALL.png'
     plt.savefig(path_to_save+file_name, dpi=300, bbox_inches='tight')
 
-def plot_all_performance_WiSARD():
+def plot_all_performance_WiSARD(inverter_dataset=False):
 
     connection_type = ['LOS', 'NLOS', 'ALL']
 
     input_type = 'coord'
-    path = '../results/score/Wisard/' + input_type + '/'
+    if inverter_dataset:
+        path = '../results/inverter_dataset/score/Wisard/' + input_type + '/'
+    else:
+        path = '../results/score/Wisard/' + input_type + '/'
     file_name = 'accuracy_' + input_type + '_res_8_'+connection_type[0]+'.csv'
     data_LOS_coord = pd.read_csv (path + connection_type[0] + '/' + file_name, delimiter=',')
     file_name = 'accuracy_' + input_type + '_res_8_' + connection_type [1] + '.csv'
@@ -449,7 +500,10 @@ def plot_all_performance_WiSARD():
     data_ALL_coord = pd.read_csv (path + connection_type[2] + '/' + file_name, delimiter=',')
 
     input_type = 'lidar'
-    path = '../results/score/Wisard/' + input_type + '/'
+    if inverter_dataset:
+        path = '../results/inverter_dataset/score/Wisard/' + input_type + '/'
+    else:
+        path = '../results/score/Wisard/' + input_type + '/'
     file = 'accuracy_' + input_type + '_'+connection_type[0]+'_thr_01'+'.csv'
     data_LOS_lidar = pd.read_csv (path + connection_type[0] + '/' + file, delimiter=',')
     file = 'accuracy_' + input_type + '_'+connection_type[1]+'_thr_01'+'.csv'
@@ -458,7 +512,10 @@ def plot_all_performance_WiSARD():
     data_ALL_lidar = pd.read_csv (path + connection_type[2] + '/' + file, delimiter=',')
 
     input_type = 'lidar_coord'
-    path = '../results/score/Wisard/' + input_type + '/'
+    if inverter_dataset:
+        path = '../results/inverter_dataset/score/Wisard/' + input_type + '/'
+    else:
+        path = '../results/score/Wisard/' + input_type + '/'
     file = 'accuracy_' + input_type + '_res_8_'+connection_type[0]+'_thr_01'+'.csv'
     data_LOS_lidar_coord = pd.read_csv (path + connection_type[0] + '/' + file, delimiter=',')
     file = 'accuracy_' + input_type + '_res_8_'+connection_type[1]+'_thr_01'+'.csv'
@@ -496,7 +553,13 @@ def plot_all_performance_WiSARD():
 
 
     #plt.show()
-    plt.savefig('../results/score/Wisard/performance_accuracy_all_LOS_NLOS'+'_thr_01'+'.png', dpi=300, bbox_inches='tight')
+    if inverter_dataset:
+        path_to_save = '../results/inverter_dataset/score/Wisard/'
+        file_name = 'performance_accuracy_all_LOS_NLOS_inverter_dataset.png'
+    else:
+        path_to_save = '../results/score/Wisard/'
+        file_name = 'performance_accuracy_all_LOS_NLOS.png'
+    plt.savefig(path_to_save+file_name, dpi=300, bbox_inches='tight')
     a = 0
 
 
@@ -505,4 +568,11 @@ def plot_all_performance_WiSARD():
 #beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='LOS')
 #beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='NLOS')
 
-plot_all_performance_WiSARD()
+#plot_all_performance_WiSARD(inverter_dataset=False)
+#beam_selection_LOS_NLOS(input_type='lidar', connection_type='LOS')
+
+
+beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='NLOS')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='ALL')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='LOS')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='NLOS')
