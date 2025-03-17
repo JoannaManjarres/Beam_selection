@@ -68,5 +68,66 @@ def plot_samples(dataset_s008, dataset_s009):
     plt.savefig ('../analyses/samples_by_episode.png', dpi=300)
     plt.close ()
 
+def plot_samples_NLOS():
+    dataset_s008, dataset_s009 = read_data()
+
+    s008_NLOS = dataset_s008[dataset_s008['LOS'] == 'LOS=0']
+    s008_ep_NLOS = s008_NLOS ['episode'].tolist ()
+    episode_NLOS_s008, samples_for_episode_s008_NLOS = np.unique (s008_ep_NLOS, return_counts=True)
+
+
+    s008_LOS = dataset_s008[dataset_s008['LOS'] == 'LOS=1']
+    s008_ep_LOS = s008_LOS['episode'].tolist()
+    episode_s008_LOS, samples_for_episode_s008_LOS = np.unique(s008_ep_LOS, return_counts=True)
+
+    s009_NLOS = dataset_s009[dataset_s009['LOS'] == 'LOS=0']
+    s009_ep_NLOS = np.array (s009_NLOS ['episode']).tolist ()
+    s009_ep_NLOS = [int (numeric_string) for numeric_string in s009_ep_NLOS]
+    episode_NLOS_s009, samples_for_episode_s009_NLOS = np.unique (s009_ep_NLOS, return_counts=True)
+
+    s009_LOS = dataset_s009[dataset_s009['LOS'] == 'LOS=1']
+    s009_ep_LOS = np.array(s009_LOS['episode']).tolist()
+    s009_ep_LOS = [int(numeric_string) for numeric_string in s009_ep_LOS]
+    episode_s009_LOS, samples_for_episode_s009_LOS = np.unique(s009_ep_LOS, return_counts=True)
+
+    samples_to_plot = 100
+    ep_s008_NLOS, mean_s008_NLOS = calculate_mean_of_samples(episode_NLOS_s008, samples_for_episode_s008_NLOS, samples_to_plot)
+    ep_s009_NLOS, mean_s009_NLOS = calculate_mean_of_samples(episode_NLOS_s009, samples_for_episode_s009_NLOS, samples_to_plot)
+    ep_s008_LOS, mean_s008_LOS = calculate_mean_of_samples(episode_s008_LOS, samples_for_episode_s008_LOS, samples_to_plot)
+    ep_s009_LOS, mean_s009_LOS = calculate_mean_of_samples(episode_s009_LOS, samples_for_episode_s009_LOS, samples_to_plot)
+
+    plt.figure(figsize=(14, 6))
+    #plt.plot(episode_s008, samples_for_episode_s008, 'o', label='s008', color='blue')
+    plt.plot(ep_s008_NLOS, mean_s008_NLOS, '-o', label='s008 NLOS -> '+str(len(s008_NLOS)), color='blue')
+    plt.plot (ep_s009_NLOS, mean_s009_NLOS, '-o', label='s009 NLOS -> '+str(len(s009_NLOS)), color='red')
+    #plt.plot(ep, mean_s009_NLOS, '-o', label='s009 NLOS', color='orange')
+    plt.plot(ep_s008_LOS, mean_s008_LOS, '--o', label='s008 LOS -> '+str(len(s008_LOS)), color='blue')
+    plt.plot(ep_s009_LOS, mean_s009_LOS, '--o', label='s009 LOS -> '+str(len(s009_LOS)), color='red')
+    #plt.bar(episode_s008[:100], samples_for_episode_s008[:100], label='s008')
+
+    plt.xlabel('episodes')
+    plt.ylabel('samples')
+    plt.legend(ncol=2)
+    plt.xticks(ep_s008_LOS, fontsize=5, rotation=90)
+    plt.title('Média de amostras por cada '+str(samples_to_plot)+' episódios')
+    a=0
+
+def calculate_mean_of_samples(episodes, samples_for_episode, samples_to_plot):
+    mean = []
+    ep = []
+    var = int(np.round (len (episodes) / samples_to_plot))
+
+    start = 0
+    for i in range (var):
+        end = start + samples_to_plot
+        a = np.mean(samples_for_episode[start:end])
+        mean.append(a)
+        ep.append(start)
+        start = start + samples_to_plot
+
+    return ep, mean
+
+
+plot_samples_NLOS()
 dataset_s008, dataset_s009 =read_data()
 plot_samples(dataset_s008, dataset_s009)
