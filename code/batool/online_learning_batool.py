@@ -2069,7 +2069,7 @@ def main():
 #window = 'fixed_window'
 #input = 'coord'
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')
-plot_results__('lidar', 'jumpy_sliding_window')
-
+#plot_results__('lidar', 'jumpy_sliding_window')
+#fit_fixed_window_top_k(label_input_type='coord', episodes_for_test=2000)
 
 

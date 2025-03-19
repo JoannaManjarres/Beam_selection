@@ -6,6 +6,8 @@ from sklearn.metrics import accuracy_score
 import beam_selection_wisard as bsw
 import matplotlib.pyplot as plt
 import pre_process_lidar
+import wisardpkg as wp
+from operator import itemgetter
 from matplotlib.gridspec import GridSpec
 
 def read_beams_raymobtime(num_antennas_rx, path_of_data):
@@ -302,7 +304,24 @@ def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connectio
 
     print('input_train', len (input_test), len(input_test[0]))
     print('input_test', len (input_train), len(input_train[0]))
-    vector_acuracia, address_size = select_best_beam (#input_train=input_train,
+
+    top_k = True
+    if top_k:
+        top_k, acuracia = beam_selection_top_k_wisard (x_train= input_test,
+                                     x_test=input_train,
+                                     y_train=label_test,
+                                     y_test=label_train,
+                                     data_input=input_type,
+                                     data_set=connection_type,
+                                     address_of_size=64,
+                                     name_of_conf_input=connection_type)
+
+        path_csv = '../results/inverter_dataset/score/Wisard/top-k/' + input_type + '/' + connection_type + '/'
+        df = pd.DataFrame ({"top-k": top_k, "score": acuracia})
+        df.to_csv (path_csv + file_name, index=False)
+
+    else:
+        vector_acuracia, address_size = select_best_beam (#input_train=input_train,
                                                       #input_validation=input_test,
                                                       #label_train=label_train,
                                                       #label_validation=label_test,
@@ -320,9 +339,10 @@ def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connectio
                                                       enableDebug=False,
                                                       plot_confusion_matrix_enable=False)
 
-    path_csv = '../results/inverter_dataset/score/Wisard/' + input_type + '/' + connection_type + '/'
-    df = pd.DataFrame ({"addres_size": address_size, "accuracy": vector_acuracia})
-    df.to_csv (path_csv + file_name, index=False)
+        path_csv = '../results/inverter_dataset/score/Wisard/' + input_type + '/' + connection_type + '/'
+        df = pd.DataFrame ({"addres_size": address_size, "accuracy": vector_acuracia})
+        df.to_csv (path_csv + file_name, index=False)
+    a=0
 
 
 def select_best_beam(input_train,
@@ -455,7 +475,219 @@ def select_best_beam(input_train,
 
     return vector_acuracia, address_size
 
+def beam_selection_top_k_wisard(x_train, x_test,
+                                y_train, y_test,
+                                data_input, data_set,
+                                address_of_size,
+                                name_of_conf_input):
 
+    #print("Calculate top-k with Wisard")
+    print ("... Calculando os top-k com Wisard")
+    addressSize = address_of_size
+    ignoreZero = False
+    verbose = True
+    var = True
+    wsd = wp.Wisard(addressSize,
+                    ignoreZero=ignoreZero,
+                    verbose=verbose,
+                    returnConfidence=var,
+                    returnActivationDegree=var,
+                    returnClassesDegrees=var)
+    wsd.train(x_train, y_train)
+
+    # the output is a list of string, this represent the classes attributed to each input
+    out = wsd.classify(x_test)
+
+    #wsd_1 = wp.Wisard(addressSize, ignoreZero=ignoreZero, verbose=verbose)
+    #wsd_1.train(x_train, y_train)
+    #out_1 = wsd_1.classify(x_test)
+
+
+    content_index = 0
+    ram_index = 0
+    #print(wsd.getsizeof(ram_index,content_index))
+    #print(wsd.json())
+    #print(out)
+
+    #top_k = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50]
+    #top_k = [ 10, 20, 30, 40, 50]
+    top_k = np.arange(1, 51, 1)
+
+
+    acuracia = []
+    score = []
+
+    all_classes_order = []
+
+    for sample in range(len(out)):
+
+        classes_degree = out[sample]['classesDegrees']
+        dict_classes_degree_order = sorted(classes_degree, key=itemgetter('degree'), reverse=True)
+
+        classes_by_sample_in_order = []
+        for x in range(len(dict_classes_degree_order)):
+            classes_by_sample_in_order.append(dict_classes_degree_order[x]['class'])
+        all_classes_order.append(classes_by_sample_in_order)
+
+    save_results = False
+    if save_results:
+        path_index_predict = '../results/index_beams_predict/WiSARD/top_k/' + name_of_conf_input + '/'
+    for i in range (len(top_k)):
+        acerto = 0
+        nao_acerto = 0
+        best_classes = []
+        best_classes_int = []
+        for sample in range (len(all_classes_order)):
+            best_classes.append(all_classes_order[sample][:top_k[i]])
+            best_classes_int.append([int(x) for x in best_classes[sample]])
+            if (y_test[sample] in best_classes[sample]):
+                acerto = acerto + 1
+            else:
+                nao_acerto = nao_acerto + 1
+
+        score.append(acerto / len(out))
+
+        #file_name = 'index_beams_predict_top_' + str(top_k[i]) + '.npz'
+        #npz_index_predict = path_index_predict + file_name
+        #np.savez(npz_index_predict, output_classification=best_classes_int)
+
+    df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
+    #path_csv = '../results/accuracy/8X32/' + data_input + '/top_k/'
+
+    if save_results:
+        path_csv = '../results/score/Wisard/top_k/'+name_of_conf_input+'/'
+        df_score_wisard_top_k.to_csv (path_csv + 'score_' + name_of_conf_input + '_top_k.csv', index=False)
+
+        file_name = 'index_beams_predict_top_k.npz'
+        npz_index_predict = path_index_predict + file_name
+        np.savez (npz_index_predict, output_classification=all_classes_order)
+
+
+
+
+    print ('Enderecamento de memoria: ', addressSize)
+    '''
+    for i in range(len(top_k)):
+        acerto = 0
+        nao_acerto = 0
+
+        if top_k[i] == 1:
+            a=0
+            #acuracia_tpo_1 = accuracy_score(y_test, out_1)
+            #print('Acuracia top k =1: ', acuracia_tpo_1)
+
+        for amostra_a_avaliar in range(len(out)):
+
+            lista_das_classes = out[amostra_a_avaliar]['classesDegrees']
+            dict_com_classes_na_ordem = sorted(lista_das_classes, key=itemgetter('degree'), reverse=True)
+            #f.write(str(dict_com_classes_na_ordem))
+
+            classes_na_ordem_descendente = []
+            for x in range(len(dict_com_classes_na_ordem)):
+                classes_na_ordem_descendente.append(dict_com_classes_na_ordem[x]['class'])
+
+            top_5 = classes_na_ordem_descendente[0:top_k[i]]
+
+            if top_k[i] == 1:
+                index_predict_top_1.append(top_5)
+            if top_k[i] == 2:
+                index_predict_top_2.append(top_5)
+            if top_k[i] == 3:
+                index_predict_top_3.append(top_5)
+            if top_k [i] == 4:
+                index_predict_top_4.append (top_5)
+            elif top_k[i] == 5:
+                index_predict_top_5.append(top_5)
+            elif top_k[i] == 6:
+                index_predict_top_6.append(top_5)
+            elif top_k[i] == 7:
+                index_predict_top_7.append(top_5)
+            elif top_k[i] == 8:
+                index_predict_top_8.append(top_5)
+            elif top_k[i] == 9:
+                index_predict_top_9.append(top_5)
+            elif top_k[i] == 10:
+                index_predict_top_10.append(top_5)
+            elif top_k[i] == 20:
+                index_predict_top_20.append(top_5)
+            elif top_k[i] == 30:
+                index_predict_top_30.append(top_5)
+            elif top_k[i] == 40:
+                index_predict_top_40.append(top_5)
+            elif top_k[i] == 50:
+                index_predict_top_50.append(top_5)
+
+
+            if( y_test[amostra_a_avaliar] in top_5):
+                acerto = acerto + 1
+            else:
+                nao_acerto = nao_acerto + 1
+
+        acuracia.append(acerto/len(out))
+
+    #print("len(out):", len(out))
+    #print("TOP-K: ", top_k)
+    #print("Acuracia: ",acuracia)
+    #f.close()
+    path_index_predict = '../results/index_beams_predict/WiSARD/top_k/'+name_of_conf_input+'/'
+    for i in range(len(top_k)):
+        file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
+        npz_index_predict = path_index_predict + file_name
+        if top_k[i] == 1:
+            np.savez(npz_index_predict, output_classification=index_predict_top_1)
+        if top_k[i] == 2:
+            np.savez(npz_index_predict, output_classification=index_predict_top_2)
+        if top_k[i] == 3:
+            np.savez(npz_index_predict, output_classification=index_predict_top_3)
+        if top_k[i] == 4:
+            np.savez(npz_index_predict, output_classification=index_predict_top_4)
+        elif top_k[i] == 5:
+            np.savez(npz_index_predict, output_classification=index_predict_top_5)
+        elif top_k[i] == 6:
+            np.savez(npz_index_predict, output_classification=index_predict_top_6)
+        elif top_k[i] == 7:
+            np.savez(npz_index_predict, output_classification=index_predict_top_7)
+        elif top_k[i] == 8:
+            np.savez(npz_index_predict, output_classification=index_predict_top_8)
+        elif top_k[i] == 9:
+            np.savez(npz_index_predict, output_classification=index_predict_top_9)
+        elif top_k[i] == 10:
+            np.savez(npz_index_predict, output_classification=index_predict_top_10)
+        elif top_k[i] == 20:
+            np.savez(npz_index_predict, output_classification=index_predict_top_20)
+        elif top_k[i] == 30:
+            np.savez(npz_index_predict, output_classification=index_predict_top_30)
+        elif top_k[i] == 40:
+            np.savez(npz_index_predict, output_classification=index_predict_top_40)
+        elif top_k[i] == 50:
+            np.savez(npz_index_predict, output_classification=index_predict_top_50)
+
+    #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
+    #np.savez (npz_index_predict, output_classification=estimated_beams)
+    '''
+    print ("-----------------------------")
+    print ("TOP-K \t\t|\t Acuracia")
+    print("-----------------------------")
+    for i in range(len(top_k)):
+        if top_k[i] == 1:
+            print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
+        elif top_k[i] == 5:
+            print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
+        else:
+            print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
+    print ("-----------------------------")
+
+
+    #df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
+    #path_csv='../results/accuracy/8X32/'+data_input+'/top_k/'
+    #print(path_csv+'acuracia_wisard_' + data_input + '_top_k.csv')
+    #df_acuracia_wisard_top_k.to_csv(path_csv + 'acuracia_wisard_' + data_input + '_' + data_set + '_top_k.csv', index=False)
+    #df_acuracia_wisard_top_k.to_csv (path_csv + 'acuracia_wisard_' + name_of_conf_input + '_top_k.csv',
+    #                                 index=False)
+
+
+    #plot_top_k(top_k, score, data_input, name_of_conf_input=name_of_conf_input)
+    return top_k, score
 def plot_performance_WiSARD_LOS_NLOS_connection(input_type):
 
     path = '../results/score/Wisard/'+input_type+'/'
@@ -572,7 +804,10 @@ def plot_all_performance_WiSARD(inverter_dataset=False):
 #beam_selection_LOS_NLOS(input_type='lidar', connection_type='LOS')
 
 
+
+beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='NLOS')
-beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='ALL')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='NLOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connection_type='NLOS')
