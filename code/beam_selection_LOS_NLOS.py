@@ -9,6 +9,7 @@ import pre_process_lidar
 import wisardpkg as wp
 from operator import itemgetter
 from matplotlib.gridspec import GridSpec
+import read_data as read_data
 
 def read_beams_raymobtime(num_antennas_rx, path_of_data):
 
@@ -170,8 +171,9 @@ def Thermomether_coord_x_y_unbalanced_for_s009(escala, all_info_coord_val, data)
     return encondig_coord
 
 def get_coord_preprocess(connection_type, preprocess_resolution):
-    train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data_s009 ()
-    train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data_s008 ()
+    train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data.read_data_s009()
+    train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data.read_data_s008()
+
 
     if connection_type == 'LOS':
         data_train = train_data_LOS_s008
@@ -805,7 +807,7 @@ def plot_all_performance_WiSARD(inverter_dataset=False):
 
 
 
-beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='LOS')
+beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='NLOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='NLOS')

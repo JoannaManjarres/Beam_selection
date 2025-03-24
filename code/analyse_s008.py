@@ -1,12 +1,12 @@
 import numpy as np
 import csv
-import seaborn as sns
 import pandas as pd
 import mimo_best_beams
 import matplotlib.pyplot as plt
 
 import seaborn as sns
 import random
+import read_data as readData
 
 random.seed(0)
 
@@ -329,7 +329,7 @@ def plot_hist_prob_beam(beam, title):#, set, pp_folder, connection, x_label='ind
     plt.savefig(path+"histogram_s008_prob_all_Beams_combined.png", bbox_inches='tight')
     plt.show()
 
-def plot_histogram_beam(index_beam, title):#, user, color, connection, set, pp_folder, config):
+def plot_histogram_beam(index_beam, title, savefig=False, path=''):#, user, color, connection, set, pp_folder, config):
     color = 'blue'
     #print("Histograma dos indices dos Beams do ", user ," [" + connection + "] em config ", config , " \n usando dados de ",  set)
 
@@ -355,6 +355,8 @@ def plot_histogram_beam(index_beam, title):#, user, color, connection, set, pp_f
     # plot.fig.set_figheight(8)
     plt.subplots_adjust(right=0.786, bottom=0.155)
 
+    if savefig:
+        plt.savefig(path, transparent=False, dpi=300, bbox_inches='tight')
     #name = path + 'Histogram_dos_Beams_' + user + '_' + connection + '_' + set + '.png'
     #plt.savefig(name, transparent=False, dpi=300)
     plt.show()
@@ -666,13 +668,156 @@ def plot_beams_with_coord():
     g.figure.set_size_inches (7.5, 10.5)
     plt.savefig ('../analyses/tx_beam_distribution_with_position_s008.png', dpi=300, bbox_inches='tight')
 
+def plot_histogram_geral(LOS_data, NLOS_data, all_data,
+                         path_to_save, label_data, all_classes=False):
+    data3 = LOS_data ['index_beams']
+    data2 = NLOS_data ['index_beams']
+    data1 = all_data ['index_beams']
+
+
+    plt.figure (figsize=(10, 4))
+    labels = ['All', 'NLOS', 'LOS']
+    colors = ['#F9A59B', 'green', 'steelblue']
+    if all_classes:
+        plt.hist ([data1, data2, data3], bins=256, label=labels, color=colors, alpha=1)
+        plt.title ('Histograma dos indices dos Beams do dataset '+label_data, fontsize=14, fontweight='bold')
+        plt.xlabel ('Indices dos beams', fontsize=12)
+        plt.ylabel ('Frequência', fontsize=12)
+        plt.legend (title='Dados', fontsize=10, title_fontsize=12)
+        path = path_to_save + 'histogram_all_classes_by_set.png'
+        plt.savefig (path, dpi=300, bbox_inches='tight')
+    else:
+        plt.hist ([data1, data2, data3], bins=1, label=labels, color=colors, alpha=1)
+        plt.title ('Histograma dos indices dos Beams do dataset '+label_data, fontsize=14, fontweight='bold')
+        # plt.xlabel ('Valores', fontsize=12)
+        plt.ylabel ('Frequência', fontsize=12)
+        # plt.legend (title='Dados', fontsize=10, title_fontsize=12)
+        plt.xticks ([50, 120, 190], labels)
+        path = path_to_save + 'histogram_one_classe_by_set.png'
+        plt.savefig (path, dpi=300, bbox_inches='tight')
+
+    plt.show ()
+    plt.savefig(path, dpi=300, bbox_inches='tight')
+
+
+def do_hist_beams(LOS_data, NLOS_data, all_data, label_data):
+    path = '../analyses/index_beams/'+label_data+'/'
+
+    title = 'Distribuicao dos indices dos Beams do '+label_data+' [LOS]'
+    file_name = 'histogram_'+label_data+'_LOS.png'
+    path_to_save = path + file_name
+    #plot_histogram_beam (index_beam=LOS_data['index_beams'], title=title, savefig=True, path=path_to_save)
+
+    title = 'Distribuicao dos indices dos Beams do ' + label_data + ' [NLOS]'
+    file_name = 'histogram_' + label_data + '_NLOS.png'
+    path_to_save = path + file_name
+    #plot_histogram_beam(index_beam=NLOS_data['index_beams'], title=title, savefig=True, path=path_to_save)
+
+    title = 'Distribuicao dos indices dos Beams do ' + label_data + ' [ALL]'
+    file_name = 'histogram_' + label_data + '_ALL.png'
+    path_to_save = path + file_name
+    #plot_histogram_beam(index_beam=all_data['index_beams'], title=title, savefig=True, path=path_to_save)
+
+    plot_histogram_geral(LOS_data, NLOS_data, all_data, path, label_data)
+    a=0
+
+
+def plot_beams_in_histogram():
+    s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008()
+    s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009()
+
+    #do_hist_beams(s008_data_LOS, s008_NLOS, s008_valid_data, 's008')
+    do_hist_beams(s009_data_LOS, s009_NLOS, s009_valid_data, 's009')
+
+def statistics_index_beams(data_set, label_connection,label_dataset, path):
+
+    classes_frequency = 50
+    labels, counts = np.unique (data_set ['index_beams'].tolist (), return_counts=True)
+    data = {'index': labels, 'counts': counts}
+    df = pd.DataFrame (data)
+    df = df.sort_values (by='counts', ascending=False)
+    d = df[df['counts'] > classes_frequency]
+
+    print('Dataset:', label_dataset, 'Connection:', label_connection)
+    print(d[:20])
+    if label_connection =='ALL':
+        color = '#F9A59B'
+    if label_connection =='LOS':
+        color = 'steelblue'
+    if label_connection =='NLOS':
+        color = 'green'
+    plot = d.plot(kind='bar', x='index', y='counts', color= color, legend=False)
+    plot.figure.set_size_inches (10, 4)
+
+    plt.title ('Histograma dos índices com frequência maior a '+str(classes_frequency)+' \n do dataset '+label_dataset+' - '+label_connection,
+               fontsize=14, fontweight='bold')
+    plt.xlabel ('Índices dos beams', fontsize=12)
+    plt.savefig(path + 'Hist_classes_freq_'+str(classes_frequency)+'_'+label_dataset+'_'+label_connection+'.png', dpi=300, bbox_inches='tight')
+
+    d1 = df [df ['counts'] == 1] ['counts'].tolist ()
+    d2 = df [df ['counts'] == 2] ['counts'].tolist ()
+    d3 = df [df ['counts'] == 3] ['counts'].tolist ()
+    d4 = df [df ['counts'] == 4] ['counts'].tolist ()
+    d5 = df [df ['counts'] == 5] ['counts'].tolist ()
+    d6 = df [df ['counts'] == 6] ['counts'].tolist ()
+    d7 = df [df ['counts'] == 7] ['counts'].tolist ()
+    d8 = df [df ['counts'] == 8] ['counts'].tolist ()
+    d9 = df [df ['counts'] == 9] ['counts'].tolist ()
+    d10 = df [df ['counts'] == 10] ['counts'].tolist ()
+    freq = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    classes_with_freq_less_10 = [len (d1), len (d2), len (d3), len (d4), len (d5),
+                                 len (d6), len (d7), len (d8), len (d9), len (d10)]
+    plt.clf()
+    plt.bar (freq, classes_with_freq_less_10, color=color, label=label_connection)
+    plt.xticks(freq)
+    for i in range(len(classes_with_freq_less_10)):
+        plt.text(i + 1, classes_with_freq_less_10[i], str(classes_with_freq_less_10 [i]), ha='center', va='bottom')
+    plt.xlabel('Frequência')
+    plt.ylabel('Número de classes')
+    plt.legend()
+
+    #plt.show()
+    plt.savefig(
+        path + 'Hist_classes_freq_less' + str (len(freq)) + '_' + label_dataset + '_' + label_connection + '.png',
+        dpi=300, bbox_inches='tight')
+
+
+
+    a=0
+def stats_index_beams():
+    s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008 ()
+    s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009 ()
+
+
+    path = '../analyses/index_beams/'
+    connection_type = ['ALL', 'LOS', 'NLOS']
+    data_set = 's008'
+    s008 = [s008_valid_data, s008_data_LOS, s008_NLOS]
+    for i in range (3):
+        statistics_index_beams (data_set=s008 [i],
+                                label_connection=connection_type [i],
+                                label_dataset=data_set,
+                                path=path + data_set + '/')
+
+    data_set = 's009'
+    s009 = [s009_valid_data, s009_data_LOS, s009_NLOS]
+    for i in range(3):
+        statistics_index_beams(data_set=s009[i],
+                               label_connection=connection_type[i],
+                               label_dataset=data_set,
+                               path=path + data_set + '/')
+
+
+
+
+
 
 #compare_beamoutput_matrices_from_RT()
 #generated_beams_output_from_ray_tracing()
 #stats_index_beams_article()
 #plot_distribution_of_beams()
-plot_beams_with_coord()
 
+stats_index_beams()
 
 
 
