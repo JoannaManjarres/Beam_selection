@@ -488,3 +488,88 @@ def plot_top_k(top, acuracia, data_input, name_of_conf_input):
     #    '../results/accuracy/8X32/' + data_input + '/top_k/acuracia_top_k_wisard_' + name_of_conf_input + '.png',
     #    dpi=300, bbox_inches='tight')
     plt.show()
+
+def top_k_wisard_beam_selection(x_train, x_test,
+                                y_train, y_test,
+                                address_of_size,
+                                name_of_conf_input):
+
+    print ("... Calculando os top-k com Wisard")
+    addressSize = address_of_size
+    ignoreZero = False
+    verbose = True
+    var = True
+    wsd = wp.Wisard(addressSize,
+                    ignoreZero=ignoreZero,
+                    verbose=verbose,
+                    returnConfidence=var,
+                    returnActivationDegree=var,
+                    returnClassesDegrees=var)
+    wsd.train(x_train, y_train)
+
+    # the output is a list of string, this represent the classes attributed to each input
+    out = wsd.classify(x_test)
+
+    #top_k = [ 10, 20, 30, 40, 50]
+    top_k = np.arange(1, 51, 1)
+
+    score = []
+    all_classes_order = []
+
+    for sample in range(len(out)):
+
+        classes_degree = out[sample]['classesDegrees']
+        dict_classes_degree_order = sorted(classes_degree, key=itemgetter('degree'), reverse=True)
+
+        classes_by_sample_in_order = []
+        for x in range(len(dict_classes_degree_order)):
+            classes_by_sample_in_order.append(dict_classes_degree_order[x]['class'])
+        all_classes_order.append(classes_by_sample_in_order)
+
+    save_results = False
+    if save_results:
+        path_index_predict = '../results/index_beams_predict/WiSARD/top_k/' + name_of_conf_input + '/'
+    for i in range (len(top_k)):
+        acerto = 0
+        nao_acerto = 0
+        best_classes = []
+        best_classes_int = []
+        for sample in range (len(all_classes_order)):
+            best_classes.append(all_classes_order[sample][:top_k[i]])
+            best_classes_int.append([int(x) for x in best_classes[sample]])
+            if (y_test[sample] in best_classes[sample]):
+                acerto = acerto + 1
+            else:
+                nao_acerto = nao_acerto + 1
+
+        score.append(acerto / len(out))
+
+    df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
+
+    if save_results:
+        path_csv = '../results/score/Wisard/top_k/'+name_of_conf_input+'/'
+        df_score_wisard_top_k.to_csv (path_csv + 'score_' + name_of_conf_input + '_top_k.csv', index=False)
+
+        file_name = 'index_beams_predict_top_k.npz'
+        npz_index_predict = path_index_predict + file_name
+        np.savez (npz_index_predict, output_classification=all_classes_order)
+
+
+
+    print_results = False
+    if print_results:
+        print ('Enderecamento de memoria: ', addressSize)
+        print ("-----------------------------")
+        print ("TOP-K \t\t|\t Acuracia")
+        print("-----------------------------")
+        for i in range(len(top_k)):
+            if top_k[i] == 1:
+                print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
+            elif top_k[i] == 5:
+                print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
+            else:
+                print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
+        print ("-----------------------------")
+
+
+    return top_k, score

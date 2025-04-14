@@ -807,7 +807,7 @@ def plot_all_performance_WiSARD(inverter_dataset=False):
 
 
 
-beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
+#beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar', connection_type='NLOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')
 beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='NLOS')

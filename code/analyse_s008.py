@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 import mimo_best_beams
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 import seaborn as sns
 import random
@@ -362,8 +363,31 @@ def plot_histogram_beam(index_beam, title, savefig=False, path=''):#, user, colo
     plt.show()
 
 def relation_coord_with_beams_Plot2D():
-    _,_, all_data_train, all_data_test = separete_beam_output_train_test()
-    data = pd.DataFrame(all_data_train, columns=['EpisodeID', 'x', 'y', 'z', 'LOS', 'index_beams'])
+    #_,_, all_data_train, all_data_test = separete_beam_output_train_test()
+    #data = pd.DataFrame(all_data_train, columns=['EpisodeID', 'x', 'y', 'z', 'LOS', 'index_beams'])
+    import read_data as readData
+    s008 = False
+    connection_type = 'NLOS'
+
+    if s008:
+        data_LOS_s008, NLOS_s008, valid_data_s008 = readData.read_data_s008()
+        dataset = 's008'
+        if connection_type == 'LOS':
+            data = data_LOS_s008
+        elif connection_type == 'NLOS':
+            data = NLOS_s008
+        elif connection_type == 'ALL':
+            data = valid_data_s008
+
+    else:
+        data_LOS_s009, NLOS_s009, valid_data_s009 = readData.read_data_s009()
+        dataset = 's009'
+        if connection_type == 'LOS':
+            data = data_LOS_s009
+        elif connection_type == 'NLOS':
+            data = NLOS_s009
+        elif connection_type == 'ALL':
+            data = valid_data_s009
 
     sns.set (style='darkgrid')
     plot = sns.relplot (data=data,
@@ -379,7 +403,7 @@ def relation_coord_with_beams_Plot2D():
 
     # sns.set(rc={'figure.figsize': (60, 5)})
 
-    plot.fig.suptitle ('Distribuicao dos indices dos Beams \n relativo à posicao usando dados de Train',
+    plot.fig.suptitle ('Distribuicao dos indices dos Beams \n relativo à posicao usando dados '+ connection_type+' de '+dataset,
                         fontweight='bold')
     plot.fig.subplots_adjust (top=0.90)
     plot.fig.set_figwidth (6)
@@ -387,6 +411,7 @@ def relation_coord_with_beams_Plot2D():
     #name = path + 'relation_coord_with_combined_beams_' + connection + '_' + set + '.png'
     #plt.savefig (name, transparent=False, dpi=300)
     plt.show ()
+    a = 0
 
 def compare_beamoutput_matrices_from_RT():
     path = '../data/beams_output/dataset_s008/beam_output_generate_rt_s008/testes/'
@@ -679,20 +704,24 @@ def plot_histogram_geral(LOS_data, NLOS_data, all_data,
     labels = ['All', 'NLOS', 'LOS']
     colors = ['#F9A59B', 'green', 'steelblue']
     if all_classes:
-        plt.hist ([data1, data2, data3], bins=256, label=labels, color=colors, alpha=1)
+        plt.hist ([data1, data2, data3], density=True,
+                  bins=256, label=labels, color=colors, alpha=1)
         plt.title ('Histograma dos indices dos Beams do dataset '+label_data, fontsize=14, fontweight='bold')
         plt.xlabel ('Indices dos beams', fontsize=12)
-        plt.ylabel ('Frequência', fontsize=12)
+        plt.ylabel ('Probabilidade', fontsize=12)
         plt.legend (title='Dados', fontsize=10, title_fontsize=12)
         path = path_to_save + 'histogram_all_classes_by_set.png'
+        plt.show()
         plt.savefig (path, dpi=300, bbox_inches='tight')
     else:
-        plt.hist ([data1, data2, data3], bins=1, label=labels, color=colors, alpha=1)
+        plt.hist ([data1, data2, data3],
+                  bins=1, label=labels, color=colors, alpha=1)
         plt.title ('Histograma dos indices dos Beams do dataset '+label_data, fontsize=14, fontweight='bold')
         # plt.xlabel ('Valores', fontsize=12)
         plt.ylabel ('Frequência', fontsize=12)
         # plt.legend (title='Dados', fontsize=10, title_fontsize=12)
         plt.xticks ([50, 120, 190], labels)
+        plt.show()
         path = path_to_save + 'histogram_one_classe_by_set.png'
         plt.savefig (path, dpi=300, bbox_inches='tight')
 
@@ -706,7 +735,7 @@ def do_hist_beams(LOS_data, NLOS_data, all_data, label_data):
     title = 'Distribuicao dos indices dos Beams do '+label_data+' [LOS]'
     file_name = 'histogram_'+label_data+'_LOS.png'
     path_to_save = path + file_name
-    #plot_histogram_beam (index_beam=LOS_data['index_beams'], title=title, savefig=True, path=path_to_save)
+    plot_histogram_beam (index_beam=LOS_data['index_beams'], title=title, savefig=True, path=path_to_save)
 
     title = 'Distribuicao dos indices dos Beams do ' + label_data + ' [NLOS]'
     file_name = 'histogram_' + label_data + '_NLOS.png'
@@ -726,8 +755,8 @@ def plot_beams_in_histogram():
     s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008()
     s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009()
 
-    #do_hist_beams(s008_data_LOS, s008_NLOS, s008_valid_data, 's008')
-    do_hist_beams(s009_data_LOS, s009_NLOS, s009_valid_data, 's009')
+    do_hist_beams(s008_data_LOS, s008_NLOS, s008_valid_data, 's008')
+    #do_hist_beams(s009_data_LOS, s009_NLOS, s009_valid_data, 's009')
 
 def statistics_index_beams(data_set, label_connection,label_dataset, path):
 
@@ -778,7 +807,7 @@ def statistics_index_beams(data_set, label_connection,label_dataset, path):
 
     #plt.show()
     plt.savefig(
-        path + 'Hist_classes_freq_less' + str (len(freq)) + '_' + label_dataset + '_' + label_connection + '.png',
+        path + 'Hist_classes_freq_less' + str(len(freq)) + '_' + label_dataset + '_' + label_connection + '.png',
         dpi=300, bbox_inches='tight')
 
 
@@ -808,6 +837,176 @@ def stats_index_beams():
                                path=path + data_set + '/')
 
 
+def index_beams_percentual():
+
+    s008_dataset = True
+    if s008_dataset:
+        s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008 ()
+        s008 = [s008_valid_data ['index_beams'].tolist (), s008_data_LOS ['index_beams'].tolist (),
+                s008_NLOS ['index_beams'].tolist ()]
+        dataset = 's008'
+
+    else:
+        s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009 ()
+        s008 = [s009_valid_data['index_beams'].tolist(), s009_data_LOS['index_beams'].tolist(), s009_NLOS['index_beams'].tolist()]
+        dataset = 's009'
+
+    name = ['ALL', 'LOS', 'NLOS']
+    colors = ['#F9A59B', 'steelblue', 'green']
+
+    for i in range(3):
+
+        labels, counts = np.unique(s008[i], return_counts=True)
+        percent = [i / sum(counts) * 100 for i in counts]
+
+        fig, ax = plt.subplots (2, 1, figsize=(10, 5))
+        ax[0].bar(labels, counts,  align="edge", color=colors[i])
+        ax[0].set_ylabel('Frequência')
+        ax[1].bar(labels, percent, align="edge", color=colors[i])
+        ax[1].set_ylabel('percentual')
+        vals = ax[1].get_yticks()
+        ax[1].set_yticklabels(['%1.2f%%' % i for i in vals])
+        ax[1].set_xlabel('Índices dos beams')
+        ax[0].text(250, counts.max()-100, 'amostras:  \n' + str(len(s008[i])), horizontalalignment='center', verticalalignment='center')
+        fig.suptitle('Histograma dos índices dos beams do dataset '+dataset+ ' ' + name[i])
+        path = '../analyses/index_beams/'+dataset+'/'
+        plt.savefig(path+'histogram_%_'+dataset+'_'+name[i]+'.png', dpi=300, bbox_inches='tight')
+        fig.clf()
+        plt.close(fig)
+
+        #plt.show ()
+
+
+def index_beams_high_classes_percent():
+    classes_frequency = 50
+    s008_dataset = False
+    if s008_dataset:
+        s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008 ()
+        s008 = [s008_valid_data['index_beams'].tolist(),
+                s008_data_LOS['index_beams'].tolist(),
+                s008_NLOS['index_beams'].tolist()]
+        dataset = 's008'
+
+    else:
+        s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009 ()
+        s008 = [s009_valid_data['index_beams'].tolist (),
+                s009_data_LOS ['index_beams'].tolist (),
+                s009_NLOS ['index_beams'].tolist ()]
+        dataset = 's009'
+
+    name = ['ALL', 'LOS', 'NLOS']
+    colors = ['#F9A59B', 'steelblue', 'green']
+
+
+    for i in range(3):
+        labels, counts = np.unique(s008[i], return_counts=True)
+        percent = [i / sum(counts) * 100 for i in counts]
+        stats_by_classes = pd.DataFrame({'index': labels,
+                                         'counts': counts,
+                                         'percent': percent})
+        stats_by_classes = stats_by_classes.sort_values(by='percent', ascending=False)
+        classes_filter = stats_by_classes [stats_by_classes ['counts'] > classes_frequency]
+        classes_filter_percent = classes_filter [classes_filter ['percent'] > 1]
+
+        fig, ax = plt.subplots(2, 1, figsize=(10, 5))
+
+        classes_filter_percent.plot(kind='bar',
+                             x='index', y='counts',
+                             color=colors[i], legend=False,
+                             ax=ax[0], fontsize=8)
+        ax[0].set_ylabel ('Frequência')
+        ax[0].grid(linestyle='-', linewidth=0.5, alpha=0.4, color='gray')
+        ax[0].text(len(classes_filter_percent['index'])-2, classes_filter_percent['counts'].max() - 100,
+                    'amostras:  \n' + str(len(s008[i])),
+                     horizontalalignment='center', verticalalignment='center',
+                    )
+        ax[0].text(len(classes_filter_percent['index'])-2, classes_filter_percent['counts'].max() - 400,
+                     name[i],
+                     horizontalalignment='center', verticalalignment='center',
+                     color=colors[i])
+        #ax[0].title.set_text('Histograma dos índices com frequência maior a 50 do dataset ' + dataset + ' - ' + name [i])
+                             #fontsize=14, fontweight='bold')
+        ax [0].title.set_text (
+            'Histograma das classes com frequência maior a 1% do dataset ' + dataset + ' - ' + name [i])
+
+        classes_filter_percent.plot (kind='bar',
+                             x='index', y='percent',
+                             color=colors[i], legend=False,
+                             ax=ax[1],
+                             fontsize=8)
+        ax[1].set_ylabel('percentual')
+        vals = ax[1].get_yticks()
+        ax[1].set_yticklabels(['%1.2f%%' % i for i in vals], fontsize=8)
+        #ax[1].grid(axis='y', alpha=0.9, color='gray')
+        ax[1].set_xlabel('Índices dos beams')
+        path = '../analyses/index_beams/' + dataset + '/'
+        plt.savefig (path + 'hist_classes_>_perc_1%' + dataset + '_' + name [i] + '.png', dpi=300, bbox_inches='tight')
+        fig.clf ()
+        plt.close (fig)
+
+def index_beams_low_classe_frequency():
+    s008_dataset = False
+    if s008_dataset:
+        s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008 ()
+        s008 = [s008_valid_data ['index_beams'].tolist (),
+                s008_data_LOS ['index_beams'].tolist (),
+                s008_NLOS ['index_beams'].tolist ()]
+        dataset = 's008'
+
+    else:
+        s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009 ()
+        s008 = [s009_valid_data ['index_beams'].tolist (),
+                s009_data_LOS ['index_beams'].tolist (),
+                s009_NLOS ['index_beams'].tolist ()]
+        dataset = 's009'
+
+    name = ['ALL', 'LOS', 'NLOS']
+    colors = ['#F9A59B', 'steelblue', 'green']
+    freq = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    for i in range(3):
+        labels, counts = np.unique(s008[i], return_counts=True)
+        percent = [i / sum(counts) * 100 for i in counts]
+        stats_by_classes = pd.DataFrame({'index': labels,
+                                         'counts': counts,
+                                         'percent': percent})
+        stats_by_classes = stats_by_classes.sort_values(by='percent', ascending=True)
+        classes_filter = stats_by_classes[stats_by_classes['counts'] <= 10]
+        classes_filter.reset_index(drop=True, inplace=True)
+
+        fig, ax = plt.subplots(2, 1, figsize=(12, 6))
+        classes_filter.plot(kind='bar', x='index', y='counts',
+                             color=colors[i], legend=False,
+                             ax=ax[0], fontsize=8)
+
+        ax[0].yaxis.set_major_locator(ticker.AutoLocator())
+        ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator())
+        ax[0].grid(alpha=0.3)
+        ax[0].set_ylabel('Frequência')
+        ax[0].text(5, 8,
+                    'amostras:  \n' + str(len(s008[i])),
+                     horizontalalignment='center', verticalalignment='center',
+                    )
+        ax[0].title.set_text('Histograma dos índices com frequência menor a 10 do dataset ' + dataset + ' - ' + name[i])
+
+        classes_filter.plot (kind='bar', x='index', y='percent',
+                             color=colors [i], legend=False,
+                             ax=ax[1], fontsize=8)
+        ax[1].yaxis.set_major_locator (ticker.AutoLocator ())
+        ax[1].yaxis.set_minor_locator (ticker.AutoMinorLocator ())
+        ax[1].grid(alpha=0.3)
+        ax[1].set_ylabel('percentual')
+        vals = ax[1].get_yticks()
+        ax[1].set_yticklabels(['%1.2f%%' % i for i in vals], fontsize=8)
+        ax[1].set_xlabel('Índices dos beams')
+
+        path = '../analyses/index_beams/' + dataset + '/'
+        plt.savefig(path + 'hist_%_classes_freq_inf_10' + dataset + '_' + name [i] + '.png', dpi=300, bbox_inches='tight')
+        fig.clf ()
+        plt.close (fig)
+
+
+
+
 
 
 
@@ -815,9 +1014,11 @@ def stats_index_beams():
 #compare_beamoutput_matrices_from_RT()
 #generated_beams_output_from_ray_tracing()
 #stats_index_beams_article()
-#plot_distribution_of_beams()
+#plot_beams_in_histogram()
+index_beams_high_classes_percent()
+#index_beams_low_classe_frequency()
 
-stats_index_beams()
+#relation_coord_with_beams_Plot2D()
 
 
 
