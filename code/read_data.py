@@ -27,7 +27,7 @@ def read_beams_raymobtime(num_antennas_rx, path_of_data):
 
     return tx_index, rx_index, best_beam_index
 
-def read_data_s009():
+def read_data_s009(scale_to_coord=8):
     filename = '../data/coord/CoordVehiclesRxPerScene_s009.csv'
     data = pd.read_csv (filename)
     valid_data = data [data ['Val'] == 'V']
@@ -40,7 +40,7 @@ def read_data_s009():
     data_lidar_2D_without_variance_s008, data_lidar_2D_without_variance_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (
         data_lidar_2D_with_rx_termomether_s008, data_lidar_2D_with_rx_termomether_s009, th_variance)
 
-    encondig_coord = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s009(escala=8)
+    encondig_coord = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s009(escala=scale_to_coord)
 
     lidar_coord = np.concatenate((data_lidar_2D_without_variance_s009, encondig_coord), axis=1)
     valid_data.insert (10, 'index_beams', best_beam_index)
@@ -55,7 +55,7 @@ def read_data_s009():
 
     return data_LOS, data_NLOS, valid_data
 
-def read_data_s008():
+def read_data_s008(scale_to_coord=8):
     filename = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
     limit_ep_train = 1564
     data = pd.read_csv (filename)
@@ -73,7 +73,7 @@ def read_data_s008():
     data_lidar_2D_without_variance_s008, data_lidar_2D_without_variance_s009 = pre_process_lidar.data_lidar_2D_binary_without_variance (
         data_lidar_2D_with_rx_termomether_s008, data_lidar_2D_with_rx_termomether_s009, th_variance)
 
-    encondign_coord_train, encondign_coord_validation, encondig_coord = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s008(escala=8)
+    encondign_coord_train, encondign_coord_validation, encondig_coord = pre_process_coord.Thermomether_coord_x_y_unbalanced_for_s008(escala=scale_to_coord)
 
     lidar_coord = np.concatenate((data_lidar_2D_without_variance_s008, encondig_coord), axis=1)
 

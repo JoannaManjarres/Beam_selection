@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 import ast
 import pre_process_lidar
 import seaborn as sns
+import problexity as px
+import collections
 
 
 def cross_validation_k_fold(connetion_type):
@@ -69,13 +71,13 @@ def cross_validation_k_fold(connetion_type):
     plt.savefig('../results/score/Wisard/k_fold/'+connetion_type+'/plot_'+connetion_type+'_lidar_k_fold.png', dpi=300, bbox_inches='tight')
 
     b=0
-def train_test_tradicional(connection_type):
+def train_test_tradicional(connection_type, input_type):
     s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008 ()
     s009_LOS, s009_NLOS, s009_ALL = readData.read_data_s009 ()
 
     print('Beam selection for '+connection_type+' connection type')
 
-    inverter_dataset = True
+    inverter_dataset = False
     if connection_type == 'LOS':
         if inverter_dataset:
             print('with inverted dataset')
@@ -103,9 +105,17 @@ def train_test_tradicional(connection_type):
     print("Data train: ", data_train.shape)
     print("Data test: ", data_test.shape)
 
-    X_train = np.array (data_train ['lidar'])
+    if input_type == 'lidar':
+        X_train = np.array (data_train ['lidar'])
+        X_test = np.array (data_test ['lidar'])
+    if input_type == 'coord':
+        X_train = np.array (data_train ['enconding_coord'])
+        X_test = np.array (data_test ['enconding_coord'])
+    if input_type == 'lidar_coord':
+        X_train = np.array (data_train ['lidar_coord'])
+        X_test = np.array (data_test ['lidar_coord'])
+
     y_train = np.array (data_train ['index_beams'])
-    X_test = np.array (data_test ['lidar'])
     y_test = np.array (data_test ['index_beams'])
 
     y_train = [str (x) for x in y_train]
@@ -120,9 +130,10 @@ def train_test_tradicional(connection_type):
 
     # Guarda os resultados
     results={
+        "top_k": top_k,
+        "Acurácia": accuracy,
         "Tamanho Treino": len (X_train),
-        "Tamanho Teste": len (X_test),
-        "Acurácia": accuracy
+        "Tamanho Teste": len (X_test)
     }
 
 
@@ -131,10 +142,15 @@ def train_test_tradicional(connection_type):
         filename = "_lidar_dataset_inverter.csv"
     else:
         filename = "_lidar_dataset.csv"
+        filename =input_type+"_results_top_k_wisard_"+connection_type+".csv"
 
+
+    #df_results.to_csv (
+    #"../results/score/Wisard/split_dataset/" + connection_type + "/results_" + connection_type + filename,
+    #index=False)
     df_results.to_csv (
-    "../results/score/Wisard/split_dataset/" + connection_type + "/results_" + connection_type + filename,
-    index=False)
+        "../results/score/Wisard/split_dataset/" + connection_type + "/" +input_type + "/"  + filename,
+        index=False)
 
 
 def split_dataset(connection_type='ALL'):
@@ -339,8 +355,106 @@ def test_train_s008_LOS_test_s009_NLOS():
         filename = ("results_" + input_type + "_s008_LOS_train_s009_NLOS_test.csv")
         df_results.to_csv (path + filename, index=False)
 
-def split_dataset_manual(connection_type='NLOS'):
+def split_dataset_manual_intervalo_confianca():
+    s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008 ()
+    s009_LOS, s009_NLOS, s009_ALL = readData.read_data_s009 ()
+    input_type = 'lidar_coord'
+    connection_type = 'ALL'
 
+    if connection_type == 'LOS':
+        s009_data = s009_LOS
+        s008_data = s008_LOS
+        percentual_s008 = [0, 0.0568, 0.1137, 0.1703, 0.2272]
+        percentual_s009 = [1, 0.75, 0.5, 0.25, 0]
+        percentual_s009_filename = [1, 0.75, 0.5, 0.25, 0]
+
+    elif connection_type == 'NLOS':
+        s009_data = s009_NLOS
+        s008_data = s008_NLOS
+        # percentual_s008 = [1, 0.75, 0.5, 0.25, 0]
+        percentual_s009 = [0.5771, 0.4328, 0.2885, 0.1442, 0]
+        percentual_s009_filename = [1, 0.75, 0.5, 0.25, 0]
+        percentual_s008 = [0, 0.25, 0.5, 0.75, 1]
+
+    elif connection_type == 'ALL':
+        s009_data = s009_ALL
+        s008_data = s008_ALL
+        percentual_s008 = [0, 0.2153, 0.4305, 0.6457, 0.861]
+        percentual_s009 = [1, 0.75, 0.5, 0.25, 0]
+        percentual_s009_filename = [1, 0.75, 0.5, 0.25, 0]
+
+    for i in range (len (percentual_s009)):
+        s009_train = s009_data.sample (frac=percentual_s009 [i])
+        s008_train = s008_data.sample (frac=percentual_s008 [i])
+        s009_test = s009_data.drop (s009_train.index)
+        s008_test = s008_data.drop (s008_train.index)
+
+        label_s009_train = s009_train ['index_beams'].tolist ()
+        label_s008_train = s008_train ['index_beams'].tolist ()
+        label_s009_test = s009_test ['index_beams'].tolist ()
+        label_s008_test = s008_test ['index_beams'].tolist ()
+
+        if input_type == 'lidar':
+            input_s009_train = s009_train ['lidar'].tolist ()
+            input_s008_train = s008_train ['lidar'].tolist ()
+            input_s009_test = s009_test ['lidar'].tolist ()
+            input_s008_test = s008_test ['lidar'].tolist ()
+        elif input_type == 'coord':
+            input_s009_train = s009_train ['enconding_coord'].tolist ()
+            input_s008_train = s008_train ['enconding_coord'].tolist ()
+            input_s009_test = s009_test ['enconding_coord'].tolist ()
+            input_s008_test = s008_test ['enconding_coord'].tolist ()
+        elif input_type == 'lidar_coord':
+            input_s009_train = s009_train ['lidar_coord'].tolist ()
+            input_s008_train = s008_train ['lidar_coord'].tolist ()
+            input_s009_test = s009_test ['lidar_coord'].tolist ()
+            input_s008_test = s008_test ['lidar_coord'].tolist ()
+
+        X_train = input_s009_train + input_s008_train
+        y_train = label_s009_train + label_s008_train
+
+        X_test = input_s009_test + input_s008_test
+        y_test = label_s009_test + label_s008_test
+
+        y_train = [str (x) for x in y_train]
+        y_test = [str (x) for x in y_test]
+
+        acc = []
+        for j in range(10):
+            top_k, accuracy = bs.top_k_wisard_beam_selection (x_train=X_train,
+                                                          x_test=X_test,
+                                                          y_train=y_train,
+                                                          y_test=y_test,
+                                                          address_of_size=44,
+                                                          name_of_conf_input='')
+            acc.append(accuracy)
+        acc_mean = np.mean(acc, axis=0)
+        acc_std = np.std(acc, axis=0)
+        # Guarda os resultados
+        results = {
+            "top_k": top_k,
+            "samples_train": len (X_train),
+            "train_s009_%": (percentual_s009_filename [i] * 100),
+            "train_s009_samples": len (input_s009_train),
+            "train_s008_%": (percentual_s008 [i] * 100),
+            "train_s008_samples": len (input_s008_train),
+            "samples_teste": len (X_test),
+            "test_s009_samples": len (input_s009_test),
+            "test_s008_samples": len (input_s008_test),
+            "acc_mean": acc_mean,
+            "acc_std": acc_std
+            }
+        df_results = pd.DataFrame (results)
+        path = "../results/score/Wisard/split_datasets_manual_suffle/" + connection_type + "/" + input_type + "/std/"
+        if connection_type == 'NLOS':
+            filename = ("results_std_" + input_type + "_" +
+                        str (percentual_s009_filename [i] * 100) + "%_s009_train_" + connection_type + ".csv")
+        else:
+            filename = ("results_std_" + input_type + "_" +
+                        str (percentual_s009 [i] * 100) + "%_s009_train_" + connection_type + ".csv")
+        df_results.to_csv (path + filename, index=False)
+
+def split_dataset_manual(connection_type='NLOS'):
 
     s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008()
     s009_LOS, s009_NLOS, s009_ALL = readData.read_data_s009()
@@ -435,20 +549,20 @@ def split_dataset_manual(connection_type='NLOS'):
                 "test_s008_samples": len (input_s008_test),
                 "accuracy": accuracy
             }
-            df_results = pd.DataFrame (results)
-            path = "../results/score/Wisard/split_datasets_manual_suffle/" + connection_type + "/" + input_type + "/"
-            if connection_type == 'NLOS':
-                filename = ("results_" + input_type + "_" +
+            save_results = False
+            if save_results:
+                df_results = pd.DataFrame (results)
+                path = "../results/score/Wisard/split_datasets_manual_suffle/" + connection_type + "/" + input_type + "/"
+                if connection_type == 'NLOS':
+                    filename = ("results_" + input_type + "_" +
                             str(percentual_s009_filename[i] * 100) + "%_s009_train_" + connection_type + ".csv")
 
-            else:
-                filename = ("results_" + input_type + "_" +
+                else:
+                    filename = ("results_" + input_type + "_" +
                             str(percentual_s009[i] * 100) + "%_s009_train_" + connection_type + ".csv")
-            df_results.to_csv(path + filename, index=False)
-
-
-
-
+                df_results.to_csv(path + filename, index=False)
+            else:
+                return results
 
     else:
         #Tamanho do dataset para treinamento:
@@ -510,10 +624,11 @@ def split_dataset_manual(connection_type='NLOS'):
 def plot_results_split_dataset_manual():
     #read a csv file
     dataset_invert = True
-    connection_type = 'NLOS'
-    input_type = 'coord'
-    suffle = True
-    special_case = True
+    connection_type = 'ALL'
+    input_type = 'lidar_coord'
+    suffle = 3
+    special_case = False #treino s008 LOS e teste s009 NLOS
+    results_std = True
 
     if special_case:
         path = "../results/score/Wisard/test_train_s008_LOS_test_s009_NLOS/lidar/"
@@ -543,17 +658,46 @@ def plot_results_split_dataset_manual():
     fig, ax = plt.subplots (figsize=(6, 8))
     colors = ['b', 'g', 'gold', 'c', 'm']
 
-    if suffle:
+    if results_std:
+        for i in range (len (percentual)):
+            path = "../results/score/Wisard/split_datasets_manual_suffle/" + connection_type + "/" + input_type + "/std/"
+            filename = "results_std_" + input_type + "_" + str (
+                percentual [i] * 100) + "%_s009_train_" + connection_type + ".csv"
+            data = pd.read_csv (path + filename)
+
+            #fmt='-o')
+            ax.plot (data ['top_k'][:10], data['acc_mean'][:10],
+                     label=data['train_s009_%'].astype(str).tolist()[0] + '%',
+                     marker='.', linestyle='--', linewidth=0.7,
+                     color=colors[i])
+            ax.fill_between (data ['top_k'] [:10], data ['acc_mean'] [:10] - data ['acc_std'] [:10],
+                             data ['acc_mean'] [:10] + data ['acc_std'] [:10],
+                             alpha=0.15, color=colors[i])
+            #ax.errorbar (data ['top_k'] [:10], data ['acc_mean'] [:10],
+            #             yerr=data ['acc_std'] [:10], marker='.', color='red')
+            a=0
+        plt.legend (loc='lower right', title='percentual Treino s009:')
+        plt.xlabel ('Top-k')
+        plt.xticks (data ['top_k'] [:10])
+        plt.ylabel ('Acurácia')
+        plt.grid (linestyle='--', linewidth=0.3)
+        plt.title (
+            'Seleção de Feixes Wisard com ' + connection_type + ' '+
+            input_type +' \n variacao na conformacao do dataset de treino - shuffle com std')
+        plt.savefig(path + '_compare_split_manual_dataset_suffle_std.png', dpi=300, bbox_inches='tight' )
+        #plt.show()
+
+    if suffle==1:
         for i in range (len (percentual)):
             path = "../results/score/Wisard/split_datasets_manual_suffle/" + connection_type + "/" + input_type + "/"
             filename = "results_" + input_type + "_" + str (
                 percentual [i] * 100) + "%_s009_train_" + connection_type + ".csv"
             data = pd.read_csv (path + filename)
 
-            ax.plot (data ['top_k'] [:10], data ['accuracy'] [:10],
-                     label=data ['train_s009_%'].astype (str).tolist () [0] + '%',
+            ax.plot (data ['top_k'] [:10], data['accuracy'][:10],
+                     label=data['train_s009_%'].astype(str).tolist()[0] + '%',
                      marker='o',
-                     color=colors [i])
+                     color=colors[i])
         plt.legend (loc='lower right', title='percentual Treino s009:')
         plt.xlabel ('Top-k')
         plt.xticks (data ['top_k'] [:10])
@@ -564,7 +708,7 @@ def plot_results_split_dataset_manual():
             input_type +' \n variacao na conformacao do dataset de treino - shuffle')
         plt.savefig(path + '_compare_split_manual_dataset_suffle.png', dpi=300, bbox_inches='tight' )
         plt.show()
-    else:
+    elif suffle ==2:
         for i in range(len(percentual)):
             path = "../results/score/Wisard/split_datasets_manual/" + connection_type + "/" + input_type + "/"
             filename = "results_" +input_type +"_"+ str(percentual[i]*100)+"%_s009_train_" +connection_type +".csv"
@@ -582,7 +726,93 @@ def plot_results_split_dataset_manual():
         plt.title('Seleção de Feixes Wisard com '+ connection_type +' LiDAR \n variacao da proporcao do dataset de treino')
         plt.show()
 
+def read_results_conventional_evaluation(label_input_type):
+    path = '../results/score/Wisard/split_dataset/'
+    connection_type = 'LOS'
+    path_result = path + connection_type +'/'+ label_input_type + '/'
+    file_name = label_input_type + '_results_top_k_wisard_' + connection_type + '.csv'
+    data_LOS = pd.read_csv (path_result + file_name, delimiter=',')
+    LOS = data_LOS[data_LOS['top_k'] <= 10]
 
+    connection_type = 'NLOS'
+    path_result = path + connection_type +'/'+ label_input_type + '/'
+    file_name = label_input_type + '_results_top_k_wisard_' + connection_type + '.csv'
+    data_NLOS = pd.read_csv (path_result + file_name, delimiter=',')
+    NLOS = data_NLOS[data_NLOS['top_k'] <= 10]
+
+    connection_type = 'ALL'
+    path_result = path + connection_type +'/'+ label_input_type + '/'
+    file_name = label_input_type + '_results_top_k_wisard_' + connection_type + '.csv'
+    data_ALL = pd.read_csv (path_result + file_name, delimiter=',')
+    ALL = data_ALL[data_ALL['top_k'] <= 10]
+
+    return LOS, NLOS, ALL
+def plot_test_LOS_NLOS():
+    import matplotlib.pyplot as plt
+
+    label_input_type = 'coord'
+    data_LOS_coord, data_NLOS_coord, data_ALL_coord = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar'
+    data_LOS_lidar, data_NLOS_lidar, data_ALL_lidar = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar_coord'
+    data_LOS_lidar_coord, data_NLOS_lidar_coord, data_ALL_lidar_coord = read_results_conventional_evaluation(label_input_type)
+
+
+    fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
+    plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
+    size_of_font = 18
+    ax [0].plot (data_LOS_coord['top_k'], data_LOS_coord ['Acurácia'], label='Coord LOS', marker='o')
+    ax [0].text (data_LOS_coord ['top_k'].min (), data_LOS_coord ['Acurácia'] [0],
+                 str (round (data_LOS_coord ['Acurácia'] [0], 3)))
+    ax [0].plot (data_NLOS_coord['top_k'], data_NLOS_coord ['Acurácia'], label='Coord NLOS', marker='o')
+    ax [0].text (data_NLOS_coord ['top_k'].min (), data_NLOS_coord ['Acurácia'] [0],
+                 str (round (data_NLOS_coord ['Acurácia'] [0], 3)))
+    ax [0].plot (data_ALL_coord['top_k'], data_ALL_coord ['Acurácia'], label='Coord ALL', marker='o')
+    ax [0].text (data_ALL_coord['top_k'].min(), data_ALL_coord ['Acurácia'][0],
+                 str(round(data_ALL_coord ['Acurácia'][0], 3)))
+    ax [0].grid ()
+    ax [0].set_xticks (data_LOS_coord ['top_k'])
+    ax [0].set_xlabel ('Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [1].plot (data_LOS_lidar['top_k'], data_LOS_lidar['Acurácia'], label='LOS', marker='o')
+    ax [1].plot (data_NLOS_lidar['top_k'], data_NLOS_lidar['Acurácia'], label='NLOS', marker='o')
+    ax [1].plot (data_ALL_lidar['top_k'], data_ALL_lidar['Acurácia'], label='ALL', marker='o')
+    ax [1].text (data_LOS_lidar['top_k'].min(), data_LOS_lidar['Acurácia'][0],
+                 str(round(data_LOS_lidar ['Acurácia'][0], 3)))
+    ax [1].text (data_NLOS_lidar ['top_k'].min (), data_NLOS_lidar ['Acurácia'] [0],
+                 str (round (data_NLOS_lidar['Acurácia'][0], 3)))
+    ax [1].text (data_ALL_lidar ['top_k'].min (), data_ALL_lidar ['Acurácia'] [0],
+                 str (round (data_ALL_lidar ['Acurácia'] [0], 3)))
+
+    ax [1].grid ()
+    ax [1].set_xticks (data_LOS_coord ['top_k'])
+    ax [1].set_xlabel ('Lidar \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [2].plot (data_LOS_lidar_coord['top_k'], data_LOS_lidar_coord['Acurácia'],
+                 label='Lidar Coord LOS', marker='o')
+    ax [2].plot (data_NLOS_lidar_coord['top_k'], data_NLOS_lidar_coord['Acurácia'],
+                 label='Lidar Coord NLOS', marker='o')
+    ax [2].plot (data_ALL_lidar_coord['top_k'], data_ALL_lidar_coord['Acurácia'],
+                 label='Lidar Coord ALL', marker='o')
+    ax [2].text (data_LOS_lidar_coord ['top_k'].min (), data_LOS_lidar_coord ['Acurácia'] [0],
+                 str (round (data_LOS_lidar_coord ['Acurácia'] [0], 3)))
+    ax [2].text (data_NLOS_lidar_coord ['top_k'].min (), data_NLOS_lidar_coord ['Acurácia'] [0],
+                 str (round (data_NLOS_lidar_coord ['Acurácia'] [0], 3)))
+    ax [2].text (data_ALL_lidar_coord ['top_k'].min (), data_ALL_lidar_coord ['Acurácia'] [0],
+                 str (round (data_ALL_lidar_coord ['Acurácia'] [0], 3)))
+
+    ax [2].grid ()
+    ax [2].set_xticks (data_LOS_coord['top_k'])
+    ax [2].set_xlabel ('Lidar e Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
+    ax [1].legend ()
+    plt.suptitle('Selecao de Feixe usando o modelo WiSARD', fontsize=size_of_font, font='Times New Roman')
+
+
+    path_to_save = '../results/score/wisard/split_dataset/'
+    file_name = 'performance_accuracy_all_LOS_NLOS_wisard.png'
+    plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
 
 def plot_beams_with_position():
     type_connetion = 'LOS'
@@ -592,8 +822,6 @@ def plot_beams_with_position():
     if type_connetion == 'LOS':
         s009_data = s009_LOS
         s008_data = s008_LOS
-
-
     if type_connetion == 'NLOS':
         s009_data = s009_NLOS
         s008_data = s008_NLOS
@@ -675,14 +903,230 @@ def analise_interclas():
 
     #plt.show()
 
+def complexity_calculator():
+
+    lidar =False
+    coord = True
+    s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008()
+    y = np.array(s008_LOS['index_beams'])
+
+    if lidar:
+        X = s008_ALL['lidar'].tolist()
+
+    if coord:
+        X = pd.concat([s008_LOS['x'], s008_LOS['y']], axis=1)
+        X = np.array (X).reshape (len (s008_LOS), 2)
+
+        #X = np.array(s008_ALL['x']).reshape(len(s008_ALL), 1)
+
+    print( X.shape, y.shape)
+
+    counts = collections.Counter (y)
+    mask = np.array ([counts [label] >= 10 for label in y])
+
+    X_filtered = X [mask]
+    y_filtered = y [mask]
+
+    cc = px.ComplexityCalculator()
+    cc.fit (X_filtered, y_filtered)
+
+    #----------------------------------
+    plot=False
+    if plot:
+        # Conta as amostras por classe
+        label_counts = collections.Counter(y)
+
+        # Organiza os dados
+        classes = list(label_counts.keys ())
+        counts = list(label_counts.values ())
+
+        # Ordena para visualização mais limpa
+        classes, counts = zip (*sorted (zip (classes, counts), key=lambda x: x [0]))
+
+        # Gráfico
+        plt.figure (figsize=(12, 6))
+        plt.bar (classes, counts, color='skyblue', edgecolor='black')
+        plt.xlabel ('Rótulos (classes / feixes)')
+        plt.ylabel ('Número de amostras')
+        plt.title ('Distribuição das amostras por classe')
+        plt.xticks (rotation=90)
+        plt.grid (axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout ()
+        plt.show ()
+    # ----------------------------------
+    print (px.__version__)
+    counts =collections.Counter(y)
+    mask = np.array ([counts[label] >= 2 for label in y])
+
+    X_filtered = X [mask]
+    y_filtered = y [mask]
+
+    print ("X shape:", X_filtered.shape)
+    print ("y shape:", y_filtered.shape)
+
+    knn_metrics = ['N1', 'N2', 'LSC', 'NEC']
+    custom_args = {m: {'k': 1} for m in knn_metrics}
+
+
+    cc = px.ComplexityCalculator (metrics=knn_metrics, custom_metric_args=custom_args)
+    cc.fit (X_filtered, y_filtered)
+
+    # Exibir resultados
+    for m in knn_metrics:
+        print (f"{m}: {cc.results_ [m]:.4f}")
+
+    # Initialize CoplexityCalculator with default parametrization
+    custom_args = {
+        'N1': {'k': 1},
+        'N2': {'k': 1},
+        'LSC': {'k': 1},
+        'NEC': {'k': 1},
+    }
+    safe_metrics = ['F1', 'F2', 'F3', 'T1', 'T2']
+    cc = px.ComplexityCalculator(metrics=safe_metrics)
+    cc.fit (X, y)
+
+    # Fit model with data
+
+
+    cc.n_classes = len(np.unique(y))
+    cc.n_features = X.shape[1]
+    cc.n_samples = X.shape[0]
+    cc.fit (X, y)
+    # Calculate complexity metrics
+    cc.calculate_complexity_metrics ()
+    # Print complexity metrics
+    print ("-" * 30)
+    print ("Complexity metrics")
+    print ("-" * 30)
+
+    cc.report()
+    cc.metrics()
+
+    a=0
+
+def analise_k_means():
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import silhouette_score
+
+    s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008 ()
+
+    y = np.array (s008_LOS ['index_beams'])
+    unique_classes, counts = np.unique(y, return_counts=True)
+    percent = [i / sum (counts) * 100 for i in counts]
+    stats_by_classes = pd.DataFrame ({'index': unique_classes,
+                                      'counts': counts,
+                                      'percent': percent})
+    stats_by_classes = stats_by_classes [stats_by_classes ['percent'] > 1]
+
+    class_ = []
+    n_clusters = []
+    param_silhouette = []
+    for classe in stats_by_classes['index'].tolist():
+        # Filtrar dados da classe
+        #X_classe = X[y == classe]
+        X_classe_x = s008_LOS[s008_LOS['index_beams'] == classe]['x']
+        X_classe_y = s008_LOS[s008_LOS['index_beams'] == classe]['y']
+        X_classe = pd.concat((X_classe_x, X_classe_y), axis=1)
+
+        # Ajustando K-means para essa classe
+        clusters_num = [2,3,4,5]
+        for i in range(len(clusters_num)):
+            kmeans = KMeans(n_clusters=clusters_num[i])  # Ajustar o número de clusters conforme necessário
+            kmeans.fit(X_classe)
+
+            silhouette = silhouette_score (X_classe, kmeans.labels_)
+            if silhouette > 0.85:
+                class_.append(classe)
+                n_clusters.append(clusters_num[i])
+                param_silhouette.append(silhouette)
+
+                #print (f"Classe {classe} - Número de clusters: {clusters_num[i]} - Silhouette: {silhouette:.4f}")
+                break
+
+    print("Classes \t n_clusters \t param_silhouette: \n")
+    for i in range(len(class_)):
+        print("\t", class_[i],"\t", n_clusters[i], "\t",param_silhouette[i])
+    print("Classes com Silhouette > 0.85: ", class_)
+    print("Número de clusters: ", n_clusters)
+    a=0
+'''
+def plot_clusters(class_, s008_LOS):
+    for j in range(len(class_)):
+        # Plotar os resultados de cada classe
+        X_classe_x = s008_LOS [s008_LOS ['index_beams'] == class_[j]] ['x']
+        X_classe_y = s008_LOS [s008_LOS ['index_beams'] == class_[j]] ['y']
+        kmeans = KMeans (n_clusters=n_clusters[j])  # Ajustar o número de clusters conforme necessário
+        kmeans.fit(X_classe)
+
+        plt.scatter(X_classe['x'], X_classe['y'], c=kmeans.labels_, cmap='viridis')
+        plt.title(f"Clusters para Classe {classe}")
+        plt.xlabel("Coordenada X")
+        plt.ylabel("Coordenada Y")
+        plt.show()
+
+    a=0
+'''
+
+def hierarchical_model(input_type='lidar'):
+    s008_LOS, s008_NLOS, s008_ALL = readData.read_data_s008(scale_to_coord=8)
+    s009_LOS, s009_NLOS, s009_ALL = readData.read_data_s009(scale_to_coord=8)
+
+    y_train_ = s008_ALL['LOS']
+    y_test_ = s009_ALL['LOS']
+
+    y_train = np.where(y_train_ == 'LOS=1', 1, 0)
+    y_test = np.where(y_test_ == 'LOS=1', 1, 0)
+    y_train = [str(x) for x in y_train]
+    y_test = [str(x) for x in y_test]
+
+    input_type=['coord', 'lidar', 'lidar_coord']
+    all_results = []
+    for i in range(len(input_type)):
+        if input_type[i] == 'lidar':
+            X_train = s008_ALL['lidar'].tolist()
+            X_test = s009_ALL['lidar'].tolist()
+        elif input_type[i] == 'coord':
+            X_train = s008_ALL['enconding_coord'].tolist()
+            X_test = s009_ALL['enconding_coord'].tolist()
+        elif input_type[i] == 'lidar_coord':
+            X_train = s008_ALL['lidar_coord'].tolist()
+            X_test = s009_ALL['lidar_coord'].tolist()
+
+        acc = []
+        add = [6, 12, 24, 36, 44, 56, 64]
+        for j in range (len(add)):
+            accuracy = bs.LOS_NLOS_classification(x_train=X_train,
+                                                         x_test=X_test,
+                                                         y_train=y_train,
+                                                         y_test=y_test,
+                                                         address_of_size=add[j])
+            acc.append(accuracy)
+        results = {"input_type": input_type[i],
+                   "add": add,
+                   "accuracy": acc}
+        all_results.append(results)
+    results_ = pd.DataFrame(all_results)
+
+    results_coord = results_[results_['input_type']=='coord']
+    results_lidar = results_[results_['input_type']=='lidar']
+    results_lidar_coord = results_[results_['input_type']=='lidar_coord']
+
+    plt.plot(results_coord['add'].tolist()[0], results_coord['accuracy'].tolist()[0], marker='o', label='Coord')
+    plt.plot(results_lidar['add'].tolist()[0], results_lidar['accuracy'].tolist()[0], marker='o', label='Lidar')
+    plt.plot(results_lidar_coord['add'].tolist()[0], results_lidar_coord['accuracy'].tolist()[0], marker='o', label='Lidar e Coord')
+    plt.xlabel('Add')
+    plt.legend()
+    plt.xticks(results_coord['add'].tolist()[0])
+    plt.ylabel('Accuracy')
+    plt.grid(linestyle='--', linewidth=0.5)
+    plt.title('Classificacao LOS-NLOS com a rede WiSARD')
+
+
+    a=0
 
 
 
-#cross_validation_k_fold('NLOS')
-#train_test_tradicional('LOS')
-#split_dataset(connection_type='LOS')
-#split_dataset_manual()
-#plot_results_split_dataset_manual()
-#plot_beams_with_position()
-#test_train_s008_LOS_test_s009_NLOS()
-analise_interclas()
+#split_dataset_manual_intervalo_confianca()
+hierarchical_model()
+

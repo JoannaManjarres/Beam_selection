@@ -414,18 +414,21 @@ def read_all_data():
     data_for_train = pd.DataFrame ({"Episode": train_data ['EpisodeID'],
                                     "coord": coord_train.tolist(),
                                     "lidar": lidar_train_reshaped.tolist(),
-                                    "index_beams": Y_train.tolist()})
+                                    "index_beams": Y_train.tolist(),
+                                    "LOS": train_data['LOS'].tolist()})
 
 
     data_for_validation = pd.DataFrame ({"Episode": validation_data['EpisodeID'],
                                          "coord": coord_validation.tolist(),
                                          "lidar": lidar_validation_reshaped.tolist(),
-                                         "index_beams": Y_val.tolist()})
+                                         "index_beams": Y_val.tolist(),
+                                         "LOS": validation_data['LOS'].tolist()})
 
     data_for_test = pd.DataFrame ({"Episode": valid_data_test['EpisodeID'],
                                    "coord": coord_test.tolist(),
                                    "lidar": lidar_test_reshaped.tolist(),
-                                   "index_beams": Y_test.tolist()})
+                                   "index_beams": Y_test.tolist(),
+                                   "LOS": valid_data_test['LOS'].tolist()})
 
 
     return data_for_train, data_for_validation, data_for_test, num_classes

@@ -181,7 +181,278 @@ def main():
     print('|   input = '+args.input_type)
     fixed_window_top_k(args.input_type, start_epi_test=0, stop_epi_test=episodes_for_test)
 
+def test_LOS_NLOS(connection_type,label_input_type):
+
+    train_data, val_data, test_data, num_classes = prepare.read_all_data()
+    reduce_samples_for_train = True
+
+    #connection_type = 'NLOS'
+    #label_input_type = 'coord'#'lidar' 'lidar_coord'
+    BATCH_SIZE = 32
+    train = True
+
+    if connection_type == 'LOS':
+
+        if reduce_samples_for_train:
+            data_for_train = train_data[train_data['LOS'] == 'LOS=1'].sample(n=4285, random_state=1)
+            data_for_validation = val_data[val_data['LOS'] == 'LOS=1'].sample(n=427, random_state=1)
+        else:
+            data_for_train = train_data[train_data['LOS'] == 'LOS=1']
+            data_for_validation = val_data[val_data['LOS'] == 'LOS=1']
+
+        data_for_test = test_data[test_data['LOS'] == 'LOS=1']
 
 
-main()
+        a=0
+
+
+    elif connection_type == 'NLOS':
+
+        if reduce_samples_for_train:
+            data_for_train = train_data[train_data['LOS'] == 'LOS=0'].sample(n=4285, random_state=1)
+            data_for_validation = val_data[val_data['LOS'] == 'LOS=0'].sample(n=427, random_state=1)
+        else:
+            data_for_train = train_data[train_data['LOS'] == 'LOS=0']
+            data_for_validation = val_data[val_data['LOS'] == 'LOS=0']
+
+        data_for_test = test_data[test_data['LOS'] == 'LOS=0']
+
+    elif connection_type == 'ALL':
+
+        if reduce_samples_for_train:
+            data_for_train = train_data.sample (n=4285, random_state=1)
+            data_for_validation = val_data.sample (n=427, random_state=1)
+        else:
+            data_for_train = train_data
+            data_for_validation = val_data
+
+        data_for_test = test_data
+
+    #data_for_test = test_data
+    label_for_train = data_for_train ['index_beams'].tolist ()
+    label_train = np.array(label_for_train)
+    label_for_validation = data_for_validation ['index_beams'].tolist ()
+    label_validation = np.array(label_for_validation)
+    label_for_test = data_for_test ['index_beams'].tolist ()
+    label_test = np.array(label_for_test)
+
+    if label_input_type == 'coord':
+        input_train = data_for_train['coord'].tolist()
+        input_train = np.array(input_train)
+        input_validation = data_for_validation ['coord'].tolist ()
+        input_validation = np.array (input_validation)
+
+        train_generator = prepare.DataGenerator_coord (input_train,
+                                                       label_train,
+                                                       BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_coord (input_validation,
+                                                     label_validation,
+                                                     BATCH_SIZE, shuffle=True)
+
+        input_train_shape = input_train.shape [1:]
+        input_test = data_for_test ['coord'].tolist ()
+        input_test = np.array (input_test)
+
+    elif label_input_type == 'lidar':
+        input_train = data_for_train['lidar'].tolist()
+        input_train = np.array(input_train)
+        input_train = input_train.reshape(input_train.shape [0], 20, 200, 10)
+
+        input_validation = data_for_validation['lidar'].tolist()
+        input_validation = np.array(input_validation)
+        input_validation = input_validation.reshape(input_validation.shape [0], 20, 200, 10)
+
+        train_generator = prepare.DataGenerator_lidar(input_train,
+                                                      label_train,
+                                                      BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_lidar(input_validation,
+                                                    label_validation,
+                                                    BATCH_SIZE, shuffle=True)
+        input_train_shape = input_train.shape[1:]
+
+        input_test = data_for_test['lidar'].tolist()
+        input_test = np.array(input_test)
+        input_test = input_test.reshape(input_test.shape[0], 20, 200, 10)
+
+    elif label_input_type =='lidar_coord':
+        input_train_lidar = data_for_train ['lidar'].tolist ()
+        input_train_lidar = np.array (input_train_lidar)
+        input_train_lidar = input_train_lidar.reshape (input_train_lidar.shape [0], 20, 200, 10)
+
+        input_validation_lidar = data_for_validation['lidar'].tolist()
+        input_validation_lidar = np.array(input_validation_lidar)
+        input_validation_lidar = input_validation_lidar.reshape(input_validation_lidar.shape [0], 20, 200, 10)
+
+        input_test_lidar = data_for_test['lidar'].tolist()
+        input_test_lidar = np.array(input_test_lidar)
+        input_test_lidar = input_test_lidar.reshape(input_test_lidar.shape[0], 20, 200, 10)
+
+        input_train_coord = data_for_train['coord'].tolist()
+        input_train_coord = np.array(input_train_coord)
+        input_validation_coord = data_for_validation['coord'].tolist()
+        input_validation_coord = np.array(input_validation_coord)
+
+        input_test_coord = data_for_test['coord'].tolist()
+        input_test_coord = np.array(input_test_coord)
+
+        train_generator = prepare.DataGenerator_both (input_train_lidar,
+                                                      input_train_coord,
+                                                      label_train, BATCH_SIZE, shuffle=True)
+
+        val_generator = prepare.DataGenerator_both (input_validation_lidar,
+                                                    input_validation_coord,
+                                                    label_validation, BATCH_SIZE)
+
+        input_train_shape = [input_train_lidar.shape[1:], input_train_coord.shape[1:]]
+
+        input_test = [input_test_lidar, input_test_coord]
+
+    print(' input: ', label_input_type)
+    print(' sample for trainning: ', np.shape(train_generator.indexes)[0])
+    print(' sample for validation: ', np.shape(val_generator.indexes)[0])
+    if label_input_type == 'lidar_coord':
+        print(' sample for test: ', np.shape(input_test[0])[0])
+    else:
+        print(' sample for test: ', np.shape(input_test)[0])
+
+
+    df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
+                                                                         train_generator, val_generator,
+                                                                         input_test, label_test,
+                                                                         num_classes,
+                                                                         input_train_shape,
+                                                                         0, train)
+
+    if reduce_samples_for_train:
+        path_result = (
+                '../../results/score/ruseckas/split_dataset_LOS_NLOS/' +
+                label_input_type + '/' +
+                connection_type + '/' +
+                'less_samples_for_train/')
+    else:
+        path_result = (
+                '../../results/score/ruseckas/split_dataset_LOS_NLOS/' +
+                label_input_type + '/' +
+                connection_type + '/')
+    df_results_top_k.to_csv (path_result + label_input_type + '_results_top_k_ruseckas_' + connection_type + '_ok_.csv',
+                             index=False)
+
+    a=0
+
+def read_results_conventional_evaluation(label_input_type):
+    path = '../../results/score/ruseckas/split_dataset_LOS_NLOS/'
+    reduce_samples_for_train = True
+    add_path = 'less_samples_for_train/'
+
+    connection_type = 'LOS'
+
+
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_ruseckas_' + connection_type + '_ok_.csv'
+    if reduce_samples_for_train:
+        data_LOS = pd.read_csv (path_result + add_path+ file_name, delimiter=',')
+    else:
+        data_LOS = pd.read_csv (path_result + file_name, delimiter=',')
+    LOS = data_LOS[data_LOS['top-k'] <= 10]
+
+    connection_type = 'NLOS'
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_ruseckas_' + connection_type + '_ok_.csv'
+    if reduce_samples_for_train:
+        data_NLOS = pd.read_csv (path_result + add_path + file_name, delimiter=',')
+    else:
+        data_NLOS = pd.read_csv (path_result + file_name, delimiter=',')
+    NLOS = data_NLOS[data_NLOS['top-k'] <= 10]
+
+    connection_type = 'ALL'
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_ruseckas_' + connection_type + '_ok_.csv'
+    if reduce_samples_for_train:
+        data_ALL = pd.read_csv (path_result + add_path + file_name, delimiter=',')
+    else:
+       data_ALL = pd.read_csv (path_result + file_name, delimiter=',')
+    ALL = data_ALL[data_ALL['top-k'] <= 10]
+
+    return LOS, NLOS, ALL
+def plot_test_LOS_NLOS():
+    import matplotlib.pyplot as plt
+
+    reduce_samples_for_train = True
+
+    label_input_type = 'coord'
+    data_LOS_coord, data_NLOS_coord, data_ALL_coord = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar'
+    data_LOS_lidar, data_NLOS_lidar, data_ALL_lidar = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar_coord'
+    data_LOS_lidar_coord, data_NLOS_lidar_coord, data_ALL_lidar_coord = read_results_conventional_evaluation(label_input_type)
+
+
+    fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
+    plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
+    size_of_font = 18
+    ax [0].plot (data_LOS_coord['top-k'], data_LOS_coord ['score'], label='Coord LOS', marker='o')
+    ax [0].text (data_LOS_coord ['top-k'].min (), data_LOS_coord ['score'] [0],
+                 str (round (data_LOS_coord ['score'] [0], 3)))
+    ax [0].plot (data_NLOS_coord['top-k'], data_NLOS_coord ['score'], label='Coord NLOS', marker='o')
+    ax [0].text (data_NLOS_coord ['top-k'].min (), data_NLOS_coord ['score'] [0],
+                 str (round (data_NLOS_coord ['score'] [0], 3)))
+    ax [0].plot (data_ALL_coord['top-k'], data_ALL_coord ['score'], label='Coord ALL', marker='o')
+    ax [0].text (data_ALL_coord['top-k'].min(), data_ALL_coord ['score'][0],
+                 str(round(data_ALL_coord ['score'][0], 3)))
+    ax [0].grid ()
+    ax [0].set_xticks (data_LOS_coord ['top-k'])
+    ax [0].set_xlabel ('Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [1].plot (data_LOS_lidar['top-k'], data_LOS_lidar['score'], label='LOS', marker='o')
+    ax [1].plot (data_NLOS_lidar['top-k'], data_NLOS_lidar['score'], label='NLOS', marker='o')
+    ax [1].plot (data_ALL_lidar['top-k'], data_ALL_lidar['score'], label='ALL', marker='o')
+    ax [1].text (data_LOS_lidar['top-k'].min(), data_LOS_lidar['score'][0],
+                 str(round(data_LOS_lidar ['score'][0], 3)))
+    ax [1].text (data_NLOS_lidar ['top-k'].min (), data_NLOS_lidar ['score'] [0],
+                 str (round (data_NLOS_lidar['score'][0], 3)))
+    ax [1].text (data_ALL_lidar ['top-k'].min (), data_ALL_lidar ['score'] [0],
+                 str (round (data_ALL_lidar ['score'] [0], 3)))
+
+    ax [1].grid ()
+    ax [1].set_xticks (data_LOS_coord ['top-k'])
+    ax [1].set_xlabel ('Lidar \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [2].plot (data_LOS_lidar_coord['top-k'], data_LOS_lidar_coord['score'],
+                 label='Lidar Coord LOS', marker='o')
+    ax [2].plot (data_NLOS_lidar_coord['top-k'], data_NLOS_lidar_coord['score'],
+                 label='Lidar Coord NLOS', marker='o')
+    ax [2].plot (data_ALL_lidar_coord['top-k'], data_ALL_lidar_coord['score'],
+                 label='Lidar Coord ALL', marker='o')
+    ax [2].text (data_LOS_lidar_coord ['top-k'].min (), data_LOS_lidar_coord ['score'] [0],
+                 str (round (data_LOS_lidar_coord ['score'] [0], 3)))
+    ax [2].text (data_NLOS_lidar_coord ['top-k'].min (), data_NLOS_lidar_coord ['score'] [0],
+                 str (round (data_NLOS_lidar_coord ['score'] [0], 3)))
+    ax [2].text (data_ALL_lidar_coord ['top-k'].min (), data_ALL_lidar_coord ['score'] [0],
+                 str (round (data_ALL_lidar_coord ['score'] [0], 3)))
+
+    ax [2].grid ()
+    ax [2].set_xticks (data_LOS_coord['top-k'])
+    ax [2].set_xlabel ('Lidar e Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
+    ax [1].legend ()
+    plt.suptitle('Selecao de Feixe usando os modelos do Ruseckas', fontsize=size_of_font, font='Times New Roman')
+
+
+    path_to_save = '../../results/score/ruseckas/split_dataset_LOS_NLOS/'
+    if reduce_samples_for_train:
+        file_name = 'performance_accuracy_all_LOS_NLOS_ruseckas_less_samples_for_train.png'
+    else:
+        file_name = 'performance_accuracy_all_LOS_NLOS_ruseckas.png'
+    plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
+
+
+#main()
+plot_test_LOS_NLOS()
+connection = ['NLOS']#, 'NLOS']#, 'ALL']
+label_input_type = ['lidar']#, 'lidar', 'lidar_coord'] *** agora lidar_coord
+for i in connection:
+    for j in label_input_type:
+        test_LOS_NLOS(i, j)
+
 

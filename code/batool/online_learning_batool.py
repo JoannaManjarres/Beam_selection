@@ -20,6 +20,7 @@ from tensorflow.keras.models import model_from_json,Model, load_model
 from custom_metrics import *
 
 
+
 #from main import getBeamOutput
 #from main import open_npz
 
@@ -768,6 +769,7 @@ def beam_selection_Batool(input,
 
 
     if flag_fast_experiment:
+        print('entre')
 
         if episode == 0 or episode == 200 or episode == 400 or episode == 600 or episode == 800  or episode == 1000  or episode == 1200 \
                 or episode == 1400 or episode == 1600 or episode == 1800:
@@ -783,7 +785,8 @@ def beam_selection_Batool(input,
             trainning_process_time, samples_shape = train_model (input, model,
                                                                  data_train, data_validation,
                                                                  see_trainning_progress)
-            top_k = [1, 5, 10, 15, 20, 25, 30]
+            #top_k = [1, 5, 10, 15, 20, 25, 30]
+            top_k = np.arange (1, 31, 1)
             df_results_top_k = test_model (input, model, data_test, top_k, see_trainning_progress)
 
         else:
@@ -807,12 +810,15 @@ def beam_selection_Batool(input,
 
 
     else:
+        print('No entre')
         restore_models = False
+        top_k = np.arange (1, 31, 1)
+        #print(top_k)
         model = model_configuration(input, data_train, data_validation, data_test, num_classes, restore_models)
         trainning_process_time, samples_shape = train_model (input, model,
                                                              data_train, data_validation,
                                                              see_trainning_progress)
-        top_k = [1, 5, 10, 15, 20, 25, 30]
+        #top_k = np.arange(1, 31, 1)
         df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
 
     df_results_top_k['episode'] = episode
@@ -890,6 +896,7 @@ def read_all_data():
                                    "coord": coord_train.tolist(),
                                    "x": coord_train[:, 0],
                                    "y": coord_train[:, 1],
+                                   "LOS": train_data['LOS'],
                                    "index_beams": y_train.tolist(),
                                    "lidar": lidar_train_reshaped.tolist()})
 
@@ -902,7 +909,8 @@ def read_all_data():
     data_for_validation = pd.DataFrame({"Episode": validation_data['EpisodeID'],
                                         "coord": coord_validation.tolist(),
                                         "x": coord_validation[:, 0],
-                                        "y": coord_validation[:, 1]})
+                                        "y": coord_validation[:, 1],
+                                        "LOS": validation_data['LOS'],})
     data_for_validation["lidar"] = lidar_validation_reshaped.tolist()
     data_for_validation["index_beams"] = y_validation.tolist()
 
@@ -918,7 +926,8 @@ def read_all_data():
     data_for_test = pd.DataFrame({"Episode": valid_data['EpisodeID'],
                                     "coord": coord_test.tolist(),
                                     "x": coord_test[:, 0],
-                                    "y": coord_test[:, 1]})
+                                    "y": coord_test[:, 1],
+                                    "LOS": valid_data['LOS'],})
     data_for_test["lidar"] = lidar_test_reshaped.tolist()
     data_for_test["index_beams"] = y_test.tolist()
 
@@ -2063,6 +2072,205 @@ def main():
     # import keras
     # print(keras.__version__)
 
+def test_LOS_NLOS(connection_type, label_input_type):
+
+    #connection_type = 'NLOS'
+    #label_input_type = 'lidar'
+    reduce_samples_for_train = True
+    data_for_train, data_for_validation, data_for_test, num_classes = read_all_data()
+
+    if connection_type == 'LOS':
+        if reduce_samples_for_train:
+            data_train = data_for_train[data_for_train['LOS'] == 'LOS=1'].sample(n=4285, random_state=1)
+            data_val = data_for_validation[data_for_validation['LOS'] == 'LOS=1'].sample(n=427, random_state=1)
+        else:
+            data_train = data_for_train[data_for_train['LOS'] == 'LOS=1']
+            data_val = data_for_validation[data_for_validation['LOS'] == 'LOS=1']
+        data_test = data_for_test[data_for_test['LOS'] == 'LOS=1']
+    elif connection_type == 'NLOS':
+        if reduce_samples_for_train:
+            data_train = data_for_train[data_for_train['LOS'] == 'LOS=0'].sample(n=4285, random_state=1)
+            data_val = data_for_validation[data_for_validation['LOS'] == 'LOS=0'].sample(n=427, random_state=1)
+        else:
+            data_train = data_for_train[data_for_train['LOS'] == 'LOS=0']
+            data_val = data_for_validation[data_for_validation['LOS'] == 'LOS=0']
+        data_test = data_for_test[data_for_test['LOS'] == 'LOS=0']
+    elif connection_type == 'ALL':
+        if reduce_samples_for_train:
+            data_train = data_for_train.sample(n=4285, random_state=1)
+            data_val = data_for_validation.sample(n=427, random_state=1)
+        else:
+            data_train = data_for_train
+            data_val = data_for_validation
+        data_test = data_for_test
+
+    if label_input_type == 'coord':
+        input_train = prepare_coord_for_trainning(data_train, data_train.shape[0])
+
+        input_validation = prepare_coord_for_trainning(data_val, data_val.shape[0])
+        input_test = prepare_coord_for_trainning(data_test, data_test.shape[0])
+
+    elif label_input_type == 'lidar':
+        input_train = data_train['lidar'].tolist()
+        input_train = np.array (input_train).reshape(len(input_train), 20, 200, 10)
+        input_validation = data_val['lidar'].tolist()
+        input_validation = np.array (input_validation).reshape (len (input_validation), 20, 200, 10)
+        input_test = data_test['lidar'].tolist()
+        input_test = np.array (input_test).reshape (len (input_test), 20, 200, 10)
+
+    elif label_input_type == 'lidar_coord':
+        input_lidar_train = data_train['lidar'].tolist()
+        input_lidar_train = np.array (input_lidar_train).reshape(len (input_lidar_train), 20, 200, 10)
+        input_lidar_val = data_val['lidar'].tolist()
+        input_lidar_val = np.array(input_lidar_val).reshape(len(input_lidar_val), 20, 200, 10)
+        input_lidar_test = data_test['lidar'].tolist()
+        input_lidar_test = np.array(input_lidar_test).reshape(len(input_lidar_test), 20, 200, 10)
+
+        input_coord_train = prepare_coord_for_trainning (data_train, data_train.shape [0])
+        input_coord_validation = prepare_coord_for_trainning (data_val, data_val.shape [0])
+        input_coord_test = prepare_coord_for_trainning (data_test, data_test.shape [0])
+
+        input_train = [input_lidar_train, input_coord_train]
+        input_validation = [input_lidar_val, input_coord_validation]
+        input_test = [input_lidar_test, input_coord_test]
+
+    label_train = np.array(data_train['index_beams'].tolist ())
+    label_validation = np.array(data_val['index_beams'].tolist ())
+    label_test = np.array(data_test['index_beams'].tolist ())
+
+
+
+    df_results_top_k = beam_selection_Batool (input=label_input_type,
+                                              data_train=[input_train, label_train],
+                                              data_validation=[input_validation, label_validation],
+                                              data_test=[input_test, label_test],
+                                              num_classes=num_classes,
+                                              episode=0,
+                                              see_trainning_progress=0,
+                                              restore_models=False,
+                                              flag_fast_experiment=False)
+
+    if reduce_samples_for_train:
+        path_result = (
+                    '../../results/score/Batool/split_dataset_LOS_NLOS/' +
+                    label_input_type + '/' + connection_type + '/' + 'less_samples_for_train/')
+
+    else:
+        path_result = ('../../results/score/Batool/split_dataset_LOS_NLOS/'+label_input_type+'/'+connection_type+'/')
+    df_results_top_k.to_csv (path_result + label_input_type +'_results_top_k_batool_'+connection_type+'_ok.csv', index=False)
+
+
+def read_results_conventional_evaluation(label_input_type):
+    reduce_samples_for_train = True
+    add_path = 'less_samples_for_train/'
+
+    path = '../../results/score/Batool/split_dataset_LOS_NLOS/'
+
+
+
+    connection_type = 'LOS'
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_batool_' + connection_type + '_ok.csv'
+    if reduce_samples_for_train:
+        data_LOS = pd.read_csv (path_result + add_path +file_name, delimiter=',')
+    else:
+        data_LOS = pd.read_csv (path_result + file_name, delimiter=',')
+    LOS = data_LOS[data_LOS['top-k'] <= 10]
+
+    connection_type = 'NLOS'
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_batool_' + connection_type + '_ok.csv'
+
+    if reduce_samples_for_train:
+        data_NLOS = pd.read_csv (path_result + add_path + file_name, delimiter=',')
+    else:
+        data_NLOS = pd.read_csv (path_result + file_name, delimiter=',')
+    NLOS = data_NLOS[data_NLOS['top-k'] <= 10]
+
+    connection_type = 'ALL'
+    path_result = path + label_input_type + '/' + connection_type + '/'
+    file_name = label_input_type + '_results_top_k_batool_' + connection_type + '_ok.csv'
+    if reduce_samples_for_train:
+        data_ALL = pd.read_csv (path_result + add_path + file_name, delimiter=',')
+    else:
+        data_ALL = pd.read_csv (path_result + file_name, delimiter=',')
+    ALL = data_ALL[data_ALL['top-k'] <= 10]
+
+    return LOS, NLOS, ALL
+def plot_test_LOS_NLOS():
+    import matplotlib.pyplot as plt
+    reduce_samples_for_train = True
+    add_path = 'less_samples_for_train/'
+
+    label_input_type = 'coord'
+    data_LOS_coord, data_NLOS_coord, data_ALL_coord = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar'
+    data_LOS_lidar, data_NLOS_lidar, data_ALL_lidar = read_results_conventional_evaluation(label_input_type)
+    label_input_type = 'lidar_coord'
+    data_LOS_lidar_coord, data_NLOS_lidar_coord, data_ALL_lidar_coord = read_results_conventional_evaluation(label_input_type)
+
+
+    fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
+    plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
+    size_of_font = 18
+    ax [0].plot (data_LOS_coord['top-k'], data_LOS_coord ['score'], label='Coord LOS', marker='o')
+    ax [0].text (data_LOS_coord ['top-k'].min (), data_LOS_coord ['score'] [0],
+                 str (round (data_LOS_coord ['score'] [0], 3)))
+    ax [0].plot (data_NLOS_coord['top-k'], data_NLOS_coord ['score'], label='Coord NLOS', marker='o')
+    ax [0].text (data_NLOS_coord ['top-k'].min (), data_NLOS_coord ['score'] [0],
+                 str (round (data_NLOS_coord ['score'] [0], 3)))
+    ax [0].plot (data_ALL_coord['top-k'], data_ALL_coord ['score'], label='Coord ALL', marker='o')
+    ax [0].text (data_ALL_coord['top-k'].min(), data_ALL_coord ['score'][0],
+                 str(round(data_ALL_coord ['score'][0], 3)))
+    ax [0].grid ()
+    ax [0].set_xticks (data_LOS_coord ['top-k'])
+    ax [0].set_xlabel ('Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [1].plot (data_LOS_lidar['top-k'], data_LOS_lidar['score'], label='LOS', marker='o')
+    ax [1].plot (data_NLOS_lidar['top-k'], data_NLOS_lidar['score'], label='NLOS', marker='o')
+    ax [1].plot (data_ALL_lidar['top-k'], data_ALL_lidar['score'], label='ALL', marker='o')
+    ax [1].text (data_LOS_lidar['top-k'].min(), data_LOS_lidar['score'][0],
+                 str(round(data_LOS_lidar ['score'][0], 3)))
+    ax [1].text (data_NLOS_lidar ['top-k'].min (), data_NLOS_lidar ['score'] [0],
+                 str (round (data_NLOS_lidar['score'][0], 3)))
+    ax [1].text (data_ALL_lidar ['top-k'].min (), data_ALL_lidar ['score'] [0],
+                 str (round (data_ALL_lidar ['score'] [0], 3)))
+
+    ax [1].grid ()
+    ax [1].set_xticks (data_LOS_coord ['top-k'])
+    ax [1].set_xlabel ('Lidar \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [2].plot (data_LOS_lidar_coord['top-k'], data_LOS_lidar_coord['score'],
+                 label='Lidar Coord LOS', marker='o')
+    ax [2].plot (data_NLOS_lidar_coord['top-k'], data_NLOS_lidar_coord['score'],
+                 label='Lidar Coord NLOS', marker='o')
+    ax [2].plot (data_ALL_lidar_coord['top-k'], data_ALL_lidar_coord['score'],
+                 label='Lidar Coord ALL', marker='o')
+    ax [2].text (data_LOS_lidar_coord ['top-k'].min (), data_LOS_lidar_coord ['score'] [0],
+                 str (round (data_LOS_lidar_coord ['score'] [0], 3)))
+    ax [2].text (data_NLOS_lidar_coord ['top-k'].min (), data_NLOS_lidar_coord ['score'] [0],
+                 str (round (data_NLOS_lidar_coord ['score'] [0], 3)))
+    ax [2].text (data_ALL_lidar_coord ['top-k'].min (), data_ALL_lidar_coord ['score'] [0],
+                 str (round (data_ALL_lidar_coord ['score'] [0], 3)))
+
+    ax [2].grid ()
+    ax [2].set_xticks (data_LOS_coord['top-k'])
+    ax [2].set_xlabel ('Lidar e Coordenadas \n Top-k  ', font='Times New Roman', fontsize=size_of_font)
+
+    ax [0].set_ylabel ('Acurácia', font='Times New Roman', fontsize=size_of_font)
+    ax [1].legend ()
+    plt.suptitle('Selecao de Feixe usando os modelos da Batool', fontsize=size_of_font, font='Times New Roman')
+
+    path_to_save = '../../results/score/Batool/split_dataset_LOS_NLOS/'
+
+    if reduce_samples_for_train:
+        file_name = 'performance_accuracy_all_LOS_NLOS_batool_less_samples_for_train_ok.png'
+    else:
+
+        file_name = 'performance_accuracy_all_LOS_NLOS_batool.png'
+    plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
+
+
 #main()
 #read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
@@ -2071,5 +2279,15 @@ def main():
 #plot_comparition_time_process(type_of_input=input, type_of_window=window, model='MLP')
 #plot_results__('lidar', 'jumpy_sliding_window')
 #fit_fixed_window_top_k(label_input_type='coord', episodes_for_test=2000)
+#test_LOS_NLOS(connection_type='NLOS', label_input_type='coord')
 
+#test_LOS_NLOS(connection_type='NLOS', label_input_type='lidar_coord')
+
+#test_LOS_NLOS(connection_type='LOS', label_input_type='coord')
+#test_LOS_NLOS(connection_type='NLOS', label_input_type='coord')
+
+
+
+
+plot_test_LOS_NLOS()
 

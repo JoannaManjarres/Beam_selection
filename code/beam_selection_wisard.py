@@ -489,6 +489,44 @@ def plot_top_k(top, acuracia, data_input, name_of_conf_input):
     #    dpi=300, bbox_inches='tight')
     plt.show()
 
+def LOS_NLOS_classification(x_train, x_test,
+                            y_train, y_test,
+                            address_of_size):
+
+    from sklearn.metrics import accuracy_score
+
+    addressSize = address_of_size
+    ignoreZero = False
+    verbose = True
+    var = False
+    wsd = wp.Wisard (addressSize,
+                     ignoreZero=ignoreZero,
+                     verbose=verbose,
+                     returnConfidence=var,
+                     returnActivationDegree=var,
+                     returnClassesDegrees=var)
+    wsd.train (x_train, y_train)
+
+    # the output is a list of string, this represent the classes attributed to each input
+    out = wsd.classify (x_test)
+
+    acc = accuracy_score(y_true=y_test, y_pred=out)
+
+    #accuracy = 0
+    #for i in range(len(out)):
+    #    if out[i]==y_test[i]:
+    #        accuracy = accuracy + 1
+
+    #acc_2 = accuracy/len(out)
+
+    return acc
+
+
+
+
+
+
+
 def top_k_wisard_beam_selection(x_train, x_test,
                                 y_train, y_test,
                                 address_of_size,
