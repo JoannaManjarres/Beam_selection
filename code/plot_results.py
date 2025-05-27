@@ -958,8 +958,7 @@ def plot_compare_windows_size_in_window_sliding(input_name, ref):
     plt.close()
 
 def plot_compare_types_of_windows(input_name, ref):
-
-
+    print ('input name: ', input_name, 'ref: ', ref)
     path = '../../results/score/' + ref + '/servidor_land/online/' + input_name + '/'
 
 
@@ -1015,7 +1014,7 @@ def plot_compare_types_of_windows(input_name, ref):
     plt.title('Comparison of types of windows in online learning \n with '+ref+' and '+input_name)
     plt.xlabel('Top-k')
     plt.ylabel('score')
-    plt.savefig(path + 'score_comparation_window_types.png', dpi=300)
+    plt.savefig(path + 'score_comparation_window_types_'+input_name+'.png', dpi=300)
     #plt.close()
     plt.show()
 
@@ -1072,4 +1071,4 @@ def plot_time_process_vs_samples_online_learning_wisard( path,
 #plot_results_lidar_with_coord_top_k()
 #plot_of_bars()
 #results_lidar_2D_binary_without_variance()
-plot_compare_windows_size_in_window_sliding('coord', 'Wisard')
+#plot_compare_windows_size_in_window_sliding('coord', 'Wisard')

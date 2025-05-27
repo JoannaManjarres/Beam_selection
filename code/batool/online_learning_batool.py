@@ -2008,9 +2008,9 @@ def main():
     #import plots_for_jornal_paper/plot_by_window_type as plot_1
 
     run_simulation = False
-    input = 'lidar'
+    input = 'coord'
     type_of_window = 3
-    plot_compare_results = False
+    plot_compare_results = True
 
         #1 = 'fixed_window'
         #2 = 'sliding_window'
@@ -2056,8 +2056,10 @@ def main():
 
     else:
         if plot_compare_results:
+            print('plot results?: ', plot_compare_results)
+
             plot.plot_compare_types_of_windows (input_name=input, ref='Batool')
-            plot.plot_compare_windows_size_in_window_sliding(input_name=input, ref='Batool')
+            #plot.plot_compare_windows_size_in_window_sliding(input_name=input, ref='Batool')
             #plot_1.calculate_statis(input=input, window_type=window, ref='Batool')
 
         else:
@@ -2271,7 +2273,7 @@ def plot_test_LOS_NLOS():
     plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
 
 
-#main()
+main()
 #read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #window = 'fixed_window'
@@ -2289,5 +2291,5 @@ def plot_test_LOS_NLOS():
 
 
 
-plot_test_LOS_NLOS()
+#plot_test_LOS_NLOS()
 

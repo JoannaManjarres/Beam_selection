@@ -621,7 +621,7 @@ def prepare_coord_for_trainning(data, samples):
 
 def parameters_variation(label_input_type, bs, connection_type):
     #connection_type = 'NLOS'
-    parameters_of_variation = 'batch_size' #'epochs'
+    parameters_of_variation = 'epochs'#'batch_size' #'epochs'
     data_for_train, data_for_validation, data_for_test, num_classes = read_all_data()
 
     if connection_type == 'LOS':
@@ -672,7 +672,8 @@ def parameters_variation(label_input_type, bs, connection_type):
     label_validation = np.array (data_val ['index_beams'].tolist ())
     label_test = np.array (data_test ['index_beams'].tolist ())
 
-    epochs = [20,30,40,50,60,70,80,90,100, 110, 120,130, 150]# default 70
+    #epochs = [20,30,40,50,60,70,80,90,100, 110, 120,130, 150]# default 70
+    epochs = [20, 70,  100]
     #bs=16
     #epochs =[100]
     score = []
@@ -724,6 +725,67 @@ def read_results_param_var_epochs(label_input_type='coord'):
 
     return df_ALL, df_LOS, df_NLOS
 
+def read_results_param_var_batch_size_epochs(label_input_type='coord'):
+    connection_type = ['ALL', 'LOS', 'NLOS']
+    batch_size = [16, 32, 64, 128]
+    name = 'results_batool_epochs_variation.csv'
+    path = ('../../results/score/Batool/parameters_variation/batch_size/' + label_input_type + '/' )
+
+    for i in range(len(connection_type)):
+        all_path = (path + str(connection_type[i]) + '/')
+        score = pd.DataFrame ()
+        for j in range(len(batch_size)):
+            batch_path = (all_path + str(batch_size[j]) + '/')
+            df = pd.read_csv(batch_path + name, delimiter=',')
+            score = pd.concat([score, df['score']], axis=1)
+            #score.columns = batch_size
+        if i == 0:
+            score.columns = batch_size
+            all_score = score
+            all_score['epochs'] = df['epochs']
+        elif i == 1:
+            score.columns = batch_size
+            los_score = score
+            los_score ['epochs'] = df ['epochs']
+        elif i == 2:
+            score.columns = batch_size
+            nlos_score = score
+            nlos_score ['epochs'] = df ['epochs']
+
+    return all_score, los_score, nlos_score
+
+def plot_results_param_var_batch_size_epochs(label_input_type='coord'):
+    import matplotlib.pyplot as plt
+    df_ALL, df_LOS, df_NLOS = read_results_param_var_batch_size_epochs(label_input_type=label_input_type)
+    connection_type = 'ALL'
+    if connection_type == 'ALL':
+        data = df_ALL
+    if connection_type == 'LOS':
+        data = df_LOS
+    if connection_type == 'NLOS':
+        data = df_NLOS
+
+    plt.plot (data['epochs'], data[16], marker='o', label='bs=16')
+    plt.plot (data['epochs'], data[32], marker='o', label='bs=32')
+    plt.plot (data['epochs'], data[64], marker='o', label='bs=64')
+    plt.plot (data['epochs'], data[128], marker='o', label='bs=128')
+
+
+
+    plt.legend()
+    plt.grid( linestyle = '--', linewidth = 0.5)
+    #plt.ylim(0, 0.3)
+    plt.xlabel('Épocas')
+    plt.ylabel('Acurácia')
+    plt.title('Modelo Batool com coord e dados '+ connection_type +'. \n - Variação de Épocas e tamanho do batch -')
+    plt.ylim(0, 0.25)
+
+    plt.xticks(data['epochs'])
+    #plt.show()
+    plt.savefig('../../results/score/Batool/parameters_variation/batch_size/' + label_input_type + '/'
+                + connection_type +'batch_size_variation.png', dpi=300, bbox_inches='tight')
+
+
 def plot_results_param_var_epochs(label_input_type='coord'):
     import matplotlib.pyplot as plt
     df_ALL, df_LOS, df_NLOS = read_results_param_var_epochs(label_input_type=label_input_type)
@@ -741,6 +803,7 @@ def plot_results_param_var_epochs(label_input_type='coord'):
     plt.savefig('../../results/score/Batool/parameters_variation/epochs/' + label_input_type + '/' + 'epochs_variation.png', dpi=300, bbox_inches='tight')
 
 
-
+#plot_results_param_var_batch_size_epochs()
 #plot_results_param_var_epochs(label_input_type='coord')
-parameters_variation(label_input_type='coord', connection_type='NLOS',bs=64)
+parameters_variation(label_input_type='lidar', connection_type='NLOS',bs=32)
+parameters_variation(label_input_type='lidar', connection_type='ALL',bs=32)
