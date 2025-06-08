@@ -566,118 +566,120 @@ def beam_selection_top_k_wisard(x_train, x_test,
 
 
 
+    print_ = False
 
-    print ('Enderecamento de memoria: ', addressSize)
-    '''
-    for i in range(len(top_k)):
-        acerto = 0
-        nao_acerto = 0
-
-        if top_k[i] == 1:
-            a=0
-            #acuracia_tpo_1 = accuracy_score(y_test, out_1)
-            #print('Acuracia top k =1: ', acuracia_tpo_1)
-
-        for amostra_a_avaliar in range(len(out)):
-
-            lista_das_classes = out[amostra_a_avaliar]['classesDegrees']
-            dict_com_classes_na_ordem = sorted(lista_das_classes, key=itemgetter('degree'), reverse=True)
-            #f.write(str(dict_com_classes_na_ordem))
-
-            classes_na_ordem_descendente = []
-            for x in range(len(dict_com_classes_na_ordem)):
-                classes_na_ordem_descendente.append(dict_com_classes_na_ordem[x]['class'])
-
-            top_5 = classes_na_ordem_descendente[0:top_k[i]]
-
+    if print_:
+        print ('Enderecamento de memoria: ', addressSize)
+        '''
+        for i in range(len(top_k)):
+            acerto = 0
+            nao_acerto = 0
+    
             if top_k[i] == 1:
-                index_predict_top_1.append(top_5)
+                a=0
+                #acuracia_tpo_1 = accuracy_score(y_test, out_1)
+                #print('Acuracia top k =1: ', acuracia_tpo_1)
+    
+            for amostra_a_avaliar in range(len(out)):
+    
+                lista_das_classes = out[amostra_a_avaliar]['classesDegrees']
+                dict_com_classes_na_ordem = sorted(lista_das_classes, key=itemgetter('degree'), reverse=True)
+                #f.write(str(dict_com_classes_na_ordem))
+    
+                classes_na_ordem_descendente = []
+                for x in range(len(dict_com_classes_na_ordem)):
+                    classes_na_ordem_descendente.append(dict_com_classes_na_ordem[x]['class'])
+    
+                top_5 = classes_na_ordem_descendente[0:top_k[i]]
+    
+                if top_k[i] == 1:
+                    index_predict_top_1.append(top_5)
+                if top_k[i] == 2:
+                    index_predict_top_2.append(top_5)
+                if top_k[i] == 3:
+                    index_predict_top_3.append(top_5)
+                if top_k [i] == 4:
+                    index_predict_top_4.append (top_5)
+                elif top_k[i] == 5:
+                    index_predict_top_5.append(top_5)
+                elif top_k[i] == 6:
+                    index_predict_top_6.append(top_5)
+                elif top_k[i] == 7:
+                    index_predict_top_7.append(top_5)
+                elif top_k[i] == 8:
+                    index_predict_top_8.append(top_5)
+                elif top_k[i] == 9:
+                    index_predict_top_9.append(top_5)
+                elif top_k[i] == 10:
+                    index_predict_top_10.append(top_5)
+                elif top_k[i] == 20:
+                    index_predict_top_20.append(top_5)
+                elif top_k[i] == 30:
+                    index_predict_top_30.append(top_5)
+                elif top_k[i] == 40:
+                    index_predict_top_40.append(top_5)
+                elif top_k[i] == 50:
+                    index_predict_top_50.append(top_5)
+    
+    
+                if( y_test[amostra_a_avaliar] in top_5):
+                    acerto = acerto + 1
+                else:
+                    nao_acerto = nao_acerto + 1
+    
+            acuracia.append(acerto/len(out))
+    
+        #print("len(out):", len(out))
+        #print("TOP-K: ", top_k)
+        #print("Acuracia: ",acuracia)
+        #f.close()
+        path_index_predict = '../results/index_beams_predict/WiSARD/top_k/'+name_of_conf_input+'/'
+        for i in range(len(top_k)):
+            file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
+            npz_index_predict = path_index_predict + file_name
+            if top_k[i] == 1:
+                np.savez(npz_index_predict, output_classification=index_predict_top_1)
             if top_k[i] == 2:
-                index_predict_top_2.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_2)
             if top_k[i] == 3:
-                index_predict_top_3.append(top_5)
-            if top_k [i] == 4:
-                index_predict_top_4.append (top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_3)
+            if top_k[i] == 4:
+                np.savez(npz_index_predict, output_classification=index_predict_top_4)
             elif top_k[i] == 5:
-                index_predict_top_5.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_5)
             elif top_k[i] == 6:
-                index_predict_top_6.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_6)
             elif top_k[i] == 7:
-                index_predict_top_7.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_7)
             elif top_k[i] == 8:
-                index_predict_top_8.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_8)
             elif top_k[i] == 9:
-                index_predict_top_9.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_9)
             elif top_k[i] == 10:
-                index_predict_top_10.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_10)
             elif top_k[i] == 20:
-                index_predict_top_20.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_20)
             elif top_k[i] == 30:
-                index_predict_top_30.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_30)
             elif top_k[i] == 40:
-                index_predict_top_40.append(top_5)
+                np.savez(npz_index_predict, output_classification=index_predict_top_40)
             elif top_k[i] == 50:
-                index_predict_top_50.append(top_5)
-
-
-            if( y_test[amostra_a_avaliar] in top_5):
-                acerto = acerto + 1
+                np.savez(npz_index_predict, output_classification=index_predict_top_50)
+    
+        #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
+        #np.savez (npz_index_predict, output_classification=estimated_beams)
+        '''
+        print ("-----------------------------")
+        print ("TOP-K \t\t|\t Acuracia")
+        print("-----------------------------")
+        for i in range(len(top_k)):
+            if top_k[i] == 1:
+                print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
+            elif top_k[i] == 5:
+                print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
             else:
-                nao_acerto = nao_acerto + 1
-
-        acuracia.append(acerto/len(out))
-
-    #print("len(out):", len(out))
-    #print("TOP-K: ", top_k)
-    #print("Acuracia: ",acuracia)
-    #f.close()
-    path_index_predict = '../results/index_beams_predict/WiSARD/top_k/'+name_of_conf_input+'/'
-    for i in range(len(top_k)):
-        file_name = 'index_beams_predict_top_'+str(top_k[i])+'.npz'
-        npz_index_predict = path_index_predict + file_name
-        if top_k[i] == 1:
-            np.savez(npz_index_predict, output_classification=index_predict_top_1)
-        if top_k[i] == 2:
-            np.savez(npz_index_predict, output_classification=index_predict_top_2)
-        if top_k[i] == 3:
-            np.savez(npz_index_predict, output_classification=index_predict_top_3)
-        if top_k[i] == 4:
-            np.savez(npz_index_predict, output_classification=index_predict_top_4)
-        elif top_k[i] == 5:
-            np.savez(npz_index_predict, output_classification=index_predict_top_5)
-        elif top_k[i] == 6:
-            np.savez(npz_index_predict, output_classification=index_predict_top_6)
-        elif top_k[i] == 7:
-            np.savez(npz_index_predict, output_classification=index_predict_top_7)
-        elif top_k[i] == 8:
-            np.savez(npz_index_predict, output_classification=index_predict_top_8)
-        elif top_k[i] == 9:
-            np.savez(npz_index_predict, output_classification=index_predict_top_9)
-        elif top_k[i] == 10:
-            np.savez(npz_index_predict, output_classification=index_predict_top_10)
-        elif top_k[i] == 20:
-            np.savez(npz_index_predict, output_classification=index_predict_top_20)
-        elif top_k[i] == 30:
-            np.savez(npz_index_predict, output_classification=index_predict_top_30)
-        elif top_k[i] == 40:
-            np.savez(npz_index_predict, output_classification=index_predict_top_40)
-        elif top_k[i] == 50:
-            np.savez(npz_index_predict, output_classification=index_predict_top_50)
-
-    #npz_index_predict = '../results/index_beams_predict/top_k/' + f'index_beams_predict_top_{top_k[i]}' + '.npz'
-    #np.savez (npz_index_predict, output_classification=estimated_beams)
-    '''
-    print ("-----------------------------")
-    print ("TOP-K \t\t|\t Acuracia")
-    print("-----------------------------")
-    for i in range(len(top_k)):
-        if top_k[i] == 1:
-            print('K = ', top_k[i], '\t\t|\t ', np.round(score[i],3)), '\t\t|'
-        elif top_k[i] == 5:
-            print ('K = ', top_k [i], '\t\t|\t ', np.round (score [i], 3)), '\t\t|'
-        else:
-            print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
-    print ("-----------------------------")
+                print('K = ', top_k[i], '\t|\t ', np.round(score[i],3)), '\t\t|'
+        print ("-----------------------------")
 
 
     #df_acuracia_wisard_top_k = pd.DataFrame({"Top-K": top_k, "Acuracia": acuracia})
@@ -796,6 +798,150 @@ def plot_all_performance_WiSARD(inverter_dataset=False):
     plt.savefig(path_to_save+file_name, dpi=300, bbox_inches='tight')
     a = 0
 
+def beam_selection_with_s008_or_s009(input_type='coord', connection_type='ALL'):
+    dataset = 's008'
+    print('Beam selection with: '+input_type+' and '+connection_type)
+
+    #READ S008 DATA
+
+    path = "../data/coord/baseline_raymobtime/s008/"
+    preprocess_resolution = 8
+    train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data.read_data_s008 ()
+
+    '''
+    input_cache_file = np.load (path + "coord_train.npz", allow_pickle=True)
+    keys = input_cache_file.files
+    all_coord_train = input_cache_file [keys[0]]
+
+
+
+    input_cache_file = np.load (path + "coord_validation.npz", allow_pickle=True)
+    keys = input_cache_file.files
+    all_coord_test = input_cache_file [keys[0]]
+
+    #PREPROCESS S008 COORD DATA
+    encoding_coord_train = Thermomether_coord_x_y_unbalanced (escala=preprocess_resolution,
+                                                              all_info_coord_val=valid_data_s008,
+                                                              data=all_coord_train)
+    '''
+    path_encode_coord_for_article = '../data/coord/baseline_raymobtime/s008/article_1/coord_in_Thermomether_x_y_unbalanced/'
+    coord_codify_train_cache = np.load (path_encode_coord_for_article + "coord_in_Thermomether_x_y_unbalanced_8_train.npz", allow_pickle=True)
+    keys = coord_codify_train_cache.files
+    coord_codify_train = coord_codify_train_cache[keys[0]]
+
+    coord_codify_test_cache = np.load (path_encode_coord_for_article + "coord_in_Thermomether_x_y_unbalanced_8_test.npz", allow_pickle=True)
+    keys = coord_codify_test_cache.files
+    coord_codify_test = coord_codify_test_cache[keys[0]]
+
+    path_beams_s008_article = '../data/beams_output/dataset_s008/beam_output_s008_article/'
+    beams_s008_cache = np.load (path_beams_s008_article + 'index_beams_combined_train.npz', allow_pickle=True)
+    keys = beams_s008_cache.files
+    index_beams_combined_train = beams_s008_cache[keys[0]]
+
+    beams_s008_test_cache = np.load (path_beams_s008_article + 'index_beams_combined_test.npz', allow_pickle=True)
+    keys = beams_s008_test_cache.files
+    index_beams_combined_test = beams_s008_test_cache[keys[0]]
+
+    input_train = coord_codify_train.tolist()
+    input_test = coord_codify_test.tolist()
+    label_train = [str (y) for y in index_beams_combined_train]
+    label_test = [str (y) for y in index_beams_combined_test]
+
+    #a = np.concatenate((label_train_, label_test), axis=0)
+
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_validation.npz'
+    tx_index_val, rx_index_val, best_beam_index_val = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+
+    label_train = [str(y) for y in best_beam_index_train]
+    label_test = [str(y) for y in best_beam_index_val]
+
+    #for j in range(2):
+    #    RT1_RT2 = 0
+    #    for i in range(len(tx_index_train)):
+    #        if (best_beam_index_train[i] != index_beams_combined_train[i]):
+    #            RT1_RT2 += 1
+    #    print('quant de index diferentes: ', RT1_RT2)
+
+
+    vector_acuracia, address_size = select_best_beam (input_train,
+                                                      input_test,
+                                                      label_train,
+                                                      label_test,
+                                                      figure_name='coord_' + connection_type + '_s008_s009',
+                                                      antenna_config='8x8',
+                                                      type_of_input='coord',
+                                                      titulo_figura='Coordenadas',
+                                                      user='s008_s009',
+                                                      enableDebug=False,
+                                                      plot_confusion_matrix_enable=False)
+    results_scale_8 = np.array (vector_acuracia).round (3)
+    print('Results scale 8: ', results_scale_8)
+    #READ S009 DATA
+    encoding_coord_test = Thermomether_coord_x_y_unbalanced (escala=preprocess_resolution,
+                                                             all_info_coord_val=valid_data_s008,
+                                                             data=all_coord_test)
+
+    #____________________________________
+    from sklearn.model_selection import train_test_split
+    if input_type == 'coord':
+
+        preprocess_resolution = 8
+        input_s008, input_s009, label_s008, label_s009 = get_coord_preprocess(connection_type, preprocess_resolution)
+        file_name = 'accuracy_' + input_type + '_res_' + str(preprocess_resolution) + '_' + connection_type + '.csv'
+
+    elif input_type == 'lidar':
+        input_s008, input_s009, label_s008, label_s009 = get_lidar_preprocess(connection_type)
+        file_name = 'accuracy_' + input_type + '_' + connection_type +'_thr_01' +'.csv'
+
+    elif input_type == 'lidar_coord':
+        preprocess_resolution = 8
+        print(input_type)
+        input_s008_coord, input_s009_coord, label_s008_coord, label_s009_coord = get_coord_preprocess (connection_type, preprocess_resolution)
+        input_s008_lidar, input_s009_lidar, label_s008_lidar, label_s009_lidar = get_lidar_preprocess (connection_type)
+
+        input_s008 = np.concatenate((input_s008_coord, input_s008_lidar), axis=1)
+        input_s009 = np.concatenate((input_s009_coord, input_s009_lidar), axis=1)
+        label_s008 = label_s008_coord
+        label_s009 = label_s009_coord
+        file_name = 'accuracy_' + input_type + '_res_' + str(preprocess_resolution) + '_' + connection_type + '_thr_01' +'.csv'
+
+    if dataset == 's008':
+        input_train, input_test, label_train, label_test = train_test_split(input_s008, label_s008, test_size=0.2, random_state=42)
+        input_train_a, input_test_b = train_test_split(input_s008, shuffle=False)
+        q=0
+    if dataset == 's009':
+        input_train, input_test, label_train, label_test = train_test_split(input_s009, label_s009, test_size=0.2, random_state=42)
+    #print('input_train', len(input_train[0]))
+
+    vector_acuracia, address_size = select_best_beam (input_train,
+                                                          input_test,
+                                                          label_train,
+                                                          label_test,
+                                                          figure_name='coord_' + connection_type + '_s008_s009',
+                                                          antenna_config='8x8',
+                                                          type_of_input='coord',
+                                                          titulo_figura='Coordenadas',
+                                                          user='s008_s009',
+                                                          enableDebug=False,
+                                                          plot_confusion_matrix_enable=False)
+    path_csv = '../results/score/Wisard/beam_selection_with_s008_or_s009/' + dataset + '/' + input_type + '/'  # + connection_type + '/'
+    file_name = 'accuracy_' + input_type + '_res_' + str(preprocess_resolution) + '_' + connection_type + 'addres_size.csv'
+    df = pd.DataFrame ({"address_size": address_size, "accuracy": vector_acuracia})
+    df.to_csv (path_csv + file_name, index=False)
+    '''
+    top_k, score = beam_selection_top_k_wisard (x_train=input_train, x_test=input_test,
+                                 y_train=label_train, y_test=label_test,
+                                 data_input='coord', data_set='s008',
+                                 address_of_size=44,
+                                 name_of_conf_input=dataset)
+
+    path_csv = '../results/score/Wisard/beam_selection_with_s008_or_s009/' + dataset +'/'+input_type + '/' #+ connection_type + '/'
+    df = pd.DataFrame ({"top_k": top_k, "accuracy": score})
+    df.to_csv (path_csv + file_name, index=False)
+    '''
 
 #plot_performance_WiSARD_LOS_NLOS_connection('lidar_coord')
 #beam_selection_LOS_NLOS(input_type='lidar_coord', connection_type='ALL')
@@ -806,5 +952,5 @@ def plot_all_performance_WiSARD(inverter_dataset=False):
 #beam_selection_LOS_NLOS(input_type='lidar', connection_type='LOS')
 
 
-beam_selection_LOS_NLOS_top_k()
+#beam_selection_with_s008_or_s009()
 #beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')

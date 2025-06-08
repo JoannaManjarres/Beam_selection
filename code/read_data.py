@@ -55,7 +55,24 @@ def read_data_s009(scale_to_coord=8):
 
     return data_LOS, data_NLOS, valid_data
 
-def read_data_s008(scale_to_coord=8):
+def read_data_s008_train_and_validation(scale_to_coord=8):
+    filename = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
+    limit_ep_train = 1564
+    data = pd.read_csv (filename)
+    valid_data = data [data ['Val'] == 'V']
+    # train_data = valid_data [valid_data ['EpisodeID'] <= limit_ep_train]
+
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
+    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+
+    path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_validation.npz'
+    tx_index_val, rx_index_val, best_beam_index_val = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+
+
+
+
+
+def read_data_s008(scale_to_coord):#=8):
     filename = '../data/coord/CoordVehiclesRxPerScene_s008.csv'
     limit_ep_train = 1564
     data = pd.read_csv (filename)
@@ -63,10 +80,10 @@ def read_data_s008(scale_to_coord=8):
     #train_data = valid_data [valid_data ['EpisodeID'] <= limit_ep_train]
 
     path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_train.npz'
-    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+    tx_index_train, rx_index_train, best_beam_index_train = read_beams_raymobtime(num_antennas_rx=8, path_of_data=path)
 
     path = '../data/beams_output/beam_output_baseline_raymobtime_s008/beams_output_validation.npz'
-    tx_index_val, rx_index_val, best_beam_index_val = read_beams_raymobtime (num_antennas_rx=8, path_of_data=path)
+    tx_index_val, rx_index_val, best_beam_index_val = read_beams_raymobtime(num_antennas_rx=8, path_of_data=path)
 
     data_lidar_2D_with_rx_termomether_s008, data_lidar_2D_with_rx_termomether_s009 = pre_process_lidar.process_all_data_2D_with_rx_like_thermometer ()
     th_variance = 0.1
