@@ -448,11 +448,11 @@ def plot_test_LOS_NLOS():
 
 
 #main()
-plot_test_LOS_NLOS()
-connection = ['NLOS']#, 'NLOS']#, 'ALL']
-label_input_type = ['lidar']#, 'lidar', 'lidar_coord'] *** agora lidar_coord
-for i in connection:
-    for j in label_input_type:
-        test_LOS_NLOS(i, j)
+#plot_test_LOS_NLOS()
+#connection = ['NLOS']#, 'NLOS']#, 'ALL']
+#label_input_type = ['lidar']#, 'lidar', 'lidar_coord'] *** agora lidar_coord
+#for i in connection:
+#    for j in label_input_type:
+#        test_LOS_NLOS(i, j)
 
 

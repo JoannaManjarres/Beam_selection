@@ -752,7 +752,7 @@ def do_hist_beams(LOS_data, NLOS_data, all_data, label_data):
 
 
 def plot_beams_in_histogram():
-    s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008()
+    s008_data_LOS, s008_NLOS, s008_valid_data = readData.read_data_s008(8)
     s009_data_LOS, s009_NLOS, s009_valid_data = readData.read_data_s009()
 
     do_hist_beams(s008_data_LOS, s008_NLOS, s008_valid_data, 's008')
@@ -1011,11 +1011,11 @@ def index_beams_low_classe_frequency():
 
 
 
-compare_beamoutput_matrices_from_RT()
+#compare_beamoutput_matrices_from_RT()
 #generated_beams_output_from_ray_tracing()
 #stats_index_beams_article()
-#plot_beams_in_histogram()
-index_beams_high_classes_percent()
+plot_beams_in_histogram()
+#index_beams_high_classes_percent()
 #index_beams_low_classe_frequency()
 
 #relation_coord_with_beams_Plot2D()

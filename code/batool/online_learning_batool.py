@@ -818,8 +818,10 @@ def beam_selection_Batool(input,
         trainning_process_time, samples_shape = train_model (input, model,
                                                              data_train, data_validation,
                                                              see_trainning_progress)
+        print('termiino de treinar o modelo')
         #top_k = np.arange(1, 31, 1)
         df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
+        print('testando o modelo')
 
     df_results_top_k['episode'] = episode
     df_results_top_k['trainning_process_time'] = trainning_process_time
@@ -2273,7 +2275,7 @@ def plot_test_LOS_NLOS():
     plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
 
 
-main()
+#main()
 #read_incremental_data_results_lidar()
 #plot_compare_score(type_of_input='lidar', type_of_window='fixed_window', window_size=2000)
 #window = 'fixed_window'

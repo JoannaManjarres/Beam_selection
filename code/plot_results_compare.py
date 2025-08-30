@@ -761,76 +761,24 @@ def plot_compare_accuracy_top_k():
                             label_ruseckas, label_wisard, label_batool)
 
 
-    '''
-    if input == 'coord':
-        filename ='acuracia_batool_[coord]_top_k.csv'
-        top_k, accuracy_batool_coord = read_csv_file (input=input, filename=filename)
+def calculate_and_save_rt_all_ref():
+    input = 'lidar_coord'  # lidar' #'coord', 'lidar_coord'
+    if input =='lidar':
+        reference = 'Mashhadi'
+        filename = 'score_' + reference + '_' + input + '_top_k.csv'
+        _, accuracy_mashhadi = read_csv_file (input=input, filename=filename)
+        ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas, ratio_thr_mashhadi = tp.throughput_ratio_for_all_techniques(input)
+    else:
+        ratio_thr_wisard, ratio_thr_batool, ratio_thr_ruseckas = tp.throughput_ratio_for_all_techniques(input)
 
+    top_k = list(range(1, 51))
+    df = pd.DataFrame(data={"top-k": top_k,
+                            "rt_wisard": ratio_thr_wisard,
+                            "rt_batool": ratio_thr_batool,
+                            "rt_ruseckas": ratio_thr_ruseckas} )
+    df.to_csv('../results/index_beams_predict/througput_ratio_all_models_' + input + '_top_k.csv', index=False, sep=',')
+    
 
-        filename = 'acuracia_ref_17_coord_top_k.csv'
-        _, accuracy_coord_ref_17 = read_csv_file (input=input, filename=filename)
-
-        filename = 'acuracia_wisard_coord_top_k.csv'
-        _, accuracy_wisard_coord = read_csv_file (input=input, filename=filename)
-
-        accuracy_batool = accuracy_batool_coord
-        accuracy_ref_17 = accuracy_coord_ref_17
-        accuracy_wisard = accuracy_wisard_coord
-
-        figure_name = path_to_save + 'campare_top_k_accuracy_coord.png'
-        label_ref_17 = 'COORD: Ruseckas [MLP]'
-        label_batool = 'COORD: Batool [DNN 1D]'
-        label_wisard = 'COORD: UFRJ [WiSARD]'
-
-    elif input == 'lidar':
-        filename = 'acuracia_batool_[lidar]_top_k.csv'
-        top_k, accuracy_batool_lidar = read_csv_file(input=input, filename=filename)
-
-        filename = 'acuracia_ref_17_lidar_top_k.csv'
-        _, accuracy_ref_17_lidar = read_csv_file(input=input, filename=filename)
-
-        filename = 'acuracia_wisard_LiDAR_2D_+_Rx_Term_SVar_top_k.csv'
-        _, accuracy_wisard_lidar = read_csv_file(input=input, filename=filename)
-
-        accuracy_batool = accuracy_batool_lidar
-        accuracy_ref_17 = accuracy_ref_17_lidar
-        accuracy_wisard = accuracy_wisard_lidar
-
-        figure_name = path_to_save + 'campare_top_k_accuracy_lidar.png'
-        label_ref_17 = 'COORD: Ruseckas [CNN]'
-        label_batool = 'COORD: Batool [DNN]'
-        label_wisard = 'COORD: UFRJ [WiSARD]'
-
-    elif input == 'coord_lidar':
-        filename = 'acuracia_batool_[coord_lidar]_top_k.csv' #TODO: falta rodar el modelo con estas entradas
-        #top_k, accuracy_batool_coord_lidar = read_csv_file(input='coord_lidar', filename=filename)
-
-        filename = 'acuracia_ref_17_lidar_coord_top_k.csv'
-        _, accuracy_ref_17_lidar_coord = read_csv_file(input='coord_lidar', filename=filename)
-
-        filename = 'acuracia_wisard_LiDAR_2D_+_Rx_Term_+_Coord_16_SVar_top_k.csv'
-        _, accuracy_wisard_lidar_coord = read_csv_file(input='lidar_+_coord/top_k', filename=filename)
-
-        #accuracy_batool = accuracy_batool_coord_lidar
-        accuracy_ref_17 = accuracy_ref_17_lidar_coord
-        accuracy_wisard = accuracy_wisard_lidar_coord
-
-        figure_name = path_to_save + 'campare_top_k_accuracy_coord_lidar.png'
-        label_ref_17 = 'COORD + LIDAR: Ruseckas [MLP+CNN]'
-        label_batool = 'COORD + LIDAR: Batool [DNN]'
-        label_wisard = 'COORD + LIDAR 2D: UFRJ [WiSARD]'
-
-    plot_results_top_k (top_k,
-                        input,
-                        figure_name,
-                        accuracy_ref_17,
-                        accuracy_wisard,
-                        accuracy_batool,
-                        label_ref_17,
-                        label_wisard,
-                        label_batool)
-    a=0
-    '''
 def plot_compare_score_and_rt_top_k():
     input = 'lidar'  # lidar' #'coord', 'lidar_coord'
     path_to_save = '../results/'
@@ -980,10 +928,370 @@ def compare_of_score_memorySize_and_processTime():
 
     plot_of_score_memorySize_and_processTime (memory_size, train_time, score, DP_score, input, 'treinamento')
     plot_of_score_memorySize_and_processTime (memory_size, test_time, score, DP_score, input, 'teste')
+
+def plot_results_dataset_inverter():
+
+    ref = 'Batool'
+    input_type = ['coord', 'lidar','lidar_coord']
+    batool = []
+    data = []
+    for i in range(len(input_type) ):
+        filename = 'accuracy_'+input_type[i]+'.csv'
+        path = '../results/inverter_dataset/score/' + ref + '/'+ input_type[i] + '/ALL/'
+        data = pd.read_csv (path + filename, delimiter=',')
+        batool.append(data)
+
+    #plt.plot(        batool[0]['top-k'], batool[0]['score'], marker='o', label='Batool Coord')
+
+    ref = 'Ruseckas'
+    ruseckas = []
+    r = {}
+    data = []
+    for i in range(len(input_type)):
+        filename = 'accuracy_'+input_type[i]+'.csv'
+        path = '../results/inverter_dataset/score/' + ref + '/'+ input_type[i] + '/ALL/'
+        data = pd.read_csv (path + filename, delimiter=',')
+        ruseckas.append(data)
+
+    #plt.plot (ruseckas [0]['top-k'], ruseckas [0] ['score'], marker='o', label='Batool Coord')
+
+    ref = 'Wisard'
+    wisard = []
+    data = []
+    for i in range(len(input_type) ):
+        filename = 'accuracy_'+input_type[i]+'.csv'
+        path = '../results/inverter_dataset/score/' + ref + '/top-k/'+ input_type[i] + '/ALL/'
+        data = pd.read_csv (path + filename, delimiter=',')
+        data = data[data['top-k'] < 31]  # Remove rows where 'top-k' is 0
+        wisard.append(data)
+
+    #plot results
+
+
+    fig, ax = plt.subplots (1, 3, figsize=(14, 6), sharey=True)
+    plt.subplots_adjust (left=0.08, right=0.98, bottom=0.1, top=0.9, hspace=0.12, wspace=0.05)
+
+    size_of_font = 12
+    labels = ['Coordenadas', 'LiDAR', 'LiDAR + Coordenadas']
+    for i in range(len(input_type)):
+        ax[i].plot(batool[i]['top-k'], batool[i]['score'], marker='o', label='Batool')
+        ax[i].plot(ruseckas[i]['top-k'], ruseckas[i]['score'], marker='o', label='Ruseckas')
+        ax[i].plot(wisard[i]['top-k'], wisard[i]['score'], marker='o', label='Wisard')
+        #ax[i].set_xticks(batool[i]['top-k'])
+        ax[i].grid(True, linestyle='--', alpha=0.5)
+
+        ax[i].set_xlabel('Top-k \n' + labels[i])
+        ax[0].set_ylabel('Acurácia')
+        ax[1].legend(loc='lower right', fontsize=size_of_font)
+    plt.tight_layout()
+    path = '../results/inverter_dataset/score/'
+    nameFigure = 'dataset_inverter_compare_accuracy.png'
+    plt.savefig (path + nameFigure, dpi=300)
+    a=0
+
+def read_csv(filename, path):
+    """
+    Read a CSV file and return the data as a pandas DataFrame.
+    """
+    try:
+        data = pd.read_csv(path + filename, delimiter=',')
+        return data
+    except FileNotFoundError:
+        print(f"File {filename} not found in {path}.")
+        return None
+
+def read_all_results_inverter_dataset(ref, cenario):
+    input_type = ['coord', 'lidar', 'lidar_coord']
+    if cenario == 1:
+        general_path = '../results/score/' + ref + '/top_k/'
+        key = 'Acuracia'
+        key_2 = 'Top-K'
+        #if ref == 'Wisard' or ref == 'Ruseckas':
+        #    key_2 = 'top-k'
+    if cenario == 2:
+        general_path = '../results/inverter_dataset/score/' + ref + '/'
+        key = 'score'
+        key_2 = 'top-k'
+    for i in range (len (input_type)):
+        if cenario == 1:
+            filename = 'score_' + input_type [i] + '_top_k.csv'
+            path = general_path + input_type [i] + '/'
+        if cenario == 2:
+            filename = 'accuracy_' + input_type [i] + '.csv'
+            if ref == 'Wisard':
+                path = general_path + '/top-k/' + input_type [i] + '/ALL/'
+            else:
+                path = general_path + '/' + input_type [i] + '/ALL/'
+        data = read_csv (filename, path)
+        if i == 0:
+            accuracy = data[key].tolist()
+            top_k = data[key_2].tolist()
+            results_coord_cenario_2 = [float(i) for i in accuracy]
+            results_coord_cenario_2 = [round (i, 3) for i in results_coord_cenario_2]
+            results_coord = pd.DataFrame({'Top-k': top_k, 'Acuracia': results_coord_cenario_2})
+            #a = pd.DataFrame( {'Acuracia': results_coord_cenario_2}, index=top_k,)
+
+        if i == 1:
+            accuracy = data[key].tolist()
+            top_k = data[key_2].tolist()
+            results_lidar_cenario_2 = [float(i) for i in accuracy]
+            results_lidar_cenario_2 = [round (i, 3) for i in results_lidar_cenario_2]
+            results_lidar = pd.DataFrame({'Top-k': top_k, 'Acuracia': results_lidar_cenario_2})
+        if i == 2:
+            accuracy = data[key].tolist()
+            top_k = data[key_2].tolist()
+            results_lidar_coord_cenario_2 = [float(i) for i in accuracy]
+            results_lidar_coord_cenario_2 = [round (i, 3) for i in results_lidar_coord_cenario_2]
+            results_lidar_coord = pd.DataFrame({'Top-k': top_k, 'Acuracia': results_lidar_coord_cenario_2})
+
+    return results_coord, results_lidar, results_lidar_coord
+    #return results_coord_cenario_2, results_lidar_cenario_2, results_lidar_coord_cenario_2
+def read_all_results_invert_and_not_inverted_dataset():
+
+    batool_coord_cenario_2, batool_lidar_cenario_2, batool_lidar_coord_cenario_2 = read_all_results_inverter_dataset('Batool', 2)
+    wisard_coord_cenario_2, wisard_lidar_cenario_2, wisard_lidar_coord_cenario_2 = read_all_results_inverter_dataset('Wisard',2)
+    ruseckas_coord_cenario_2, ruseckas_lidar_cenario_2, ruseckas_lidar_coord_cenario_2 = read_all_results_inverter_dataset('Ruseckas',2)
+
+    batool_coord_scenario_1, batool_lidar_scenario_1, batool_lidar_coord_scenario_1 = read_all_results_inverter_dataset('Batool', 1)
+    wisard_coord_scenario_1, wisard_lidar_scenario_1, wisard_lidar_coord_scenario_1 = read_all_results_inverter_dataset('Wisard', 1)
+    ruseckas_coord_scenario_1, ruseckas_lidar_scenario_1, ruseckas_lidar_coord_scenario_1 = read_all_results_inverter_dataset('Ruseckas', 1)
+
+    input_type = 'coord' # 'lidar', 'lidar_coord'
+    if input_type == 'coord':
+        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_coord_scenario_1,
+                                                                      batool_coord_cenario_2,
+                                                                 wisard_coord_scenario_1,
+                                                                 wisard_coord_cenario_2,
+                                                                 ruseckas_coord_scenario_1,
+                                                                 ruseckas_coord_cenario_2,
+                                                                      input_type)
+    elif input_type == 'lidar':
+        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_scenario_1,
+                                                                      batool_lidar_cenario_2,
+                                                                 wisard_lidar_scenario_1,
+                                                                 wisard_lidar_cenario_2,
+                                                                 ruseckas_lidar_scenario_1,
+                                                                 ruseckas_lidar_cenario_2,
+                                                                      input_type)
+    elif input_type == 'lidar_coord':
+        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_coord_scenario_1,
+                                                                      batool_lidar_coord_cenario_2,
+                                                                 wisard_lidar_coord_scenario_1,
+                                                                 wisard_lidar_coord_cenario_2,
+                                                                 ruseckas_lidar_coord_scenario_1,
+                                                                 ruseckas_lidar_coord_cenario_2,
+                                                                      input_type)
+
+def plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_coord_scenario_1,
+                                                                  batool_coord_cenario_2,
+                                                                 wisard_coord_scenario_1,
+                                                                 wisard_coord_cenario_2,
+                                                                 ruseckas_coord_scenario_1,
+                                                                 ruseckas_coord_cenario_2,
+                                                                  input_type):
+    batool_s2 = batool_coord_cenario_2[batool_coord_cenario_2['Top-k']<=30]
+    batool_s1 = batool_coord_scenario_1[batool_coord_scenario_1['Top-k']<=30]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(batool_s1['Top-k'], batool_s1['Acuracia'],
+             label='Batool Coord Conf. a',  color='blue')
+    plt.plot (batool_s2 ['Top-k'], batool_s2 ['Acuracia'],
+              label='Batool Coord Conf. b', linestyle='--', color='blue', alpha=0.7)
+
+    wisard_s2 = wisard_coord_cenario_2[wisard_coord_cenario_2['Top-k']<=30]
+    wisard_s1 = wisard_coord_scenario_1[wisard_coord_scenario_1['Top-k']<=30]
+    plt.plot(wisard_s1['Top-k'], wisard_s1['Acuracia'],
+             label='Wisard Coord Conf. a', color='green')
+    plt.plot (wisard_s2 ['Top-k'], wisard_s2 ['Acuracia'],
+              label='Wisard Coord Conf. b', linestyle='--',color='green',alpha=0.7)
+
+    ruseckas_s2 = ruseckas_coord_cenario_2[ruseckas_coord_cenario_2['Top-k']<=30]
+    ruseckas_s1 = ruseckas_coord_scenario_1[ruseckas_coord_scenario_1['Top-k']<=30]
+    plt.plot(ruseckas_s1['Top-k'], ruseckas_s1['Acuracia'],
+             label='Ruseckas Coord Conf. a', color='red')
+    plt.plot (ruseckas_s2 ['Top-k'], ruseckas_s2 ['Acuracia'],
+              label='Ruseckas Coord Conf. b', color='red', linestyle='--', alpha=0.7 )
+    plt.xlabel('Top-k')
+    plt.legend()
+    plt.ylabel('Acurácia')
+    plt.xticks(batool_s1['Top-k'], fontsize=7)
+    plt.grid(True, linestyle='--', alpha=0.5)
+    #plt.title('Comparação de Acurácia entre Cenarios 1 e 2 \n Entrada: '+ input_type)
+    plt.tight_layout()
+    plt.savefig ('../results/' + input_type + '_compare_accuracy_inverter_and_not_inverted_dataset.png', dpi=300)
+
+
+    a=0
+
+
+    # Create a DataFrame for each scenarioa
+    a = 0
+
+
+def plot_wisard_results_compare_dataset_inverter_LOS_NLOS():
+    input_type = ['coord', 'lidar', 'lidar_coord']
+    type_conection = ['ALL','LOS', 'NLOS']
+
+    scenario = 1 #Train S008 Test S009
+    if scenario == 1:
+        general_path = '../results/score/Wisard/split_dataset/'
+
+        ALL_data = []
+        for i in range(len(type_conection)):
+            path = general_path + type_conection [0] + '/' + input_type [i] + '/'
+            file_name = input_type[i]+'_results_top_k_wisard_'+type_conection[0]+'.csv'
+            file = read_csv(file_name, path)
+            ALL_data.append(file)
+
+        LOS_data = []
+        for i in range(len(type_conection)):
+            path = general_path + type_conection [1] + '/' + input_type [i] + '/'
+            file_name = input_type[i]+'_results_top_k_wisard_'+type_conection[1]+'.csv'
+            file = read_csv(file_name, path)
+            LOS_data.append(file)
+
+        NLOS_data = []
+        for i in range(len(type_conection)):
+            path = general_path + type_conection [2] + '/' + input_type [i] + '/'
+            file_name = input_type[i]+'_results_top_k_wisard_'+type_conection[2]+'.csv'
+            file = read_csv(file_name, path)
+            NLOS_data.append(file)
+
+    All_data_DF = pd.DataFrame ({'coord': ALL_data [0] ['Acurácia'],
+                                 'lidar': ALL_data [1] ['Acurácia'],
+                                 'lidar_coord': ALL_data [2] ['Acurácia'],
+                                 'top-k': ALL_data [0] ['top_k']})
+    All_data_DF = All_data_DF [All_data_DF ['top-k'] < 31]
+    LOS_data_DF = pd.DataFrame ({'coord': LOS_data [0] ['Acurácia'],
+                                 'lidar': LOS_data [1] ['Acurácia'],
+                                 'lidar_coord': LOS_data [2] ['Acurácia'],
+                                 'top-k': LOS_data [0] ['top_k']})
+    LOS_data_DF = LOS_data_DF [LOS_data_DF ['top-k'] < 31]
+    NLOS_data_DF = pd.DataFrame ({'coord': NLOS_data [0] ['Acurácia'],
+                                  'lidar': NLOS_data [1] ['Acurácia'],
+                                  'lidar_coord': NLOS_data [2] ['Acurácia'],
+                                  'top-k': NLOS_data [0] ['top_k']})
+    NLOS_data_DF = NLOS_data_DF [NLOS_data_DF ['top-k'] < 31]
+
+    scenario = 2
+    if scenario == 2: #Train S009 Test S008
+        general_path = '../results/inverter_dataset/score/Wisard/top-k/'
+
+        coord_data = []
+        for i in range(len(type_conection)):
+            path = general_path + input_type[0] + '/' + type_conection [i] + '/'
+            print(path)
+            if i==0:
+                file_name = 'accuracy_'+input_type[0]+'.csv'
+            else:
+                file_name = 'accuracy_'+input_type[0]+'_res_8_'+type_conection [i]+'.csv'
+            file = read_csv(file_name, path)
+            coord_data.append(file)
+
+        lidar_data = []
+        for i in range(len(type_conection)):
+            path = general_path + input_type[1] + '/' + type_conection [i] + '/'
+            if i==0:
+                file_name = 'accuracy_'+input_type[1]+'.csv'
+            else:
+                file_name = 'accuracy_'+input_type[1]+'_'+type_conection [i]+'_thr_01.csv'
+            file = read_csv(file_name, path)
+            lidar_data.append(file)
+
+        lidar_coord_data = []
+        for i in range(len(type_conection)):
+            path = general_path + input_type[2] + '/' + type_conection [i] + '/'
+            if i==0:
+                file_name = 'accuracy_'+input_type[2]+'.csv'
+            else:
+                file_name = 'accuracy_'+input_type[2]+'_res_8_'+type_conection [i]+'_thr_01.csv'
+            file = read_csv(file_name, path)
+            lidar_coord_data.append(file)
+
+
+    coord_data_DF = pd.DataFrame({'ALL': coord_data[0]['score'],
+                                'LOS': coord_data[1]['score'],
+                                'NLOS': coord_data[2]['score'],
+                                'top-k': coord_data[0]['top-k']})
+    coord_data_DF = coord_data_DF [coord_data_DF ['top-k'] < 31]
+
+
+    lidar_data_DF = pd.DataFrame({'ALL': lidar_data[0]['score'],
+                                    'LOS': lidar_data[1]['score'],
+                                    'NLOS': lidar_data[2]['score'],
+                                    'top-k': lidar_data[0]['top-k']})
+    lidar_data_DF = lidar_data_DF [lidar_data_DF ['top-k'] < 31]
+
+    lidar_coord_data_DF = pd.DataFrame({'ALL': lidar_coord_data[0]['score'],
+                                        'LOS': lidar_coord_data[1]['score'],
+                                        'NLOS': lidar_coord_data[2]['score'],
+                                        'top-k': lidar_coord_data[0]['top-k']})
+    lidar_coord_data_DF = lidar_coord_data_DF [lidar_coord_data_DF ['top-k'] < 31]
+
+    #plot results
+
+    fig = plt.figure (figsize=(15, 8), tight_layout=True)
+
+    ax1 = fig.add_subplot (131)
+    ax1.plot(All_data_DF['coord'],  label='ALL', color='darkorange')
+    ax1.plot(LOS_data_DF['coord'], label='LOS', color='steelblue')
+    ax1.plot(NLOS_data_DF['coord'],  label='NLOS', color='forestgreen')
+
+    ax1.plot(coord_data_DF['ALL'], label='ALL', color='darkorange', linestyle='--')
+    ax1.plot(coord_data_DF['LOS'],  label='LOS', color='steelblue', linestyle='--')
+    ax1.plot(coord_data_DF['NLOS'],  label='NLOS', color='forestgreen', linestyle='--')
+
+    ax2 = fig.add_subplot (132)
+    ax2.plot (All_data_DF['lidar'],  label='ALL', color='darkorange')
+    ax2.plot (LOS_data_DF['lidar'],  label='LOS', color='steelblue')
+    ax2.plot (NLOS_data_DF['lidar'],  label='NLOS', color='forestgreen')
+
+    ax2.plot (lidar_data_DF['ALL'], label='ALL', color='darkorange', linestyle='--')
+    ax2.plot (lidar_data_DF['LOS'], label='LOS', color='steelblue', linestyle='--')
+    ax2.plot (lidar_data_DF['NLOS'], label='NLOS', color='forestgreen', linestyle='--')
+
+    ax3 = fig.add_subplot (133)
+    ax3.plot (All_data_DF['lidar_coord'],  label='ALL', color='darkorange')
+    ax3.plot (LOS_data_DF['lidar_coord'],  label='LOS', color='steelblue')
+    ax3.plot (NLOS_data_DF['lidar_coord'],  label='NLOS', color='forestgreen')
+
+    ax3.plot (lidar_coord_data_DF['ALL'], label='ALL', color='darkorange', linestyle='--')
+    ax3.plot (lidar_coord_data_DF['LOS'], label='LOS', color='steelblue', linestyle='--')
+    ax3.plot (lidar_coord_data_DF['NLOS'], label='NLOS', color='forestgreen', linestyle='--')
+
+    ax1.set_title('Coord')
+    ax2.set_title('LiDAR')
+    ax3.set_title('LiDAR + Coord')
+
+
+
+    ax1.set_xlabel('Top-k')
+    ax2.set_xlabel('Top-k')
+    ax3.set_xlabel('Top-k')
+
+    ax1.set_ylabel('Acurácia')
+    ax1.legend(loc='lower right')
+    ax2.legend(loc='lower right')
+    ax3.legend(loc='lower right')
+    ax1.grid(True, linestyle='--', alpha=0.5)
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    ax3.grid(True, linestyle='--', alpha=0.5)
+
+    path_save = '../results/inverter_dataset/score/Wisard/'
+    plt.savefig (path_save+ 'compare_results_inverter_LOS_NLOS.png', dpi=300, bbox_inches='tight')
+
+                 #'score/Wisard/split_dataset/compare_results_inverter_LOS_NLOS.png', dpi=300)
+    a=0
+
+
 #####----------------------------------------------------
 
 
 
 #compare_of_score_memorySize_and_processTime()
 #plot_compare_accuracy_top_k()
-plot_compare_score_and_rt_top_k()
+calculate_and_save_rt_all_ref()
+#plot_compare_score_and_rt_top_k()
+#plot_results_dataset_inverter()
+#plot_wisard_results_compare_dataset_inverter_LOS_NLOS()
+#read_all_results_invert_and_not_inverted_dataset()

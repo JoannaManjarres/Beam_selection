@@ -49,6 +49,7 @@ def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
         input_test = prepare_lidar_for_trainning(all_dataset_s008['lidar'].tolist())
 
     if input_type == 'lidar_coord':
+        print('input: ', input_type)
         input_train_coord = prepare_coord_for_trainning(train_s009['coord'].tolist())
         input_train_lidar = prepare_lidar_for_trainning(train_s009['lidar'].tolist())
         input_train = [input_train_lidar, input_train_coord]
@@ -63,6 +64,8 @@ def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
 
 
 
+
+
     see_trainning_progress = False
     df_results_top_k = olb.beam_selection_Batool (input=input_type,
                                               data_train=[input_train, label_train],
@@ -74,7 +77,9 @@ def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
                                               restore_models=False,
                                               flag_fast_experiment=False)
 
+
     path_result = ('../../results/inverter_dataset/score/Batool/') + input_type + '/ALL/'
+    print (path_result + 'accuracy_' + input_type + '.csv')
     df_results_top_k.to_csv(path_result + 'accuracy_'+input_type+'.csv', index=False)
 
     a=0
