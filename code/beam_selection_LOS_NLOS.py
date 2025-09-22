@@ -171,8 +171,8 @@ def Thermomether_coord_x_y_unbalanced_for_s009(escala, all_info_coord_val, data)
     return encondig_coord
 
 def get_coord_preprocess(connection_type, preprocess_resolution):
-    train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data.read_data_s009()
-    train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data.read_data_s008()
+    train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data.read_data_s009(preprocess_resolution)
+    train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data.read_data_s008(preprocess_resolution)
 
 
     if connection_type == 'LOS':
@@ -308,6 +308,7 @@ def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connectio
     print('input_test', len (input_train), len(input_train[0]))
 
     top_k = True
+    save_results = False
     if top_k:
         top_k, acuracia = beam_selection_top_k_wisard (x_train= input_test,
                                      x_test=input_train,
@@ -318,9 +319,13 @@ def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connectio
                                      address_of_size=64,
                                      name_of_conf_input=connection_type)
 
-        path_csv = '../results/inverter_dataset/score/Wisard/top-k/' + input_type + '/' + connection_type + '/'
-        df = pd.DataFrame ({"top-k": top_k, "score": acuracia})
-        df.to_csv (path_csv + file_name, index=False)
+
+        if save_results:
+            path_csv = '../results/inverter_dataset/score/Wisard/top-k/' + input_type + '/' + connection_type + '/'
+            df = pd.DataFrame ({"top-k": top_k, "score": acuracia})
+            df.to_csv (path_csv + file_name, index=False)
+        else:
+            return top_k, acuracia
 
     else:
         vector_acuracia, address_size = select_best_beam (#input_train=input_train,
@@ -341,9 +346,13 @@ def beam_selection_LOS_NLOS_inverter_dataset(input_type='lidar_coord', connectio
                                                       enableDebug=False,
                                                       plot_confusion_matrix_enable=False)
 
-        path_csv = '../results/inverter_dataset/score/Wisard/' + input_type + '/' + connection_type + '/'
-        df = pd.DataFrame ({"addres_size": address_size, "accuracy": vector_acuracia})
-        df.to_csv (path_csv + file_name, index=False)
+
+        if save_results:
+            path_csv = '../results/inverter_dataset/score/Wisard/' + input_type + '/' + connection_type + '/'
+            df = pd.DataFrame ({"addres_size": address_size, "accuracy": vector_acuracia})
+            df.to_csv (path_csv + file_name, index=False)
+        else:
+            return address_size, vector_acuracia
     a=0
 
 
@@ -364,7 +373,9 @@ def select_best_beam(input_train,
         address_size = [28]
         numero_experimentos = 2
     else:
-        address_size = [6,12,18,24,28,34,38,44,48,54,58,64]
+        #address_size = [64 ]
+        address_size = np.arange(6, 66, 2)
+        #address_size = np.arange(2, 66, 2)
 
 
         numero_experimentos = 1
@@ -475,7 +486,7 @@ def select_best_beam(input_train,
                          ruta=path_result + '/processingTime/'+antenna_config+'/'+type_of_input + '/' + user +'/time_test_'+figure_name+'.png')
 
 
-    return vector_acuracia, address_size
+    return vector_acuracia_media, vector_acuracia_desvio_padrao, address_size
 
 def beam_selection_top_k_wisard(x_train, x_test,
                                 y_train, y_test,

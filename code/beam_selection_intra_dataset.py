@@ -211,6 +211,8 @@ def read_results_top_k(dataset, input_type, connection_type):
     path_csv = '../results/score/Wisard/beam_selection_with_s008_or_s009/' + dataset + '/'+input_type+'/'
     file_name = 'accuracy_top_k'+input_type+'_addresSize_44_'+connection_type+'.csv'
     df = pd.read_csv(path_csv + file_name)
+
+
     return df
 
 def plot_results_TOP_K(dataset):

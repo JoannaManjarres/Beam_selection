@@ -27,7 +27,7 @@ def read_beams_raymobtime(num_antennas_rx, path_of_data):
 
     return tx_index, rx_index, best_beam_index
 
-def read_data_s009(scale_to_coord=8):
+def read_data_s009(scale_to_coord):
     filename = '../data/coord/CoordVehiclesRxPerScene_s009.csv'
     data = pd.read_csv (filename)
     valid_data = data [data ['Val'] == 'V']

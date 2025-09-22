@@ -1046,7 +1046,51 @@ def read_all_results_inverter_dataset(ref, cenario):
 
     return results_coord, results_lidar, results_lidar_coord
     #return results_coord_cenario_2, results_lidar_cenario_2, results_lidar_coord_cenario_2
+
+def filter_results_top_k(results):
+    #filtered_results = results[results['Top-k'] <= top_k_max]
+
+    top_k = [1, 5, 10, 15, 20, 25, 30]
+    a = results[results['Top-k'].isin(top_k)]
+
+    return a
+
+def plot_results_invert_and_not_inverted_dataset(batool_coord_scenario_1_filter,
+                                                 batool_coord_cenario_2_filter,
+                                                 wisard_coord_scenario_1_filter,
+                                                 wisard_coord_cenario_2_filter,
+                                                 ruseckas_coord_scenario_1_filter,
+                                                 ruseckas_coord_cenario_2_filter,
+                                                 input_type):
+    plt.figure (figsize=(10, 6))
+    plt.rcParams ["font.family"] = "Times New Roman"
+    plt.rcParams.update ({'font.size': 14})
+
+    plt.plot (batool_coord_scenario_1_filter ['Top-k'], batool_coord_scenario_1_filter ['Acuracia'],
+              label='Batool Coord Conf. a', color='blue', marker='o')
+    plt.plot (batool_coord_cenario_2_filter ['Top-k'], batool_coord_cenario_2_filter ['Acuracia'],
+              label='Batool Coord Conf. b', linestyle='--', color='blue', marker='o', alpha=0.7)
+    plt.plot (wisard_coord_scenario_1_filter ['Top-k'], wisard_coord_scenario_1_filter ['Acuracia'],
+              label='Wisard Coord Conf. a', color='green', marker='o')
+    plt.plot (wisard_coord_cenario_2_filter ['Top-k'], wisard_coord_cenario_2_filter ['Acuracia'],
+              label='Wisard Coord Conf. b', linestyle='--', color='green', alpha=0.7, marker='o')
+    plt.plot (ruseckas_coord_scenario_1_filter ['Top-k'], ruseckas_coord_scenario_1_filter ['Acuracia'],
+              label='Ruseckas Coord Conf. a', color='red', marker='o')
+    plt.plot (ruseckas_coord_cenario_2_filter ['Top-k'], ruseckas_coord_cenario_2_filter ['Acuracia'],
+              label='Ruseckas Coord Conf. b', color='red', linestyle='--', marker='o', alpha=0.7)
+    plt.xlabel ('Top-k')
+    plt.legend ()
+    plt.ylabel ('Accuracy')
+    plt.xticks (batool_coord_scenario_1_filter ['Top-k'])
+    plt.grid (True, linestyle='--', alpha=0.5)
+    plt.tight_layout ()
+    plt.savefig ('../results/results_article_LoS_NLoS/generalization_test/'
+                 + input_type + '_compare_accuracy_inverter_and_not_inverted_dataset.png', dpi=300)
+
+
 def read_all_results_invert_and_not_inverted_dataset():
+
+    filter_data = True
 
     batool_coord_cenario_2, batool_lidar_cenario_2, batool_lidar_coord_cenario_2 = read_all_results_inverter_dataset('Batool', 2)
     wisard_coord_cenario_2, wisard_lidar_cenario_2, wisard_lidar_coord_cenario_2 = read_all_results_inverter_dataset('Wisard',2)
@@ -1056,31 +1100,87 @@ def read_all_results_invert_and_not_inverted_dataset():
     wisard_coord_scenario_1, wisard_lidar_scenario_1, wisard_lidar_coord_scenario_1 = read_all_results_inverter_dataset('Wisard', 1)
     ruseckas_coord_scenario_1, ruseckas_lidar_scenario_1, ruseckas_lidar_coord_scenario_1 = read_all_results_inverter_dataset('Ruseckas', 1)
 
-    input_type = 'coord' # 'lidar', 'lidar_coord'
-    if input_type == 'coord':
-        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_coord_scenario_1,
-                                                                      batool_coord_cenario_2,
-                                                                 wisard_coord_scenario_1,
-                                                                 wisard_coord_cenario_2,
-                                                                 ruseckas_coord_scenario_1,
-                                                                 ruseckas_coord_cenario_2,
-                                                                      input_type)
-    elif input_type == 'lidar':
-        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_scenario_1,
-                                                                      batool_lidar_cenario_2,
-                                                                 wisard_lidar_scenario_1,
-                                                                 wisard_lidar_cenario_2,
-                                                                 ruseckas_lidar_scenario_1,
-                                                                 ruseckas_lidar_cenario_2,
-                                                                      input_type)
-    elif input_type == 'lidar_coord':
-        plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_coord_scenario_1,
-                                                                      batool_lidar_coord_cenario_2,
-                                                                 wisard_lidar_coord_scenario_1,
-                                                                 wisard_lidar_coord_cenario_2,
-                                                                 ruseckas_lidar_coord_scenario_1,
-                                                                 ruseckas_lidar_coord_cenario_2,
-                                                                      input_type)
+    if filter_data:
+        batool_coord_cenario_2_filter = filter_results_top_k(batool_coord_cenario_2)
+        batool_lidar_cenario_2_filter = filter_results_top_k(batool_lidar_cenario_2)
+        batool_lidar_coord_cenario_2_filter = filter_results_top_k(batool_lidar_coord_cenario_2)
+
+        wisard_coord_cenario_2_filter = filter_results_top_k(wisard_coord_cenario_2)
+        wisard_lidar_cenario_2_filter = filter_results_top_k(wisard_lidar_cenario_2)
+        wisard_lidar_coord_cenario_2_filter = filter_results_top_k(wisard_lidar_coord_cenario_2)
+
+        ruseckas_coord_cenario_2_filter = filter_results_top_k(ruseckas_coord_cenario_2)
+        ruseckas_lidar_cenario_2_filter = filter_results_top_k(ruseckas_lidar_cenario_2)
+        ruseckas_lidar_coord_cenario_2_filter = filter_results_top_k(ruseckas_lidar_coord_cenario_2)
+
+        batool_coord_scenario_1_filter = filter_results_top_k(batool_coord_scenario_1)
+        batool_lidar_scenario_1_filter = filter_results_top_k(batool_lidar_scenario_1)
+        batool_lidar_coord_scenario_1_filter = filter_results_top_k(batool_lidar_coord_scenario_1)
+
+        wisard_coord_scenario_1_filter = filter_results_top_k(wisard_coord_scenario_1)
+        wisard_lidar_scenario_1_filter = filter_results_top_k(wisard_lidar_scenario_1)
+        wisard_lidar_coord_scenario_1_filter = filter_results_top_k(wisard_lidar_coord_scenario_1)
+
+        ruseckas_coord_scenario_1_filter = filter_results_top_k(ruseckas_coord_scenario_1)
+        ruseckas_lidar_scenario_1_filter = filter_results_top_k(ruseckas_lidar_scenario_1)
+        ruseckas_lidar_coord_scenario_1_filter = filter_results_top_k(ruseckas_lidar_coord_scenario_1)
+
+
+
+        input_type = 'lidar_coord'  # 'lidar', 'lidar_coord'
+        if input_type == 'coord':
+
+            plot_results_invert_and_not_inverted_dataset (batool_coord_scenario_1_filter,
+                                                                           batool_coord_cenario_2_filter,
+                                                                           wisard_coord_scenario_1_filter,
+                                                                           wisard_coord_cenario_2_filter,
+                                                                           ruseckas_coord_scenario_1_filter,
+                                                                           ruseckas_coord_cenario_2_filter,
+                                                                           input_type)
+        elif input_type == 'lidar':
+            plot_results_invert_and_not_inverted_dataset (batool_lidar_scenario_1_filter,
+                                                                           batool_lidar_cenario_2_filter,
+                                                                           wisard_lidar_scenario_1_filter,
+                                                                           wisard_lidar_cenario_2_filter,
+                                                                           ruseckas_lidar_scenario_1_filter,
+                                                                           ruseckas_lidar_cenario_2_filter,
+                                                                           input_type)
+        elif input_type == 'lidar_coord':
+            plot_results_invert_and_not_inverted_dataset (batool_lidar_coord_scenario_1_filter,
+                                                                           batool_lidar_coord_cenario_2_filter,
+                                                                           wisard_lidar_coord_scenario_1_filter,
+                                                                           wisard_lidar_coord_cenario_2_filter,
+                                                                           ruseckas_lidar_coord_scenario_1_filter,
+                                                                           ruseckas_lidar_coord_cenario_2_filter,
+                                                                           input_type)
+
+
+    else:
+        input_type = 'coord' # 'lidar', 'lidar_coord'
+        if input_type == 'coord':
+            plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_coord_scenario_1,
+                                                                          batool_coord_cenario_2,
+                                                                     wisard_coord_scenario_1,
+                                                                     wisard_coord_cenario_2,
+                                                                     ruseckas_coord_scenario_1,
+                                                                     ruseckas_coord_cenario_2,
+                                                                          input_type)
+        elif input_type == 'lidar':
+            plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_scenario_1,
+                                                                          batool_lidar_cenario_2,
+                                                                     wisard_lidar_scenario_1,
+                                                                     wisard_lidar_cenario_2,
+                                                                     ruseckas_lidar_scenario_1,
+                                                                     ruseckas_lidar_cenario_2,
+                                                                          input_type)
+        elif input_type == 'lidar_coord':
+            plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_lidar_coord_scenario_1,
+                                                                          batool_lidar_coord_cenario_2,
+                                                                     wisard_lidar_coord_scenario_1,
+                                                                     wisard_lidar_coord_cenario_2,
+                                                                     ruseckas_lidar_coord_scenario_1,
+                                                                     ruseckas_lidar_coord_cenario_2,
+                                                                          input_type)
 
 def plot_compare_accuracy_top_k_inverter_and_not_inverter_dataset(batool_coord_scenario_1,
                                                                   batool_coord_cenario_2,
@@ -1290,8 +1390,8 @@ def plot_wisard_results_compare_dataset_inverter_LOS_NLOS():
 
 #compare_of_score_memorySize_and_processTime()
 #plot_compare_accuracy_top_k()
-calculate_and_save_rt_all_ref()
+#calculate_and_save_rt_all_ref()
 #plot_compare_score_and_rt_top_k()
 #plot_results_dataset_inverter()
 #plot_wisard_results_compare_dataset_inverter_LOS_NLOS()
-#read_all_results_invert_and_not_inverted_dataset()
+read_all_results_invert_and_not_inverted_dataset()

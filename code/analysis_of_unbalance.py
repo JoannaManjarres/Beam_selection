@@ -49,6 +49,8 @@ def plot_histogram_with_entropy(index_beam_all, index_beam_LOS, index_beam_NLOS,
     gs = fig.add_gridspec (3, hspace=0)
     axs = gs.subplots (sharex=True)#, sharey=True)
 
+
+
     if percent:
         axs[0].bar (labels_all, percent_all, color='green', alpha=0.6)
         axs[1].bar (labels_LOS, percent_LOS, color='steelblue', alpha=0.6)

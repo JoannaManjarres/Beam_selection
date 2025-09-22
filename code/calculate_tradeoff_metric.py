@@ -80,6 +80,7 @@ def calculate_time_penalty_function(data_results):
     plt.title('Metrica de tradeoff para diferentes janelas')
     plt.ylabel ('time_train')
     plt.grid()
+    plt.savefig('../results/score/Wisard/servidor_land/online/coord/sliding_window/tradeoff_metric_sliding_window.png', dpi=300, bbox_inches='tight')
 
 
 def calculate_tradeoff_norm(data_results):
@@ -110,7 +111,7 @@ def calculate_Pareto_curve(data_results):
 
 
 def calculate_metric():
-    data_results = read_results_sliding(input_type='coord', ref='Wisard', window_type='sliding_window')
+    data_results = read_results_sliding(input_type='lidar', ref='Wisard', window_type='sliding_window')
     calculate_time_penalty_function(data_results)
     calculate_tradeoff_norm(data_results)
     calculate_adjusted_efficienc_Metric(data_results)
