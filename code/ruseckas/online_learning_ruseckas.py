@@ -170,7 +170,7 @@ def fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2000):
             df_all_index_predict.to_csv (path_result + 'all_index_predict_fixed_window_top_k.csv', index=False)
 
 def sliding_window_top_k(label_input_type,
-                         episodes_for_test=1,#2000,
+                         episodes_for_test=10,#2000,
                          window_size=1000):
     data_for_train, data_for_validation, s009_data, num_classes = prepare.read_all_data ()
     all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
@@ -235,21 +235,147 @@ def sliding_window_top_k(label_input_type,
                     input_train_shape = input_train.shape [1:]
                     input_test = np.array (input_for_test)
 
+            else:
+                start_index_s008 = (nro_episodes_s008 - window_size) + i
+                #start_index_s008 = 1565
+                if start_index_s008 < nro_episodes_s008:
+                    start_index_s009 = 0
+                    end_index_s009 = window_size - (nro_episodes_s008 - start_index_s008)
 
 
-                print (i, end=' ', flush=True)
-                df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
-                                                                                     train_generator, val_generator,
-                                                                                     input_test, label_test,
-                                                                                     num_classes,
-                                                                                     input_train_shape,
-                                                                                     i, train)
-                df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
-                df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
-                path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/sliding_window/')
-                print(path_result)
-                df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_top_k.csv', index=False)
-                df_all_index_predict.to_csv (path_result + 'all_index_predict_sliding_window_top_k.csv', index=False)
+                    input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window (
+                        all_dataset_s008,
+                        start_index_s008,
+                        label_input_type)
+                    input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
+                        s009_data=s009_data,
+                        start_index=start_index_s009,
+                        end_index=end_index_s009,
+                        input_type=label_input_type)
+
+                    input_train_S008, input_validation_s008 = sliding_prepare_for_trainning (input_for_train_s008,
+                                                                                             label_input_type)
+                    input_train_s009, input_validation_s009 = sliding_prepare_for_trainning(input_for_train_s009,
+                                                                                            label_input_type)
+                    input_train = np.concatenate ((input_train_S008, input_train_s009), axis=0)
+                    input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
+
+                    label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (label_for_train_s008)
+                    label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+
+
+                    label_train = np.concatenate ((label_train_s008, label_train_s009), axis=0)
+                    label_validation = np.concatenate ((label_val_s008, label_val_s009), axis=0)
+
+                    input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                     label_input_type,
+                                                                                                     s009_data)
+                    label_test = np.array(label_for_test)
+
+                    if label_input_type == 'coord':
+
+                        train_generator = prepare.DataGenerator_coord (input_train,
+                                                                       label_train,
+                                                                       BATCH_SIZE, shuffle=True)
+                        val_generator = prepare.DataGenerator_coord (input_validation,
+                                                                     label_validation,
+                                                                     BATCH_SIZE, shuffle=True)
+                        input_train_shape = input_train.shape [1:]
+                        input_test = np.array (input_for_test)
+                    elif label_input_type == 'lidar_coord':
+                        X_lidar_train = input_train [0]
+                        X_coord_train = input_train [1]
+                        train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                                      X_coord_train,
+                                                                      label_train, BATCH_SIZE, shuffle=True)
+                        X_lidar_val = input_validation [0]
+                        X_coord_val = input_validation [1]
+                        val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                                    X_coord_val,
+                                                                    label_validation, BATCH_SIZE)
+                        input_test_lidar = np.array (input_for_test [1])
+                        input_test_coord = np.array (input_for_test [0])
+                        input_test_lidar = input_test_lidar.reshape (input_test_lidar.shape [0], 20, 200, 10)
+                        input_test = [input_test_lidar, input_test_coord]
+
+                        input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+                    elif label_input_type == 'lidar':
+                        train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE,
+                                                                       shuffle=True)
+                        val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE,
+                                                                     shuffle=True)
+                        input_train_shape = input_train.shape [1:]
+                        input_test = np.array (input_for_test)
+                        input_test = input_test.reshape (input_test.shape [0], 20, 200, 10)
+
+                else:
+                    end_index_s009 = start_index_s009 + window_size
+                    input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (
+                        s009_data=s009_data,
+                        start_index=start_index_s009,
+                        end_index=end_index_s009,
+                        input_type=label_input_type)
+
+                    label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train_s009)
+                    input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
+                                                                                                     label_input_type,
+                                                                                                     s009_data)
+
+                    label_test = np.array (label_for_test)
+                    input_train, input_validation = sliding_prepare_for_trainning (input_for_train_s009, label_input_type)
+
+                    if label_input_type == 'coord':
+
+                        train_generator = prepare.DataGenerator_coord (input_train,
+                                                                       label_train,
+                                                                       BATCH_SIZE, shuffle=True)
+                        val_generator = prepare.DataGenerator_coord (input_validation,
+                                                                     label_validation,
+                                                                     BATCH_SIZE, shuffle=True)
+                        input_train_shape = input_train.shape [1:]
+                        input_test = np.array (input_for_test)
+                    elif label_input_type == 'lidar_coord':
+                        X_lidar_train = input_train [0]
+                        X_coord_train = input_train [1]
+                        train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                                      X_coord_train,
+                                                                      label_train, BATCH_SIZE, shuffle=True)
+                        X_lidar_val = input_validation [0]
+                        X_coord_val = input_validation [1]
+                        val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                                    X_coord_val,
+                                                                    label_validation, BATCH_SIZE)
+                        input_test_lidar = np.array (input_for_test [1])
+                        input_test_coord = np.array (input_for_test [0])
+                        input_test_lidar = input_test_lidar.reshape (input_test_lidar.shape [0], 20, 200, 10)
+                        input_test = [input_test_lidar, input_test_coord]
+
+                        input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+                    elif label_input_type == 'lidar':
+                        train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE,
+                                                                       shuffle=True)
+                        val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE,
+                                                                     shuffle=True)
+                        input_train_shape = input_train.shape [1:]
+                        input_test = np.array (input_for_test)
+                        input_test = input_test.reshape (input_test.shape [0], 20, 200, 10)
+
+                    start_index_s009 += 1
+
+        print (i, end=' ', flush=True)
+        df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
+                                                                             train_generator, val_generator,
+                                                                             input_test, label_test,
+                                                                             num_classes,
+                                                                             input_train_shape,
+                                                                             i, train)
+        df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+        df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
+        path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/sliding_window/')
+        print (path_result)
+        df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_top_k.csv', index=False)
+        df_all_index_predict.to_csv (path_result + 'all_index_predict_sliding_window_top_k.csv', index=False)
 
 
 def main():
@@ -530,7 +656,7 @@ def plot_test_LOS_NLOS():
 
 
 
-sliding_window_top_k('lidar_coord', episodes_for_test=2000, window_size=1000)
+sliding_window_top_k('coord', episodes_for_test=10, window_size=1000)
 #main()
 #plot_test_LOS_NLOS()
 #connection = ['NLOS']#, 'NLOS']#, 'ALL']
