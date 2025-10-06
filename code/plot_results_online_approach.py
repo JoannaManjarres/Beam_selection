@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 def read_csv_file(input_type, ref_name, window):
     path = '../results/score/' + ref_name
     if ref_name == 'ruseckas':
@@ -16,19 +17,10 @@ def read_csv_file(input_type, ref_name, window):
     if ref_name == 'Batool' and window == 'sliding':
         filename = 'all_results_'+window+'_window_1000_top_k.csv'
     if ref_name == 'Batool' and window == 'incremental':
-        filename =  'all_results_'+window+'_window_top_k.csv'
+        filename = 'all_results_'+window+'_window_top_k.csv'
     usecols = ["top-k", "score", "test_time", "samples_tested",	"episode", "trainning_process_time", "samples_trainning"]
-    print(path+specific_path + filename)
+    #print(path+specific_path + filename)
     data = pd.read_csv(path +specific_path+ filename)#, header=None, usecols=usecols, names=usecols)
-    '''
-    print(path + filename)
-    accuracy = data['Acuracia'].tolist()
-    accuracy = [float (i) for i in accuracy [1:]]
-    accuracy = [round (i, 2) for i in accuracy]
-
-    top_k = data ['Top-k'].tolist()
-    top_k = [float(i) for i in top_k[1:]]
-    '''
 
     return data
 
@@ -192,18 +184,226 @@ def plot_compare_bars_accuracy_models():
     plt.savefig ('../results/score/compare_online_all_ref_all_windows.png', dpi=300, bbox_inches='tight')
 
 
+window_type = 'fixed'
+
+
+def read_trainning_times_models(input_type, window_type):
+
+    wisard_data = read_csv_file(input_type, 'wisard', window_type)
+    time_wisard = wisard_data[wisard_data['top-k']==1]['trainning_process_time']*1e-9
+
+    ruseckas_data = read_csv_file(input_type, 'ruseckas', window_type)
+    time_ruseckas = ruseckas_data[ruseckas_data['top-k']==1]['trainning_process_time']
+
+    batool_data = read_csv_file(input_type, 'Batool', window_type)
+    time_batool = batool_data[batool_data['top-k']==1]['trainning_process_time']*1e-9
+
+    return time_wisard, time_ruseckas, time_batool
+
+
+
+def plot_compare_time_train_by_model():
+    coord_fixed_wisard_time, coord_fixed_ruseckas_time, coord_fixed_batool_Time = read_trainning_times_models (
+        input_type='coord', window_type='fixed')
+    lidar_fixed_wisard, lidar_fixed_ruseckas, lidar_fixed_batool = read_trainning_times_models (input_type='lidar',
+                                                                                                window_type='fixed')
+
+    lidar_coord_wisard_time = read_csv_file(input_type='lidar_coord', ref_name='wisard', window='fixed')
+    time_wisard_lidar_coord_fixed = lidar_coord_wisard_time [lidar_coord_wisard_time ['top-k'] == 1] ['trainning_process_time'] * 1e-9
+
+    # lidar_coord_fixed_wisard, lidar_coord_fixed_ruseckas, lidar_coord_fixed_batool = read_trainning_times_models (
+    #    input_type='lidar_coord', window_type='fixed')
+
+    dict_1={'gps':coord_fixed_wisard_time.tolist(),
+           'lidar': lidar_fixed_wisard.tolist(),
+            'lidar_coord': time_wisard_lidar_coord_fixed.tolist()}
+
+    dict_2={'gps':coord_fixed_batool_Time.tolist(),
+            'lidar': lidar_fixed_batool.tolist()}
+
+    dict_3={'gps':coord_fixed_ruseckas_time.tolist(),
+            'lidar': lidar_fixed_ruseckas.tolist()}
+
+    wisard_results_time = pd.DataFrame (dict_1)
+    batool_results_time = pd.DataFrame (dict_2)
+    ruseckas_results_time = pd.DataFrame (dict_3)
+
+    # Sliding window
+
+    lidar_coord_wisard_sliding = read_csv_file (input_type='lidar_coord', ref_name='wisard', window='sliding')
+    time_wisard_lidar_coord_sliding = lidar_coord_wisard_sliding [lidar_coord_wisard_sliding ['top-k'] == 1] [
+                                        'trainning_process_time'] * 1e-9
+    coord_wisard_sliding = read_csv_file (input_type='coord', ref_name='wisard', window='sliding')
+    time_wisard_coord_sliding = coord_wisard_sliding [coord_wisard_sliding ['top-k'] == 1] [
+        'trainning_process_time'] * 1e-9
+    lidar_wisard_sliding = read_csv_file (input_type='lidar', ref_name='wisard', window='sliding')
+    time_wisard_lidar_sliding = lidar_wisard_sliding [lidar_wisard_sliding ['top-k'] == 1] [
+        'trainning_process_time'] * 1e-9
+    dict_sliding = {'gps': time_wisard_coord_sliding.tolist(),
+                    'lidar': time_wisard_lidar_sliding.tolist(),
+                    'lidar_coord': time_wisard_lidar_coord_sliding.tolist()}
+
+    wisard_results_time_sliding = pd.DataFrame (dict_sliding)
+
+    coord_batool_sliding = read_csv_file (input_type='coord', ref_name='Batool', window='sliding')
+    time_batool_coord_sliding = coord_batool_sliding [coord_batool_sliding ['top-k'] == 1] [
+        'trainning_process_time'] * 1e-9
+    lidar_batool_sliding = read_csv_file (input_type='lidar', ref_name='Batool', window='sliding')
+    time_batool_lidar_sliding = lidar_batool_sliding [lidar_batool_sliding ['top-k'] == 1] [
+        'trainning_process_time'] * 1e-9
+    dict_sliding_batool = {'gps': time_batool_coord_sliding.tolist(),
+                    'lidar': time_batool_lidar_sliding.tolist()}
+    batool_results_time_sliding = pd.DataFrame (dict_sliding_batool)
+
+
+
+
+
+    # Supondo que você tenha 3 DataFrames diferentes
+    #datasets = [wisard_results_time, batool_results_time, ruseckas_results_time, wisard_results_time_sliding]
+    titles = ["WiSARD model", "Batool model", "Ruseckas model"]
+    datasets = [ wisard_results_time_sliding, batool_results_time_sliding]
+
+    fig, axes = plt.subplots (1, 3, figsize=(12, 4), sharey=False)
+    axes = axes.ravel ()
+    plt.subplots_adjust (wspace=0.25, hspace=0.03)
+    plt.rcParams.update ({"font.size": 14,  # tamanho da fonte
+                          "font.family": "Times New Roman"  # tipo de fonte (ex: 'serif', 'sans-serif', 'monospace')
+                          })
+
+    size_font = 14
+
+    for i, (df, title) in enumerate (zip (datasets, titles)):
+        sns.boxplot (
+            data=df,
+            linewidth=.3,
+            color='lightblue',
+            fliersize=3,
+            showmeans=True,
+            meanprops={
+                "marker": "o",
+                "markerfacecolor": "white",
+                "markeredgecolor": "black",
+                "markersize": "5"
+            },
+            meanline=True,
+            showcaps=True,
+            ax=axes[i],  # coloca no subplot correto
+
+        )
+        axes [i].set_title (title, fontfamily="serif", fontsize=size_font)
+        axes [i].spines ['top'].set_visible (False)
+        axes [i].spines ['right'].set_visible (False)
+        #axes [i].set_yscale ('log')
+    axes[0].set_ylabel('Training Time (s)', fontfamily="serif", fontsize=size_font)
+    plt.tight_layout (rect=[0, 0, 1, 0.95])
+    plt.savefig ('../results/score/compare_online_all_ref_all_windows_trainning_time_by_model.png', dpi=300, bbox_inches='tight')
+    a=1
+
+
+def plot_compare_trainning_times_models_by_input():
+
+
+    coord_fixed_wisard_time, coord_fixed_ruseckas_time, coord_fixed_batool_Time = read_trainning_times_models(input_type='coord', window_type='fixed')
+    lidar_fixed_wisard, lidar_fixed_ruseckas, lidar_fixed_batool = read_trainning_times_models(input_type='lidar', window_type='fixed')
+    #lidar_coord_fixed_wisard, lidar_coord_fixed_ruseckas, lidar_coord_fixed_batool = read_trainning_times_models (
+    #    input_type='lidar_coord', window_type='fixed')
+    dict = {'wisard': coord_fixed_wisard_time.tolist(), 'ruseckas': coord_fixed_ruseckas_time.tolist(), 'batool': coord_fixed_batool_Time.tolist()}
+    coord_fixed_time = pd.DataFrame(dict)
+
+    dict2 = {'wisard': lidar_fixed_wisard.tolist(), 'ruseckas': lidar_fixed_ruseckas.tolist(), 'batool': lidar_fixed_batool.tolist()}
+    lidar_fixed_time = pd.DataFrame(dict2)
+
+
+
+    # Supondo que você tenha 3 DataFrames diferentes
+    datasets = [coord_fixed_time, lidar_fixed_time]
+    titles = ["GPS data", "LiDAR data", "LiDAR + GPS data"]
+
+    fig, axes = plt.subplots (1, 3, figsize=(12, 4), sharey=False)
+    axes = axes.ravel ()
+    plt.subplots_adjust (wspace=0.25, hspace=0.03)
+    plt.rcParams.update ({"font.size": 14,  # tamanho da fonte
+                          "font.family": "Times New Roman"  # tipo de fonte (ex: 'serif', 'sans-serif', 'monospace')
+                          })
+
+    for i, (df, title) in enumerate (zip (datasets, titles)):
+        sns.boxplot (
+            data=df,
+            linewidth=.3,
+            color='lightblue',
+            fliersize=3,
+            showmeans=True,
+            meanprops={
+                "marker": "o",
+                "markerfacecolor": "white",
+                "markeredgecolor": "black",
+                "markersize": "5"
+            },
+            meanline=True,
+            showcaps=True,
+            ax=axes [i]  # coloca no subplot correto
+
+        )
+        axes [i].set_title (title)
+        size_font=14
+    axes[0].set_ylabel('Training Time (s)', fontfamily="serif", fontsize=size_font)
+    axes[0].spines ['top'].set_visible (False)
+    axes[0].spines ['right'].set_visible (False)
+    axes [1].spines ['top'].set_visible (False)
+    axes [1].spines ['right'].set_visible (False)
+    axes [2].spines ['top'].set_visible (False)
+    axes [2].spines ['right'].set_visible (False)
+    plt.tight_layout (rect=[0, 0, 1, 0.95])
+    plt.savefig ('../results/score/compare_online_all_ref_all_windows_trainning_time.png', dpi=300, bbox_inches='tight')
+    a=0
+
+
+def calculate_results(input_type, ref_name, window):
+
+    results = read_csv_file (input_type=input_type,
+                             ref_name=ref_name,
+                             window=window)
+    top_k = [1, 5, 10, 20, 30]
+    all_score = []
+    all_dp = []
+    for k in top_k:
+        score_top_k = results[results['top-k'] == k]['score'].mean()
+        dp_top_k = results[results['top-k'] == k]['score'].std()
+        all_score.append(round(score_top_k, 3))
+        all_dp.append(round(dp_top_k, 4))
+
+
+    training_time = results[results['top-k'] == 1]['trainning_process_time'].mean()*1e-9
+    dp_time = results[results['top-k'] == 1]['trainning_process_time'].std()*1e-9
+    dict_results = {'top-k': top_k, 'score': all_score, 'dp': all_dp, 'training_time (s)': training_time, 'dp_time (s)': dp_time}
+    results_df = pd.DataFrame(dict_results)
+    return results_df
+
+
+def show_results_the_all_models():
+    input_type = 'lidar_coord'
+    window_type = 'sliding'
+    model = ['wisard']#, 'Batool'] #'ruseckas'
+
+    for model in model:
+        print ("Results of evaluation models with ")
+        print (input_type + " data and " + window_type + " window")
+        print (model + " model")
+        results_coord_fixed_wisard_df = calculate_results (input_type=input_type,
+                                                       ref_name=model,
+                                                       window= window_type)
+        print (results_coord_fixed_wisard_df)
+        print('--------------------------------------------------')
 
 
     a=0
 
 
-
-
 def plot_compare_accuracy_models():
     coord_incremental_wisard = read_coord_results_ref (window='incremental', input='coord')
     lidar_incremental_wisard = read_coord_results_ref (window='incremental', input='lidar')
-    lidar_coord_incremental_wisard = read_coord_results_ref (window='incremental',
-                                                                                             input='lidar_coord')
+    lidar_coord_incremental_wisard = read_coord_results_ref (window='incremental', input='lidar_coord')
     coord_fixed_wisard, coord_fixed_ruseckas, coord_fixed_batool = read_coord_results_ref(window='fixed', input='coord')
     lidar_fixed_wisard, lidar_fixed_ruseckas, lidar_fixed_batool = read_coord_results_ref(window='fixed', input='lidar')
     lidar_coord_fixed_wisard, lidar_coord_fixed_ruseckas, lidar_coord_fixed_batool = read_coord_results_ref(window='fixed', input='lidar_coord')
@@ -299,6 +499,8 @@ def merge_file_ruseckas_files():
     result.to_csv(path + 'all_results_fixed_window_top_k.csv', index=False, header=True)
 
 
+#show_results_the_all_models()
+plot_compare_time_train_by_model()
 plot_compare_bars_accuracy_models()
 plot_compare_accuracy_models()
 

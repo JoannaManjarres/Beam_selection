@@ -373,7 +373,7 @@ def sliding_window_top_k(label_input_type,
         df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
         df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
         path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/sliding_window/')
-        print (path_result)
+        ##print (path_result)
         df_all_results_top_k.to_csv (path_result + 'all_results_sliding_window_top_k.csv', index=False)
         df_all_index_predict.to_csv (path_result + 'all_index_predict_sliding_window_top_k.csv', index=False)
 
@@ -655,8 +655,12 @@ def plot_test_LOS_NLOS():
     plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
 
 
-
-sliding_window_top_k('coord', episodes_for_test=10, window_size=1000)
+label_input_type = 'lidar_coord'
+print('--------------------------------------------------------')
+print('------- Beam Selection - Ruseckas - Online Learning')
+print('--- Window type: Sliding Window')
+print('--- Input: ', label_input_type)
+sliding_window_top_k(label_input_type, episodes_for_test=1, window_size=1000)
 #main()
 #plot_test_LOS_NLOS()
 #connection = ['NLOS']#, 'NLOS']#, 'ALL']
