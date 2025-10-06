@@ -658,8 +658,9 @@ def plot_test_LOS_NLOS():
 label_input_type = 'lidar_coord'
 print('--------------------------------------------------------')
 print('------- Beam Selection - Ruseckas - Online Learning')
-print('--- Window type: Sliding Window')
 print('--- Input: ', label_input_type)
+print('--- Window type: Sliding Window')
+
 sliding_window_top_k(label_input_type, episodes_for_test=1, window_size=1000)
 #main()
 #plot_test_LOS_NLOS()
