@@ -186,7 +186,7 @@ def sliding_window_top_k(label_input_type,
     df_all_index_predict = pd.DataFrame()
     for i in range (len (episode_for_test)):
         # for i in tqdm(range(len(episode_for_test))):
-        # i=101
+        #i=101
         if i in s009_data ['Episode'].tolist ():
             if i == 0:
                 start_index_s008 = nro_episodes_s008 - window_size
@@ -264,6 +264,7 @@ def sliding_window_top_k(label_input_type,
                         input_train_coord = np.concatenate ((input_train_S008[1], input_train_s009[1]), axis=0)
                         input_validation_coord = np.concatenate ((input_validation_s008[1], input_validation_s009[1]), axis=0)
                         input_train = [input_train_lidar, input_train_coord]
+                        input_validation = [input_validation_lidar, input_validation_coord]
                     else:
                         input_train = np.concatenate ((input_train_S008, input_train_s009), axis=0)
                         input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
@@ -669,7 +670,7 @@ print('------- Beam Selection - Ruseckas - Online Learning')
 print('--- Input: ', label_input_type)
 print('--- Window type: Sliding Window')
 
-sliding_window_top_k(label_input_type, episodes_for_test=2, window_size=1000)
+sliding_window_top_k(label_input_type, episodes_for_test=2000, window_size=1000)
 #main()
 #plot_test_LOS_NLOS()
 #connection = ['NLOS']#, 'NLOS']#, 'ALL']
