@@ -257,8 +257,16 @@ def sliding_window_top_k(label_input_type,
                                                                                              label_input_type)
                     input_train_s009, input_validation_s009 = sliding_prepare_for_trainning(input_for_train_s009,
                                                                                             label_input_type)
-                    input_train = np.concatenate ((input_train_S008, input_train_s009), axis=0)
-                    input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
+                    if label_input_type == 'lidar_coord':
+                        input_train_lidar = np.concatenate ((input_train_S008[0], input_train_s009[0]), axis=0)
+                        input_validation_lidar = np.concatenate ((input_validation_s008[0], input_validation_s009[0]), axis=0)
+
+                        input_train_coord = np.concatenate ((input_train_S008[1], input_train_s009[1]), axis=0)
+                        input_validation_coord = np.concatenate ((input_validation_s008[1], input_validation_s009[1]), axis=0)
+                        input_train = [input_train_lidar, input_train_coord]
+                    else:
+                        input_train = np.concatenate ((input_train_S008, input_train_s009), axis=0)
+                        input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
 
                     label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (label_for_train_s008)
                     label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
@@ -661,7 +669,7 @@ print('------- Beam Selection - Ruseckas - Online Learning')
 print('--- Input: ', label_input_type)
 print('--- Window type: Sliding Window')
 
-sliding_window_top_k(label_input_type, episodes_for_test=1, window_size=1000)
+sliding_window_top_k(label_input_type, episodes_for_test=2, window_size=1000)
 #main()
 #plot_test_LOS_NLOS()
 #connection = ['NLOS']#, 'NLOS']#, 'ALL']
