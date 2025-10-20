@@ -219,6 +219,8 @@ def plot_times_by_ref():
     data_wisard_coord, _, _, _ = read_results (input_type='coord', window_type='fixed_window', ref='Wisard')
     data_batool_lidar, _, _, _ = read_results (input_type='lidar', window_type='fixed_window', ref='Batool')
 
+
+
     data_wisard_top_1_lidar = data_wisard_lidar [data_wisard_lidar ['top-k'] == 1]
     data_wisard_top_1_coord = data_wisard_coord [data_wisard_coord ['top-k'] == 1]
     data_batool_top_1_lidar = data_batool_lidar [data_batool_lidar ['top-k'] == 1]

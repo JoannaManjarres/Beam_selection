@@ -187,6 +187,8 @@ def plot_compare_bars_accuracy_models():
 window_type = 'fixed'
 
 
+
+
 def read_trainning_times_models(input_type, window_type):
 
     wisard_data = read_csv_file(input_type, 'wisard', window_type)
@@ -199,6 +201,162 @@ def read_trainning_times_models(input_type, window_type):
     time_batool = batool_data[batool_data['top-k']==1]['trainning_process_time']*1e-9
 
     return time_wisard, time_ruseckas, time_batool
+
+def plot_train_time_Douglas():
+    input_types = ['coord', 'lidar', 'lidar_coord']
+    models = ['Wisard', 'Ruseckas', 'Batool']
+
+    time_wisard, time_ruseckas, time_batool = read_trainning_times_models(input_type='lidar_coord', window_type='sliding')
+
+    dfs = []
+
+    for it in input_types:
+        for m, df in zip (models, read_trainning_times_models (it, 'sliding')):
+            df = df.to_frame ()
+            df ['model'] = m
+            df ['input_type'] = it
+
+            dfs.append (df)
+
+    all_data = pd.concat (dfs)
+
+
+    plt.rcParams.update({'font.size': 14})
+    plt.rcParams.update({'font.family': 'Times New Roman'})
+    #plt.rcParams.update({'figure.autolayout': True})
+    #plt.rcParams.update({'figure.figsize': (8, 6)})
+    #plt.rcParams.update({'figure.dpi': 300})
+    plt.rcParams.update({'axes.spines.top': False,
+                         'axes.spines.right': False})
+    colors =['lightskyblue', 'forestgreen', 'coral']
+
+    z = sns.barplot (data=all_data, errorbar=('pi', 99), hue='model', y='trainning_process_time', x='input_type',
+                     hue_order=sorted (all_data.model.unique ()))#, palette='Paired')#, )#'Paired')#PuBuGn')
+    z.set_yscale ('log')
+    z.set_ylabel ('Training Time (s)')
+    z.set_xlabel ('Input Type')
+    z.legend (title='Model', loc='upper center',
+              frameon=False, ncol=3, bbox_to_anchor=(0.5, 1.18))
+
+    plt.savefig ('../results/score/compare_online_all_ref_sliding_window_trainning_time_Douglas.png', dpi=300, bbox_inches='tight')
+    a=0
+
+
+
+def read_accuracy_models(input_type, window_type):
+
+    top_k = [1, 5, 10]
+    wisard_data = read_csv_file(input_type, 'wisard', window_type)
+    wisard_score_ = wisard_data[['score','top-k']]
+    wisard_score = wisard_score_ [wisard_score_ ['top-k'].isin (top_k)]
+
+    ruseckas_data = read_csv_file(input_type, 'ruseckas', window_type)
+    ruseckas_score_ = ruseckas_data[['score','top-k']]
+    ruseckas_score = ruseckas_score_ [ruseckas_score_ ['top-k'].isin (top_k)]
+
+    batool_data = read_csv_file(input_type, 'Batool', window_type)
+    batool_score_ = batool_data[['score','top-k']]
+    batool_score = batool_score_ [batool_score_ ['top-k'].isin (top_k)]
+
+    return  wisard_score, ruseckas_score, batool_score,
+
+
+
+def plot_accuracys():
+    window_types = ['fixed', 'sliding']#, 'incremental']
+    input_types = ['coord', 'lidar', 'lidar_coord']
+    #modelos = ['Wisard', 'Ruseckas', 'Batool']
+
+    lista_de_dfs = []  # Lista para guardar todos os dataframes
+
+    print ("Carregando dados para todas as 9 combinações...")
+
+    # 💡 PASSO CHAVE 2: Loop aninhado para carregar TUDO
+    for w_type in window_types:
+        for i_type in input_types:
+            print (f"  - Carregando: Window={w_type}, Input={i_type}")
+
+            # Chamar sua função
+            wisard_df, ruseckas_df, batool_df = read_accuracy_models (
+                window_type=w_type,
+                input_type=i_type
+            )
+
+            # Juntar os 3 modelos
+            dfs = [wisard_df, ruseckas_df, batool_df]
+            nomes_modelos = ['Wisard', 'Ruseckas', 'Batool']
+
+            df_modelos_juntos = pd.concat (
+                df.assign (modelo=nome) for df, nome in zip (dfs, nomes_modelos)
+            )
+
+            # 💡 PASSO CHAVE 3: Adicionar as colunas de contexto
+            df_modelos_juntos ['window_type'] = w_type
+            df_modelos_juntos ['input_type'] = i_type
+
+            lista_de_dfs.append (df_modelos_juntos)
+
+    # --- 3. Criar o DataFrame Final ---
+    df_total_combinado = pd.concat (lista_de_dfs)
+
+    valores_k_ordenados = sorted (df_total_combinado ['top-k'].unique ())
+
+    #sns.set_palette ("pastel")
+
+    # 💡 PASSO CHAVE 4: Usar 'row' E 'col'
+    g = sns.catplot (
+        data=df_total_combinado,
+        x='top-k',
+        y='score',
+        hue='modelo',  # Comparação lado a lado (Modelos)
+        col='input_type',  # Colunas da grade (Inputs)
+        row='window_type',  # Linhas da grade (Windows)
+        kind='box',
+        order=valores_k_ordenados,
+        height=4,  # Altura de CADA subplot
+        aspect=1.2,  # Proporção (largura/altura) de CADA subplot
+        # Define a ordem das linhas/colunas para ficar como pedimos
+        row_order=window_types,
+        col_order=input_types
+        #color='lightblue'
+    )
+
+    #g.fig.suptitle ('Comparação de Modelos, Entradas e Janelas',
+    #                fontsize=20, y=1.03)
+
+    # Ajustar os rótulos dos eixos
+    #g.set_axis_labels ('Top-k', 'Score')
+    g.fig.supylabel ('', fontsize=18, x=0.035)
+    g.set_axis_labels ('Top-k', '')
+    g.set_titles (col_template="Input: {col_name}", row_template=" ")  # row_template=" " remove o título da linha
+
+    # Ajustar os títulos de cada subplot (ex: "Window: fixed | Input: coord")
+    #g.set_titles (row_template="Window: {row_name}", col_template="Input: {col_name}")
+
+    # (Opcional) Definir o mesmo limite Y para todos os 9 gráficos
+    # g.set(ylim=(0.4, 1.0))
+
+    # Ajustar layout para evitar sobreposição
+    plt.tight_layout ()
+    plt.subplots_adjust (top=0.9)  # Deixa espaço para o título geral
+
+
+    for i, row_name in enumerate (g.row_names):
+        # Seleciona o primeiro subplot de cada linha (coluna 0)
+        ax = g.axes [i, 0]
+        # Define o y-label desse subplot para o nome da janela
+        ax.set_ylabel (row_name, fontsize=12, labelpad=10, fontfamily="serif")
+
+    # Ocultar o texto padrão das linhas (que o Seaborn coloca à direita)
+    for ax in g.axes.flat:
+        if ax.texts:
+            ax.texts [0].set_visible (False)
+
+
+    plt.savefig ('../results/score/compare_online_all_ref_all_windows_accuracys.png', dpi=300, bbox_inches='tight')
+    plt.show ()
+
+    a=0
 
 
 
@@ -244,6 +402,9 @@ def plot_compare_time_train_by_model():
                     'lidar_coord': time_wisard_lidar_coord_sliding.tolist()}
 
     wisard_results_time_sliding = pd.DataFrame (dict_sliding)
+    dict_means_wisard = {'gps': [time_wisard_coord_sliding.mean()],
+                            'lidar': [time_wisard_lidar_sliding.mean()],
+                            'lidar_coord': [time_wisard_lidar_coord_sliding.mean()]}
 
     coord_batool_sliding = read_csv_file (input_type='coord', ref_name='Batool', window='sliding')
     time_batool_coord_sliding = coord_batool_sliding [coord_batool_sliding ['top-k'] == 1] [
@@ -254,6 +415,22 @@ def plot_compare_time_train_by_model():
     dict_sliding_batool = {'gps': time_batool_coord_sliding.tolist(),
                     'lidar': time_batool_lidar_sliding.tolist()}
     batool_results_time_sliding = pd.DataFrame (dict_sliding_batool)
+    dict_means_batool = {'gps': [time_batool_coord_sliding.mean()],
+                            'lidar': [time_batool_lidar_sliding.mean()]}
+
+    coord_ruseckas_sliding = read_csv_file (input_type='coord', ref_name='ruseckas', window='sliding')
+    time_ruseckas_coord_sliding = coord_ruseckas_sliding [coord_ruseckas_sliding ['top-k'] == 1] [
+        'trainning_process_time']
+    lidar_ruseckas_sliding = read_csv_file (input_type='lidar', ref_name='ruseckas', window='sliding')
+    time_ruseckas_lidar_sliding = lidar_ruseckas_sliding [lidar_ruseckas_sliding ['top-k'] == 1] [
+        'trainning_process_time']
+    dict_sliding_ruseckas = {'gps': time_ruseckas_coord_sliding.tolist(),
+                    'lidar': time_ruseckas_lidar_sliding.tolist()}
+    ruseckas_results_time_sliding = pd.DataFrame (dict_sliding_ruseckas)
+
+    dict_means_ruseckas = {'gps': [time_ruseckas_coord_sliding.mean()],
+                            'lidar': [time_ruseckas_lidar_sliding.mean()]}
+    ##########################################################################################
 
 
 
@@ -262,9 +439,10 @@ def plot_compare_time_train_by_model():
     # Supondo que você tenha 3 DataFrames diferentes
     #datasets = [wisard_results_time, batool_results_time, ruseckas_results_time, wisard_results_time_sliding]
     titles = ["WiSARD model", "Batool model", "Ruseckas model"]
-    datasets = [ wisard_results_time_sliding, batool_results_time_sliding]
+    datasets = [ wisard_results_time_sliding, batool_results_time_sliding, ruseckas_results_time_sliding]
+    means =[dict_means_wisard, dict_means_batool, dict_means_ruseckas]
 
-    fig, axes = plt.subplots (1, 3, figsize=(12, 4), sharey=False)
+    fig, axes = plt.subplots (1, 3, figsize=(12, 6), sharey=False)
     axes = axes.ravel ()
     plt.subplots_adjust (wspace=0.25, hspace=0.03)
     plt.rcParams.update ({"font.size": 14,  # tamanho da fonte
@@ -274,29 +452,38 @@ def plot_compare_time_train_by_model():
     size_font = 14
 
     for i, (df, title) in enumerate (zip (datasets, titles)):
-        sns.boxplot (
-            data=df,
-            linewidth=.3,
-            color='lightblue',
-            fliersize=3,
-            showmeans=True,
-            meanprops={
-                "marker": "o",
-                "markerfacecolor": "white",
-                "markeredgecolor": "black",
-                "markersize": "5"
-            },
-            meanline=True,
-            showcaps=True,
-            ax=axes[i],  # coloca no subplot correto
+        sns.boxplot (data=df, linewidth=.3, color='lightblue', fliersize=3,
+            showmeans=True, meanprops={"marker": "o", "markerfacecolor": "white", "markeredgecolor": "red", "markersize": "5", "linestyle": "--", "color": 'red'},
+            meanline=True, showcaps=True,
+            ax=axes[i]  # coloca no subplot correto
+                    # notch=True
 
         )
-        axes [i].set_title (title, fontfamily="serif", fontsize=size_font)
+
+        #plot in text the mean values
+        axes[0].text(0.65, dict_means_wisard['gps'][0], f"{dict_means_wisard['gps'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+        axes[0].text(1.65, dict_means_wisard['lidar'][0], f"{dict_means_wisard['lidar'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+        axes[0].text(2.65, dict_means_wisard['lidar_coord'][0], f"{dict_means_wisard['lidar_coord'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+
+        axes[1].text(0.65, dict_means_batool['gps'][0], f"{dict_means_batool['gps'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+        axes[1].text(1.65, dict_means_batool['lidar'][0], f"{dict_means_batool['lidar'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+
+        axes[2].text(0.65, dict_means_ruseckas['gps'][0], f"{dict_means_ruseckas['gps'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+        axes[2].text(1.65, dict_means_ruseckas['lidar'][0], f"{dict_means_ruseckas['lidar'][0]:.2f}", horizontalalignment='center', color='red', fontweight='bold', fontsize=size_font)
+
+        axes [i].set_title (title, fontfamily="serif", fontsize=16, fontweight='bold')
         axes [i].spines ['top'].set_visible (False)
         axes [i].spines ['right'].set_visible (False)
         #axes [i].set_yscale ('log')
+
+
+        #axes [i].set_yscale ('log')
     axes[0].set_ylabel('Training Time (s)', fontfamily="serif", fontsize=size_font)
+    axes[0].set_xticklabels (['GPS', 'LiDAR', 'LiDAR + GPS'], fontfamily="serif", fontsize=10)
+    axes[1].set_xticklabels (['GPS', 'LiDAR'], fontfamily="serif", fontsize=10)
+    axes[2].set_xticklabels (['GPS', 'LiDAR'], fontfamily="serif", fontsize=10)
     plt.tight_layout (rect=[0, 0, 1, 0.95])
+    a=1
     plt.savefig ('../results/score/compare_online_all_ref_all_windows_trainning_time_by_model.png', dpi=300, bbox_inches='tight')
     a=1
 
@@ -382,9 +569,9 @@ def calculate_results(input_type, ref_name, window):
 
 
 def show_results_the_all_models():
-    input_type = 'lidar_coord'
+    input_type = 'lidar'
     window_type = 'sliding'
-    model = ['wisard']#, 'Batool'] #'ruseckas'
+    model = ['ruseckas']#, 'Batool'] #'ruseckas'
 
     for model in model:
         print ("Results of evaluation models with ")
@@ -499,10 +686,14 @@ def merge_file_ruseckas_files():
     result.to_csv(path + 'all_results_fixed_window_top_k.csv', index=False, header=True)
 
 
+
+read_accuracy_models(input_type='lidar_coord', window_type='sliding')
+plot_accuracys()
+plot_train_time_Douglas()
 #show_results_the_all_models()
 plot_compare_time_train_by_model()
-plot_compare_bars_accuracy_models()
-plot_compare_accuracy_models()
+#plot_compare_bars_accuracy_models()
+#plot_compare_accuracy_models()
 
 
 

@@ -668,9 +668,11 @@ label_input_type = 'lidar_coord'
 print('--------------------------------------------------------')
 print('------- Beam Selection - Ruseckas - Online Learning')
 print('--- Input: ', label_input_type)
-print('--- Window type: Sliding Window')
+print('--- Window type: Fixed Window')
 
-sliding_window_top_k(label_input_type, episodes_for_test=2000, window_size=1000)
+fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2)
+#sliding_window_top_k(label_input_type, episodes_for_test=2000, window_size=1000)
+
 #main()
 #plot_test_LOS_NLOS()
 #connection = ['NLOS']#, 'NLOS']#, 'ALL']
