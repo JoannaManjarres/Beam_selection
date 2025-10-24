@@ -39,8 +39,38 @@ def read_and_plot_results_lidar_without_variance(path, title, dataset_size, name
     Acc = scores['Accuracy'].values
     plot_results_without_variance(Thresh, Acc, dataset_size, title, principal_path, name_result)
 
+def read_and_plot_results_lidar_without_variance_v2():
+    principal_path = '../results/accuracy/8x32/'
+    path = 'lidar_2D_without_variance/all/lidar_2D_with_rx_therm/'
+    name_of_file = 'acuracia_s008_train_s009_test_lidar_2D_without_variance_'
 
-    return Thresh, Acc
+    path = principal_path + path
+    usecols = ["Memory_size", "Accuracy", "Standar_deviation"]
+    threshold = ['0','0,1', '0,15', '0,2', '0,24']
+    threshold_1 = ['0', '0.1', '0.15', '0.2', '0.24']
+    dataset_size = [6429, 2295, 1888, 1381, 697]
+    scores_all = []
+    for i in range(len(threshold)):
+        file_name = name_of_file+str(threshold[i])+'.csv'
+        data = pd.read_csv (path + file_name, header=None, sep="\t", names=usecols) #, names=["Memory_size", "Acuracy", "Standar_deviation"])
+        scores_all.append([float(threshold_1[i]),data["Accuracy"].max()])
+        a=0
+
+    scores = pd.DataFrame(scores_all, columns=["Threshold", "Accuracy"])
+    scores['dataset_size'] = dataset_size
+
+    sns.set(style="whitegrid")
+    plt.scatter (scores["Threshold"].values, scores['dataset_size'].values,
+                 c=scores['Accuracy'].values, cmap='viridis', s=100)  # 'c' for color, 's' for size
+    cbar = plt.colorbar ()
+    cbar.set_label ('Accuracy')
+    plt.xlabel ('Threshold')
+    plt.ylabel ('Dataset size')
+
+    plt.savefig ('../results/plot_jornal_online/lidar_2D_with_rx_therm_without_variance_v2.png', dpi=300, bbox_inches='tight')
+
+    a=0
+    #return Thresh, Acc
 def plot_results_without_variance(threshold, acc, dataset_size, title, path, name_result):
 
     fig, ax = plt.subplots()
@@ -58,7 +88,7 @@ def plot_results_without_variance(threshold, acc, dataset_size, title, path, nam
                 color='white',
                 fontsize=size_of_font,
                 font='Times New Roman')
-    ax.text(40,y_pos.min()-0.8, '* Tamanho da entrada')
+    ax.text(40,y_pos.min()-0.8, '* Input size')
     if plot_accuracy:
         for i, v in enumerate (accuracy):
             ax.text(v + 0.5, i - 0.05, str(round(v,2)),
@@ -68,13 +98,14 @@ def plot_results_without_variance(threshold, acc, dataset_size, title, path, nam
 
     ax.set_yticks(y_pos, labels=threshold)
     ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel('Acurácia (%)', fontsize=size_of_font, font='Times New Roman')
-    ax.set_ylabel('Limiar', fontsize=size_of_font, font='Times New Roman')
+    ax.set_xlabel('Acuracy (%)', fontsize=size_of_font, font='Times New Roman')
+    ax.set_ylabel('Threshold', fontsize=size_of_font, font='Times New Roman')
     #ax.set_title(title, fontsize=14, fontweight='bold')
 
     plt.show()
 
-    fig.savefig(path+name_result, transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=300)
+    path_result = '../results/plot_jornal_online/'
+    fig.savefig(path_result+name_result, transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=300)
     plt.close(fig)
 
 
@@ -1067,7 +1098,68 @@ def plot_time_process_vs_samples_online_learning_wisard( path,
 
 
 
+def plot_window_sliding_comparition():
+    window_types = 'sliding'
+    input_type = 'lidar'
 
+    # all_csv_data = read_file_csv(input_type, 'Wisard', window_types)
+
+    data_path = '/content/drive/MyDrive/Doutorado/results_online_learning/'
+    path_result = data_path + 'Wisard/' + input_type + '/sliding_window/'
+
+    window_size = [100, 500, 1000, 1500, 2000]
+    color = ['blue', 'red', 'green', 'purple', 'orange', 'maroon', 'teal', 'black', 'gray', 'brown', 'cyan', 'magenta',
+             'yellow', 'olive', 'navy', 'lime', 'aqua', 'fuchsia', 'silver', 'white']
+
+    file_name = 'all_results_sliding_window_100_top_k.csv'
+    window_100 = pd.read_csv (path_result + file_name)
+
+    file_name = 'all_results_sliding_window_500_top_k.csv'
+    window_500 = pd.read_csv (path_result + file_name)
+
+    file_name = 'all_results_sliding_window_1000_top_k.csv'
+    window_1000 = pd.read_csv (path_result + file_name)
+
+    file_name = 'all_results_sliding_window_1500_top_k.csv'
+    window_1500 = pd.read_csv (path_result + file_name)
+
+    file_name = 'all_results_sliding_window_2000_top_k.csv'
+    window_2000 = pd.read_csv (path_result + file_name)
+
+    top_1_100 = window_100 [window_100 ['top-k'] == 1]
+    trainning_time_100 = top_1_100 ['trainning_process_time'] * 1e-9
+
+    top_1_500 = window_500 [window_500 ['top-k'] == 1]
+    trainning_time_500 = top_1_500 ['trainning_process_time'] * 1e-9
+
+    top_1_1000 = window_1000 [window_1000 ['top-k'] == 1]
+    trainning_time_1000 = top_1_1000 ['trainning_process_time'] * 1e-9
+
+    top_1_1500 = window_1500 [window_1500 ['top-k'] == 1]
+    trainning_time_1500 = top_1_1500 ['trainning_process_time'] * 1e-9
+
+    top_1_2000 = window_2000 [window_2000 ['top-k'] == 1]
+    trainning_time_2000 = top_1_2000 ['trainning_process_time']
+
+    fig, ax1 = plt.subplots ()
+    sns.kdeplot (trainning_time_100, label='kde density', legend=False)
+    sns.kdeplot (trainning_time_500, label='kde density', legend=False)
+    sns.kdeplot (trainning_time_1000, label='kde density', legend=False)
+    sns.kdeplot (trainning_time_1500, label='kde density', legend=False)
+    sns.kdeplot (trainning_time_2000, label='kde density', legend=False)
+    ax2 = ax1.twinx ()
+    plt.grid (True)
+    plt.hist (trainning_time_100, bins=60, alpha=0.3, label='Top-1')
+    plt.hist (trainning_time_500, bins=60, alpha=0.3, label='Top-1')
+    plt.hist (trainning_time_1000, bins=60, alpha=0.3, label='Top-1')
+    plt.hist (trainning_time_1500, bins=60, alpha=0.3, label='Top-1')
+    plt.hist (trainning_time_2000, bins=60, alpha=0.3, label='Top-1')
+    ax2.set_ylabel ('Counts')
+    ax1.set_xlabel ('Trainning Time [s]')
+    plt.grid (True)
+    a=0
+
+read_and_plot_results_lidar_without_variance_v2()
 #plot_results_lidar_with_coord_top_k()
 #plot_of_bars()
 #results_lidar_2D_binary_without_variance()

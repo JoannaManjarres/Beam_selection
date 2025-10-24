@@ -69,19 +69,25 @@ def calculate_time_penalty_function(data_results):
     print('tempo: ', data_results['time_train'] )
     print(metric_of_windows)
 
-    #plt.plot( data_results['accuracy'], data_results['time_train'], 'o-')
-    fig, ax = plt.subplots ()
-    scat = ax.scatter (x=data_results['accuracy'], y=data_results['time_train'], c=window_size, s=200, marker='o')
-    fig.colorbar (scat)
-    for i in range (len (window_size)):
-        ax.text (data_results['accuracy'][i], data_results['time_train'][i]+0.01, str (np.round(metric_of_windows[i],3)))
-    plt.xlabel ('accuracy')
-    plt.yticks(data_results['time_train'])
-    plt.title('Metrica de tradeoff para diferentes janelas')
-    plt.ylabel ('time_train')
-    plt.grid()
-    plt.savefig('../results/score/Wisard/servidor_land/online/coord/sliding_window/tradeoff_metric_sliding_window.png', dpi=300, bbox_inches='tight')
+    window_size_1 = [100, 500, 1000, 1500, 2000]
 
+    plt.rcParams.update({'font.size': 14})
+
+    sns.set (style="whitegrid")
+
+    plt.scatter (window_size_1, data_results['time_train'],
+                 c=data_results['accuracy'].values, cmap='viridis', s=100)  # 'c' for color, 's' for size
+    cbar = plt.colorbar ()
+    cbar.set_label ('Accuracy')
+
+
+    plt.xlabel ('Window size')
+    plt.ylabel ('Train time [s]')
+    plt.xticks(window_size_1)
+    #plt.show()
+
+    plt.savefig('../results/plot_jornal_online/tradeoff_metric_sliding_window_lidar.png', dpi=300, bbox_inches='tight')
+    a=0
 
 def calculate_tradeoff_norm(data_results):
     window_size = data_results ['window_size']

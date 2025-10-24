@@ -45,8 +45,8 @@ def plot_samples(dataset_s008, dataset_s009):
     plt.figure(figsize=(14, 6))
     plt.plot(mean_episodes, mean_s008, '-o', label='s008', color='blue')
     plt.plot (mean_episodes, mean_s009, '-o', label='s009', color='orange')
-    plt.xlabel ('episódios', fontsize=16, font='Times New Roman')
-    plt.ylabel ('média das amostras', fontsize=16, font='Times New Roman')
+    plt.xlabel ('episodes', fontsize=16, font='Times New Roman')
+    plt.ylabel ('sample mean', fontsize=16, font='Times New Roman')
     #plt.title('Mean of samples per 100 episodes')
     plt.grid (True)
     plt.xticks(mean_episodes)
@@ -63,7 +63,7 @@ def plot_samples(dataset_s008, dataset_s009):
     plt.text(500, np.max(samples_for_episode_s009),  'Mean: '+str(np.round(np.mean(samples_for_episode_s009), 3)), fontsize=12, color='orange')
     plt.xlabel('episodes')
     plt.ylabel('samples')
-    plt.title('Samples per episode')
+    #plt.title('Samples per episode')
     plt.legend()
     plt.savefig ('../analyses/samples_by_episode.png', dpi=300)
     plt.close ()
@@ -128,6 +128,6 @@ def calculate_mean_of_samples(episodes, samples_for_episode, samples_to_plot):
     return ep, mean
 
 
-plot_samples_NLOS()
-dataset_s008, dataset_s009 =read_data()
+#plot_samples_NLOS()
+dataset_s008, dataset_s009 = read_data()
 plot_samples(dataset_s008, dataset_s009)

@@ -1014,7 +1014,7 @@ def index_beams_low_classe_frequency():
 #compare_beamoutput_matrices_from_RT()
 #generated_beams_output_from_ray_tracing()
 #stats_index_beams_article()
-plot_beams_in_histogram()
+#plot_beams_in_histogram()
 #index_beams_high_classes_percent()
 #index_beams_low_classe_frequency()
 

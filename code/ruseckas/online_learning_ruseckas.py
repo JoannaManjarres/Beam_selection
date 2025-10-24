@@ -169,6 +169,158 @@ def fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2000):
             df_all_results_top_k.to_csv (path_result + 'all_results_fixed_window_top_k.csv', index=False)
             df_all_index_predict.to_csv (path_result + 'all_index_predict_fixed_window_top_k.csv', index=False)
 
+def incremental_window_top_k(label_input_type):
+    data_for_train, data_for_validation, s009_data, num_classes = prepare.read_all_data ()
+    all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+    episode_for_test = np.arange (0, 2000, 20)
+    BATCH_SIZE = 32
+    train = True
+
+    df_all_results_top_k = pd.DataFrame ()
+    df_all_index_predict = pd.DataFrame ()
+    for i in range (len (episode_for_test)):
+        # for i in tqdm(range(len(episode_for_test))):
+        #i=101
+        if i in s009_data ['Episode'].tolist ():
+            if episode_for_test[i] == 0:
+                start_index_s008 = 0
+                input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
+                                                                                                       start_index_s008,
+                                                                                                       label_input_type)
+
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (episode_for_test[i],
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
+                input_train, input_validation = sliding_prepare_for_trainning (input_for_train, label_input_type)
+                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+                label_test = np.array (label_for_test)
+
+                if label_input_type == 'lidar_coord':
+                    X_lidar_train = input_train[0]
+                    X_coord_train = input_train[1]
+                    train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                                  X_coord_train,
+                                                                  label_train, BATCH_SIZE, shuffle=True)
+                    X_lidar_val = input_validation[0]
+                    X_coord_val = input_validation[1]
+                    val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                                X_coord_val,
+                                                                label_validation, BATCH_SIZE)
+                    input_test_lidar = np.array (input_for_test [1])
+                    input_test_coord = np.array (input_for_test [0])
+                    input_test_lidar = input_test_lidar.reshape (input_test_lidar.shape [0], 20, 200, 10)
+                    input_test = [input_test_lidar, input_test_coord]
+
+                    input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+                elif label_input_type == 'lidar':
+                    train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE, shuffle=True)
+                    val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE,
+                                                                 shuffle=True)
+                    input_train_shape = input_train.shape [1:]
+                    input_test = np.array (input_for_test)
+                    input_test = input_test.reshape (input_test.shape [0], 20, 200, 10)
+                elif label_input_type == 'coord':
+                    train_generator = prepare.DataGenerator_coord (input_train,
+                                                                   label_train,
+                                                                   BATCH_SIZE, shuffle=True)
+                    val_generator = prepare.DataGenerator_coord (input_validation,
+                                                                 label_validation,
+                                                                 BATCH_SIZE, shuffle=True)
+                    input_train_shape = input_train.shape [1:]
+                    input_test = np.array (input_for_test)
+            else:
+                start_index_s008 = 0
+                start_index_s009 = 0
+                end_index_s009 = episode_for_test[i]
+                input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
+                                                                                                                 start_index_s008,
+                                                                                                                 label_input_type)
+                input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (s009_data=s009_data,
+                                                                                                                 start_index=start_index_s009,
+                                                                                                                 end_index=end_index_s009,
+                                                                                                                 input_type=label_input_type)
+
+                input_train_S008, input_validation_s008 = sliding_prepare_for_trainning (input_for_train_s008,
+                                                                                         label_input_type)
+                input_train_s009, input_validation_s009 = sliding_prepare_for_trainning (input_for_train_s009,
+                                                                                         label_input_type)
+                label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (label_for_train_s008)
+                label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+                label_train = np.concatenate ((label_train_s008, label_train_s009), axis=0)
+                label_validation = np.concatenate ((label_val_s008, label_val_s009), axis=0)
+
+                if label_input_type == 'lidar_coord':
+                    input_train_lidar = np.concatenate ((input_train_S008 [0], input_train_s009 [0]), axis=0)
+                    input_validation_lidar = np.concatenate ((input_validation_s008 [0], input_validation_s009 [0]),
+                                                             axis=0)
+
+                    input_train_coord = np.concatenate ((input_train_S008 [1], input_train_s009 [1]), axis=0)
+                    input_validation_coord = np.concatenate ((input_validation_s008 [1], input_validation_s009 [1]),
+                                                             axis=0)
+                    input_train = [input_train_lidar, input_train_coord]
+                    input_validation = [input_validation_lidar, input_validation_coord]
+                else:
+                    input_train = np.concatenate ((input_train_S008, input_train_s009), axis=0)
+                    input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
+
+
+
+                input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (episode_for_test[i],
+                                                                                                 label_input_type,
+                                                                                                 s009_data)
+                label_test = np.array (label_for_test)
+
+                if label_input_type == 'coord':
+
+                    train_generator = prepare.DataGenerator_coord (input_train,
+                                                                   label_train,
+                                                                   BATCH_SIZE, shuffle=True)
+                    val_generator = prepare.DataGenerator_coord (input_validation,
+                                                                 label_validation,
+                                                                 BATCH_SIZE, shuffle=True)
+                    input_train_shape = input_train.shape [1:]
+                    input_test = np.array (input_for_test)
+                elif label_input_type == 'lidar_coord':
+                    X_lidar_train = input_train [0]
+                    X_coord_train = input_train [1]
+                    train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                                  X_coord_train,
+                                                                  label_train, BATCH_SIZE, shuffle=True)
+                    X_lidar_val = input_validation [0]
+                    X_coord_val = input_validation [1]
+                    val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                                X_coord_val,
+                                                                label_validation, BATCH_SIZE)
+                    input_test_lidar = np.array (input_for_test [1])
+                    input_test_coord = np.array (input_for_test [0])
+                    input_test_lidar = input_test_lidar.reshape (input_test_lidar.shape [0], 20, 200, 10)
+                    input_test = [input_test_lidar, input_test_coord]
+
+                    input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+                elif label_input_type == 'lidar':
+                    train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE,
+                                                                   shuffle=True)
+                    val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE,
+                                                                 shuffle=True)
+                    input_train_shape = input_train.shape [1:]
+                    input_test = np.array (input_for_test)
+                    input_test = input_test.reshape (input_test.shape [0], 20, 200, 10)
+        print ('Ep test: ',episode_for_test[i], end=' ', flush=True)
+        df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
+                                                                             train_generator, val_generator,
+                                                                             input_test, label_test,
+                                                                             num_classes,
+                                                                             input_train_shape,
+                                                                             episode_for_test[i], train)
+        df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+        df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
+        path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/incremental_window/')
+        ##print (path_result)
+        df_all_results_top_k.to_csv (path_result + 'all_results_incremental_window_top_k.csv', index=False)
+        df_all_index_predict.to_csv (path_result + 'all_index_predict_incremental_window_top_k.csv', index=False)
+
+
 def sliding_window_top_k(label_input_type,
                          episodes_for_test=10,#2000,
                          window_size=1000):
@@ -668,9 +820,9 @@ label_input_type = 'lidar_coord'
 print('--------------------------------------------------------')
 print('------- Beam Selection - Ruseckas - Online Learning')
 print('--- Input: ', label_input_type)
-print('--- Window type: Fixed Window')
+print('--- Window type: Incremental Window')
 
-fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2)
+#fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2)
 #sliding_window_top_k(label_input_type, episodes_for_test=2000, window_size=1000)
 
 #main()
@@ -681,4 +833,5 @@ fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2)
 #    for j in label_input_type:
 #        test_LOS_NLOS(i, j)
 
+incremental_window_top_k(label_input_type)
 

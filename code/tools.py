@@ -25,6 +25,7 @@ def extract_test_data_from_s009_sliding_window(episode, label_input_type, s009_d
 
     else:
         print ('error: deve especificar o tipo de entrada')
+    a=0
 
     return input_test, label_test
 def extract_training_data_from_s008_sliding_window(s008_data, start_index, input_type):

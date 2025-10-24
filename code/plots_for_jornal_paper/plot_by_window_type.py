@@ -15,7 +15,7 @@ def read_results(input_type, window_type, ref):
         if window_type == 'sliding_window':
             filename = 'all_results_'+window_type+'_1000_top_k.csv'
     if ref =='Wisard':
-        filename = '0_all_results_'+window_type+'_top_k.csv'
+        filename = '0_all_results_'+window_type+'_1000_top_k.csv'
     data = pd.read_csv(path+filename)
 
     top_k = [1, 5, 10, 15, 20, 25, 30]
@@ -508,7 +508,7 @@ def plot_comparition_socore_top_k_between_types_of_windows_wisard(input):
     size_font = 18
     font = 'Times New Roman'
 
-    english_plot = False
+    english_plot = True
     if english_plot:
         fig_labels = ['Fixed window', 'Incremental window', 'Sliding window']
         y_label = 'Accuracy top-k'
@@ -549,7 +549,7 @@ def plot_comparition_socore_top_k_between_types_of_windows_wisard(input):
 
     ax[2].grid(axis='both', linestyle='--', linewidth=0.5, color='gray')
     # ax [2].set_xticks(coord_wisard['Top-K'])
-    ax[2].set_xlabel ('K \n Coordenadas + LiDAR', font='Times New Roman', fontsize=size_of_font)
+    ax[2].set_xlabel ('K \n Coordinate + LiDAR', font='Times New Roman', fontsize=size_of_font)
 
     ax[0].set_ylabel (y_label, font='Times New Roman', fontsize=size_of_font)
     ax[1].legend ()
@@ -603,13 +603,14 @@ def calculate_mean_of_all_episodes(dataFrame):
 
 
 
-
-
 input = 'lidar'
 #plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
-window_type = 'fixed_window' # 'incremental_window' 'sliding_window'
-ref = 'ruseckas'#'Batool' # 'Wisard'
-plot_compare_refe_in_fixed_window()
+
+
+#plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
+window_type = 'sliding_window' # 'incremental_window' 'sliding_window'
+ref = 'Wisard'#'ruseckas'#'Batool' # 'Wisard'
+#plot_compare_refe_in_fixed_window()
 calculate_statis(input, window_type, ref)
 plot_compare_inputs_in_incremental_wind_wisard()
 
