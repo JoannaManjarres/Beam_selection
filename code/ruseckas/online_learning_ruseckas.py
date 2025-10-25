@@ -172,7 +172,7 @@ def fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2000):
 def incremental_window_top_k(label_input_type):
     data_for_train, data_for_validation, s009_data, num_classes = prepare.read_all_data ()
     all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
-    episode_for_test = np.arange (0, 2000, 20)
+    episode_for_test = np.arange (100, 160, 20) #[260]
     BATCH_SIZE = 32
     train = True
 
@@ -181,7 +181,7 @@ def incremental_window_top_k(label_input_type):
     for i in range (len (episode_for_test)):
         # for i in tqdm(range(len(episode_for_test))):
         #i=101
-        if i in s009_data ['Episode'].tolist ():
+        if episode_for_test[i] in s009_data ['Episode'].tolist ():
             if episode_for_test[i] == 0:
                 start_index_s008 = 0
                 input_for_train, label_for_train = tls.extract_training_data_from_s008_sliding_window (all_dataset_s008,
@@ -306,19 +306,19 @@ def incremental_window_top_k(label_input_type):
                     input_train_shape = input_train.shape [1:]
                     input_test = np.array (input_for_test)
                     input_test = input_test.reshape (input_test.shape [0], 20, 200, 10)
-        print ('Ep test: ',episode_for_test[i], end=' ', flush=True)
-        df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
-                                                                             train_generator, val_generator,
-                                                                             input_test, label_test,
-                                                                             num_classes,
-                                                                             input_train_shape,
-                                                                             episode_for_test[i], train)
-        df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
-        df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
-        path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/incremental_window/')
-        ##print (path_result)
-        df_all_results_top_k.to_csv (path_result + 'all_results_incremental_window_top_k.csv', index=False)
-        df_all_index_predict.to_csv (path_result + 'all_index_predict_incremental_window_top_k.csv', index=False)
+            print ('Ep test: ',episode_for_test[i], end=' ', flush=True)
+            df_results_top_k, all_index_predict_order = beam_selection_ruseckas (label_input_type,
+                                                                                 train_generator, val_generator,
+                                                                                 input_test, label_test,
+                                                                                 num_classes,
+                                                                                 input_train_shape,
+                                                                                 episode_for_test[i], train)
+            df_all_results_top_k = pd.concat ([df_all_results_top_k, df_results_top_k], ignore_index=True)
+            df_all_index_predict = pd.concat ([df_all_index_predict, all_index_predict_order], ignore_index=True)
+            path_result = ('../../results/score/ruseckas/online/top_k/' + label_input_type + '/incremental_window/')
+            ##print (path_result)
+            df_all_results_top_k.to_csv (path_result + 'all_results_incremental_window_top_k.csv', index=False)
+            df_all_index_predict.to_csv (path_result + 'all_index_predict_incremental_window_top_k.csv', index=False)
 
 
 def sliding_window_top_k(label_input_type,
@@ -816,7 +816,7 @@ def plot_test_LOS_NLOS():
     plt.savefig (path_to_save + file_name, dpi=300, bbox_inches='tight')
 
 
-label_input_type = 'lidar_coord'
+label_input_type = 'coord'
 print('--------------------------------------------------------')
 print('------- Beam Selection - Ruseckas - Online Learning')
 print('--- Input: ', label_input_type)
