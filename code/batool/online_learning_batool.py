@@ -2330,7 +2330,7 @@ def plot_test_LOS_NLOS():
 #test_LOS_NLOS(connection_type='NLOS', label_input_type='coord')
 
 
-
+fit_incremental_window_top_k(label_input_type='lidar_coord', episodes_for_test=2000, start_epi = 0)
 
 #plot_test_LOS_NLOS()
 
