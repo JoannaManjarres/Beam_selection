@@ -324,7 +324,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
     opt = Adam (learning_rate=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
     if input == 'lidar_coord':
-        print('***************Training Lidar + Coord Model************')
+        #print('***************Training Lidar + Coord Model************')
         star_train = time.process_time_ns ()
         hist = model.fit (x_train,
                           y_train,
@@ -447,7 +447,7 @@ def train_model(input, model, data_train, data_validation, see_trainning_progres
                                                               R2_metric])
             #model.summary()
             if train_or_test == 'train':
-                print('***************Training************')
+                #print('***************Training************')
                 star_trainning = time.process_time_ns ()
                 hist = model.fit(X_lidar_train,
                                  y_train,
@@ -538,7 +538,7 @@ def test_model(input, model, data_test, top_k, see_trainning_progress):
     if input == 'lidar_coord':
         x_test = [data_test[0][0], data_test[0][1]]
         y_test = data_test[1]
-        print ('***************Testing************')
+        #print ('***************Testing************')
         model.load_weights (model_folder + 'best_weights.coord_lidar.h5', by_name=True)
         scores = model.evaluate (x_test, y_test, verbose=0)
         if see_trainning_progress != 0:
@@ -810,7 +810,7 @@ def beam_selection_Batool(input,
 
 
     else:
-        print('No entre')
+        #print('No entre')
         restore_models = False
         top_k = np.arange (1, 31, 1)
         #print(top_k)
@@ -818,10 +818,10 @@ def beam_selection_Batool(input,
         trainning_process_time, samples_shape = train_model (input, model,
                                                              data_train, data_validation,
                                                              see_trainning_progress)
-        print('termiino de treinar o modelo')
+        #print('termiino de treinar o modelo')
         #top_k = np.arange(1, 31, 1)
         df_results_top_k = test_model(input, model, data_test, top_k, see_trainning_progress)
-        print('testando o modelo')
+        #print('testando o modelo')
 
     df_results_top_k['episode'] = episode
     df_results_top_k['trainning_process_time'] = trainning_process_time
@@ -1207,25 +1207,46 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test, start_epi 
                 input_for_train_s008, label_for_train_s008 = tls.extract_training_data_from_s008_sliding_window(all_dataset_s008,
                                                                                                                 start_index_s008,
                                                                                                                 label_input_type)
+                label_train_s008, label_val_s008 = sliding_prepare_label_for_trainning (label_for_train_s008)
+
                 input_for_train_s009, label_for_train_s009 = tls.extract_training_data_from_s009_sliding_window (s009_data=s009_data,
                                                                                                                  start_index=0,
                                                                                                                  end_index=i,
                                                                                                                  input_type=label_input_type)
-                input_for_train = np.concatenate ((input_for_train_s008, input_for_train_s009), axis=0)
-                label_for_train = np.concatenate ((label_for_train_s008, label_for_train_s009), axis=0)
+                label_train_s009, label_val_s009 = sliding_prepare_label_for_trainning (label_for_train_s009)
+
+                label_train = np.concatenate ((label_train_s008, label_train_s009), axis=0)
+                label_validation = np.concatenate ((label_val_s008, label_val_s009), axis=0)
 
                 input_for_test, label_for_test = tls.extract_test_data_from_s009_sliding_window (i,
                                                                                                  label_input_type,
                                                                                                  s009_data)
-                label_test = np.array(label_for_test)
-                label_train, label_validation = sliding_prepare_label_for_trainning (label_for_train)
+                label_test = np.array (label_for_test)
+
+
 
                 if label_input_type == 'coord':
-                    input_train, input_validation = sliding_prepare_coord_for_trainning(input_for_train)
-                    input_test = np.array(input_for_test).reshape(len(input_for_test), 2, 1)
+                    input_train_s008, input_val_s008 = sliding_prepare_coord_for_trainning (input_for_train_s008)
+                    input_train_s009, input_val_s009 = sliding_prepare_coord_for_trainning (input_for_train_s009)
+
+                    input_train = np.concatenate ((input_train_s008, input_train_s009), axis=0)
+                    input_validation = np.concatenate ((input_val_s008, input_val_s009), axis=0)
+
+                    # input_train = input_for_train.reshape(input_for_train.shape[0], 2, 1)
+                    # input_validation = input_for_validation.reshape(input_for_validation.shape[0], 2, 1)
+
+                    input_test = np.array (input_for_test).reshape (len (input_for_test), 2, 1)
+
                 if label_input_type == 'lidar':
-                    input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
-                    input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
+                    input_train_s008, input_validation_s008 = sliding_prepare_lidar_for_trainning (input_for_train_s008)
+                    input_train_s009, input_validation_s009 = sliding_prepare_lidar_for_trainning (input_for_train_s009)
+
+                    input_train = np.concatenate ((input_train_s008, input_train_s009), axis=0)
+                    input_validation = np.concatenate ((input_validation_s008, input_validation_s009), axis=0)
+
+                    input_test = np.array (input_for_test).reshape (len (input_for_test), 20, 200, 10)
+
+
                 if label_input_type == 'lidar_coord':
                     input_coord_s008_train, input_coord_s008_validation = sliding_prepare_coord_for_trainning (
                         input_for_train_s008 [1])
@@ -1244,9 +1265,11 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test, start_epi 
                     input_lidar_train = np.concatenate ((input_lidar_s008_train, input_lidar_s009_train), axis=0)
                     input_coord_train = np.concatenate ((input_coord_s008_train, input_coord_s009_train), axis=0)
 
-                    input_lidar_validation = np.concatenate ((input_lidar_s008_validation, input_lidar_s009_validation),
+                    input_lidar_validation = np.concatenate ((input_lidar_s008_validation,
+                                                              input_lidar_s009_validation),
                                                              axis=0)
-                    input_coord_validation = np.concatenate ((input_coord_s008_validation, input_coord_s009_validation),
+                    input_coord_validation = np.concatenate ((input_coord_s008_validation,
+                                                              input_coord_s009_validation),
                                                              axis=0)
 
                     input_train = [input_lidar_train, input_coord_train]
