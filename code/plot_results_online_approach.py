@@ -670,28 +670,178 @@ def plot_compare_accuracy_models():
     plt.tight_layout (rect=[0, 0, 1, 0.95])
 
 def merge_file_ruseckas_files():
-    path = '../results/score/ruseckas/online/top_k/lidar/fixed_window/'
-    filename1 = 'all_results_fixed_window_top_k_parte_1.csv'
-    filename2 = 'all_results_fixed_window_top_k_parte_2.csv'
-    filename3 = 'all_results_fixed_window_top_k_parte_3.csv'
+    window_type = 'incremental'
+    data_type = 'coord'
+    path = '../results/score/ruseckas/online/top_k/'+data_type+'/'+window_type+'_window/'
+    filename1 = 'all_results_'+window_type+'_window_top_k_1.csv'
+    filename2 = 'all_results_'+window_type+'_window_top_k_2.csv'
+    #filename3 = 'all_results_fixed_window_top_k_parte_3.csv'
 
     usecols = ["top-k", "score", "test_time", "samples_tested",	"episode", "trainning_process_time", "samples_trainning"]
     data1 = pd.read_csv(path + filename1)#, header=None, usecols=usecols, names=usecols)
     data2 = pd.read_csv(path + filename2)#, header=None, usecols=usecols, names=usecols)
-    data3 = pd.read_csv(path + filename3)#, header=None, usecols=usecols, names=usecols)
+    #data3 = pd.read_csv(path + filename3)#, header=None, usecols=usecols, names=usecols)
 
-    frames = [data1, data2, data3]
+    frames = [data1, data2]#, data3]
     result = pd.concat(frames)
 
     result.to_csv(path + 'all_results_fixed_window_top_k.csv', index=False, header=True)
 
 
+def read_file_csv(input_type, ref_name, window):
 
-read_accuracy_models(input_type='lidar_coord', window_type='sliding')
-plot_accuracys()
-plot_train_time_Douglas()
+    data_path ='/content/drive/MyDrive/Doutorado/results_online_learning/'
+    data_path = '../results/score/results_vm_LAND/'+ ref_name +'/'
+    path = data_path #+ ref_name
+
+    specific_path = input_type +'/'+ window + '_window/'
+    filename = 'all_results_'+window+'_window_top_k.csv'
+
+    if window == 'sliding':
+      filename = 'all_results_'+window+'_window_1000_top_k.csv'
+
+    #if ref_name == 'Wisard':
+    #    data_path = '../results/score/' + ref_name + '/online/servidor_vm_land/Wisard/'
+    #    specific_path = input_type+'/'+window+'_window/'
+    #    if window == 'sliding':
+    #        filename = 'all_results_' + window + '_window_1000_top_k.csv'
+    #    path = data_path #+ specific_path
+    #    data = pd.read_csv (path + specific_path + filename)
+    #else:
+    usecols = ["top-k", "score", "test_time", "samples_tested",	"episode", "trainning_process_time", "samples_trainning"]
+    data = pd.read_csv(path +specific_path+ filename)#, header=None, usecols=usecols, names=usecols)
+
+    return data
+
+def read_accuracy_models(input_type, window_type):
+        top_k = [1, 5, 10]
+        wisard_data = read_file_csv (input_type, 'Wisard', window_type)
+        wisard_score_ = wisard_data [['score', 'top-k']]
+        wisard_score = wisard_score_ [wisard_score_ ['top-k'].isin (top_k)]
+
+        ruseckas_data = read_file_csv (input_type, 'ruseckas', window_type)
+        ruseckas_score_ = ruseckas_data [['score', 'top-k']]
+        ruseckas_score = ruseckas_score_ [ruseckas_score_ ['top-k'].isin (top_k)]
+
+        batool_data = read_file_csv (input_type, 'Batool', window_type)
+        batool_score_ = batool_data [['score', 'top-k']]
+        batool_score = batool_score_ [batool_score_ ['top-k'].isin (top_k)]
+
+        return wisard_score, ruseckas_score, batool_score,
+
+def plot_accuracy_comparison_windows_inputs_ref():
+  window_types = ['fixed', 'sliding']#, 'incremental']
+  input_types = ['coord', 'lidar', 'lidar_coord']
+  nomes_modelos = ['Wisard', 'Ruseckas', 'Batool']
+  #modelos = ['Wisard', 'Ruseckas', 'Batool']
+
+  lista_de_dfs = []
+
+  data_incre_coord = read_accuracy_models(input_type='coord', window_type='incremental')
+  data_incre_lidar = read_accuracy_models(input_type='lidar', window_type='incremental')
+
+  df_wisard_incr_coord = data_incre_coord[0]
+  df_ruseckas_incr_coord = data_incre_coord[1]
+  df_batool_incr_coord = data_incre_coord[2]
+
+  df_wisard_incre_lidar = data_incre_lidar[0]
+  df_ruseckas_incr_lidar = data_incre_lidar[1]
+  df_batool_incr_lidar = data_incre_lidar[2]
+
+  df_wisard_incr_coord ['window_type'] = 'incremental'
+  df_wisard_incr_coord ['input_type'] = 'coord'
+
+  df_ruseckas_incr_coord ['window_type'] = 'incremental'
+  df_ruseckas_incr_lidar ['input_type'] = 'lidar'
+
+  df_batool_incr_coord ['window_type'] = 'incremental'
+  df_batool_incr_coord ['input_type'] = 'coord'
+
+  df_wisard_incre_lidar ['window_type'] = 'incremental'
+  df_wisard_incre_lidar ['input_type'] = 'lidar'
+
+  df_ruseckas_incr_lidar ['window_type'] = 'incremental'
+  df_ruseckas_incr_lidar ['input_type'] = 'lidar'
+
+  df_batool_incr_lidar ['window_type'] = 'incremental'
+  df_batool_incr_lidar ['input_type'] = 'lidar'
+
+
+  for w_type in window_types:
+    for i_type in input_types:
+      dfs = read_accuracy_models (window_type=w_type, input_type=i_type)
+
+      df_modelos_juntos = pd.concat (df.assign (modelo=nome) for df, nome in zip (dfs, nomes_modelos))
+      # Adicionar as colunas de contexto
+      df_modelos_juntos ['window_type'] = w_type
+      df_modelos_juntos ['input_type'] = i_type
+
+      lista_de_dfs.append (df_modelos_juntos)
+
+
+  # Cria o DataFrame Final
+  df_total_combinado_1 = pd.concat (lista_de_dfs)
+
+  df_total_combinado = pd.concat([df_total_combinado_1,
+                    df_batool_incr_lidar, df_ruseckas_incr_lidar, df_wisard_incre_lidar,
+                    df_batool_incr_coord, df_ruseckas_incr_coord, df_wisard_incr_coord])
+
+  valores_k_ordenados = sorted (df_total_combinado ['top-k'].unique ())
+
+  #sns.set_palette ("pastel")
+
+  window_types = ['fixed', 'sliding', 'incremental']
+  df_total_combinado.rename(
+      inplace=True,
+      columns={
+          'score': 'top-k accuracy',
+          'top-k': 'k',
+          'modelo': 'model',
+          'window_type': 'window type',
+          'input_type': 'input type'
+      }
+  )
+
+  g = sns.catplot (
+      data=df_total_combinado,
+      x='k',
+      y='top-k accuracy',
+      hue='model',  # Comparação lado a lado (Modelos)
+      col='input type',  # Colunas da grade (Inputs)
+      row='window type',  # Linhas da grade (Windows)
+      kind='bar',
+      order=valores_k_ordenados,
+      height=4,  # Altura de CADA subplot
+      aspect=1.2,  # Proporção (largura/altura) de CADA subplot
+      # Define a ordem das linhas/colunas
+      row_order=window_types,
+      col_order=input_types,
+      margin_titles=True,
+      legend_out=False,
+      errorbar=('ci', 99),
+      #orientation='vertical'
+      #color='lightblue'
+  )
+
+  sns.move_legend(
+    g, "lower center",
+    bbox_to_anchor=(.5, 1), ncol=3, title=None, frameon=False,
+  )
+  data_path = '../results/score/results_vm_LAND/'
+
+  g.savefig (data_path +'compare_online_all_ref_all_windows_accuracys.png',
+             bbox_inches='tight', dpi=300)
+
+  #g.savefig('/content/drive/MyDrive/Doutorado/results_online_learning/accuracy_comparison_windows_ref_inputs.png', bbox_inches='tight', dpi=300)
+
+
+plot_accuracy_comparison_windows_inputs_ref()
+#merge_file_ruseckas_files()
+#read_accuracy_models(input_type='lidar_coord', window_type='sliding')
+#plot_accuracys()
+#plot_train_time_Douglas()
 #show_results_the_all_models()
-plot_compare_time_train_by_model()
+#plot_compare_time_train_by_model()
 #plot_compare_bars_accuracy_models()
 #plot_compare_accuracy_models()
 

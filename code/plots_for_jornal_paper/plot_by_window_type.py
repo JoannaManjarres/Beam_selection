@@ -392,6 +392,19 @@ def plot_compare_times_by_ref():
 
     a =0
 
+def calculate_accurcy_statis(input_type, window_type, ref):
+    data, _, _, top_k = read_results(input_type=input_type, window_type=window_type, ref=ref)
+    data_top_1 = data[data['top-k'] == 1]
+    score = data_top_1 ['score']
+    statistics = score.describe()
+    print('statistics of accuracy for ', input_type, ' with ', ref)
+    print(statistics)
+    print('---------------------------------')
+    #file = pd.DataFrame(data=statistics)
+    #file.to_csv('../../results/score/plot_for_jornal/'+window_type+'/stats/'+input_type+'_'+ref+'_'+window_type+'_accuracy_statistics.csv')
+
+    return statistics
+
 def calculate_statis(input_type, window_type, ref, flag_fast_experiment=False):
     data, _, _, top_k = read_results(input_type=input_type, window_type=window_type, ref=ref)
     data_top_1 = data[data['top-k'] == 1]
@@ -603,16 +616,19 @@ def calculate_mean_of_all_episodes(dataFrame):
 
 
 
-input = 'lidar'
+input = 'lidar_coord'
 #plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
 
 
 #plot_comparition_socore_top_k_between_types_of_windows_wisard(input)
 window_type = 'sliding_window' # 'incremental_window' 'sliding_window'
-ref = 'Wisard'#'ruseckas'#'Batool' # 'Wisard'
+ref = 'ruseckas'#'ruseckas'#'Batool' # 'Wisard'
 #plot_compare_refe_in_fixed_window()
-calculate_statis(input, window_type, ref)
-plot_compare_inputs_in_incremental_wind_wisard()
+calculate_accurcy_statis(input, window_type, ref)
+ref = 'Wisard'
+calculate_accurcy_statis(input, window_type, ref)
+#calculate_statis(input, window_type, ref)
+#plot_compare_inputs_in_incremental_wind_wisard()
 
 
 
