@@ -1192,31 +1192,12 @@ def fit_incremental_window_top_k(label_input_type, episodes_for_test, start_epi 
                     input_train, input_validation = sliding_prepare_lidar_for_trainning(input_for_train)
                     input_test = np.array(input_for_test).reshape(len(input_for_test), 20, 200, 10)
                 if label_input_type == 'lidar_coord':
-                    input_coord_s008_train, input_coord_s008_validation = sliding_prepare_coord_for_trainning (
-                        input_for_train_s008 [1])
-                    input_lidar_s008_train, input_lidar_s008_validation = sliding_prepare_lidar_for_trainning (
-                        input_for_train_s008 [0])
-                    # input_s008_train = [input_lidar_s008_train, input_coord_s008_train]
-                    # input_s008_validation = [input_lidar_s008_validation, input_coord_s008_validation]
-
-                    input_coord_s009_train, input_coord_s009_validation = sliding_prepare_coord_for_trainning (
-                        input_for_train_s009 [1])
-                    input_lidar_s009_train, input_lidar_s009_validation = sliding_prepare_lidar_for_trainning (
-                        input_for_train_s009 [0])
-                    # input_s009_train = [input_lidar_s009_train, input_coord_s009_train]
-                    # input_s009_validation = [input_lidar_s009_validation, input_coord_s009_validation]
-
-                    input_lidar_train = np.concatenate ((input_lidar_s008_train, input_lidar_s009_train), axis=0)
-                    input_coord_train = np.concatenate ((input_coord_s008_train, input_coord_s009_train), axis=0)
-
-                    input_lidar_validation = np.concatenate ((input_lidar_s008_validation, input_lidar_s009_validation),
-                                                             axis=0)
-                    input_coord_validation = np.concatenate ((input_coord_s008_validation, input_coord_s009_validation),
-                                                             axis=0)
-
+                    input_coord_train, input_coord_validation = sliding_prepare_coord_for_trainning (
+                        input_for_train [1])
+                    input_lidar_train, input_lidar_validation = sliding_prepare_lidar_for_trainning (
+                        input_for_train [0])
                     input_train = [input_lidar_train, input_coord_train]
                     input_validation = [input_lidar_validation, input_coord_validation]
-
                     input_coord_test = np.array (input_for_test [0]).reshape (len (input_for_test [0]), 2, 1)
                     input_lidar_test = np.array (input_for_test [1]).reshape (len (input_for_test [1]), 20, 200, 10)
                     input_test = [input_lidar_test, input_coord_test]
