@@ -149,10 +149,6 @@ def LoS_NLoS_beam_selection():
 
                     a=0
 
-def read_results_LOS_NLOS():
-    path = '../results/score/Wisard/coord/LOS'
-    connection_types = ['LOS', 'NLOS', 'ALL']
-    input_types = ['lidar', 'coord', 'lidar_coord']
 
 
 def read_LoS_NLoS_results(dataset):
@@ -372,5 +368,9 @@ def read_results_top_k(dataset, input_type, connection_type):
 
 #generalization_wisard_test()
 #LoS_NLoS_beam_selection()
-plot_LoS_NLoS_results()
+#plot_LoS_NLoS_results()
 #plot_results_LOS_NLOS()
+
+dataset = 's009'
+results = read_LoS_NLoS_results (dataset)
+a=0

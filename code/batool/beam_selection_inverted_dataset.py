@@ -26,6 +26,75 @@ def prepare_coord_for_trainning(input_for_train):
     for i in range (len (input_for_train)):
         new_form_of_input [i] = np.array (input_for_train [i])
     return new_form_of_input
+def beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='coord'):
+    data_for_train, data_for_validation, s009_data, num_classes = olb.read_all_data ()
+    all_dataset_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+    size_for_train = int (len (s009_data) * 0.8)
+    s009_train = s009_data [:size_for_train]
+    s009_val = s009_data [size_for_train:]
+
+    # separar dataset em LOS e NLOS
+    if connection == 'LOS':
+        train_s009 = s009_train [s009_train ['LOS'] == 'LOS=1']
+        val_s009 = s009_val [s009_val ['LOS'] == 'LOS=1']
+        label_val = np.array (val_s009 ['index_beams'].tolist ())
+        label_train = np.array (train_s009 ['index_beams'].tolist ())
+
+        data_for_test = all_dataset_s008 [all_dataset_s008 ['LOS'] == 'LOS=1']
+        label_test = np.array (data_for_test ['index_beams'].tolist ())
+
+    if connection == 'NLOS':
+        train_s009 = s009_train [s009_train ['LOS'] == 'LOS=0']
+        val_s009 = s009_val [s009_val ['LOS'] == 'LOS=0']
+        label_val = np.array (val_s009 ['index_beams'].tolist ())
+        label_train = np.array (train_s009 ['index_beams'].tolist ())
+
+        data_for_test = all_dataset_s008 [all_dataset_s008 ['LOS'] == 'LOS=0']
+        label_test = np.array (data_for_test ['index_beams'].tolist ())
+
+    if input_type == 'coord':
+        input_train = prepare_coord_for_trainning(train_s009['coord'].tolist())
+        input_val = prepare_coord_for_trainning(val_s009['coord'].tolist())
+        input_test = prepare_coord_for_trainning(data_for_test['coord'].tolist())
+
+    if input_type == 'lidar':
+        input_train = prepare_lidar_for_trainning(train_s009['lidar'].tolist())
+        input_val = prepare_lidar_for_trainning(val_s009['lidar'].tolist())
+        input_test = prepare_lidar_for_trainning(data_for_test['lidar'].tolist())
+
+    if input_type == 'lidar_coord':
+        print('input: ', input_type)
+        input_train_coord = prepare_coord_for_trainning(train_s009['coord'].tolist())
+        input_train_lidar = prepare_lidar_for_trainning(train_s009['lidar'].tolist())
+        input_train = [input_train_lidar, input_train_coord]
+
+        input_val_coord = prepare_coord_for_trainning(val_s009['coord'].tolist())
+        input_val_lidar = prepare_lidar_for_trainning(val_s009['lidar'].tolist())
+        input_val = [input_val_lidar, input_val_coord]
+
+        input_test_coord = prepare_coord_for_trainning(data_for_test['coord'].tolist())
+        input_test_lidar = prepare_lidar_for_trainning(data_for_test['lidar'].tolist())
+        input_test = [input_test_lidar, input_test_coord]
+
+    see_trainning_progress = False
+    df_results_top_k = olb.beam_selection_Batool (input=input_type,
+                                                  data_train=[input_train, label_train],
+                                                  data_validation=[input_val, label_val],
+                                                  data_test=[input_test, label_test],
+                                                  num_classes=num_classes,
+                                                  episode=0,
+                                                  see_trainning_progress=see_trainning_progress,
+                                                  restore_models=False,
+                                                  flag_fast_experiment=False)
+
+    path_result = ('../../results/inverter_dataset/score/Batool/') + input_type + '/'+connection+'/'
+    print (path_result + 'accuracy_' + input_type +'_'+connection+ '.csv')
+    df_results_top_k.to_csv (path_result + 'accuracy_' + input_type +'_'+connection+ '.csv', index=False)
+
+
+
+
+
 def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
     data_for_train, data_for_validation, s009_data, num_classes = olb.read_all_data ()
     all_dataset_s008 = pd.concat([data_for_train, data_for_validation], axis=0)
@@ -84,4 +153,12 @@ def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
 
     a=0
 
-beam_selection_with_inverted_dataset()
+#beam_selection_with_inverted_dataset()
+
+beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='coord')
+beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='coord')
+beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar')
+beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar')
+beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar_coord')
+beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar_coord')
+

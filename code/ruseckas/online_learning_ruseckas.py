@@ -553,7 +553,7 @@ def main():
 def test_LOS_NLOS(connection_type,label_input_type):
 
     train_data, val_data, test_data, num_classes = prepare.read_all_data()
-    reduce_samples_for_train = True
+    reduce_samples_for_train = False
 
     #connection_type = 'NLOS'
     #label_input_type = 'coord'#'lidar' 'lidar_coord'
@@ -817,10 +817,11 @@ def plot_test_LOS_NLOS():
 
 
 label_input_type = 'coord'
-print('--------------------------------------------------------')
-print('------- Beam Selection - Ruseckas - Online Learning')
-print('--- Input: ', label_input_type)
-print('--- Window type: Incremental Window')
+test_LOS_NLOS('LOS', label_input_type)
+#print('--------------------------------------------------------')
+#print('------- Beam Selection - Ruseckas - Online Learning')
+#print('--- Input: ', label_input_type)
+#print('--- Window type: Incremental Window')
 
 #fixed_window_top_k(label_input_type, start_epi_test=0, stop_epi_test=2)
 #sliding_window_top_k(label_input_type, episodes_for_test=2000, window_size=1000)
@@ -833,5 +834,5 @@ print('--- Window type: Incremental Window')
 #    for j in label_input_type:
 #        test_LOS_NLOS(i, j)
 
-incremental_window_top_k(label_input_type)
+#incremental_window_top_k(label_input_type)
 

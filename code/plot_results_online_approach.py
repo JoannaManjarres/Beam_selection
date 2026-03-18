@@ -671,7 +671,7 @@ def plot_compare_accuracy_models():
 
 def merge_file_ruseckas_files():
     window_type = 'incremental'
-    data_type = 'coord'
+    data_type = 'lidar_coord'
     path = '../results/score/ruseckas/online/top_k/'+data_type+'/'+window_type+'_window/'
     filename1 = 'all_results_'+window_type+'_window_top_k_1.csv'
     filename2 = 'all_results_'+window_type+'_window_top_k_2.csv'
@@ -685,7 +685,7 @@ def merge_file_ruseckas_files():
     frames = [data1, data2]#, data3]
     result = pd.concat(frames)
 
-    result.to_csv(path + 'all_results_fixed_window_top_k.csv', index=False, header=True)
+    result.to_csv(path + 'all_results_'+window_type+'_window_top_k.csv', index=False, header=True)
 
 
 def read_file_csv(input_type, ref_name, window):
@@ -835,8 +835,8 @@ def plot_accuracy_comparison_windows_inputs_ref():
   #g.savefig('/content/drive/MyDrive/Doutorado/results_online_learning/accuracy_comparison_windows_ref_inputs.png', bbox_inches='tight', dpi=300)
 
 
-plot_accuracy_comparison_windows_inputs_ref()
-#merge_file_ruseckas_files()
+#plot_accuracy_comparison_windows_inputs_ref()
+merge_file_ruseckas_files()
 #read_accuracy_models(input_type='lidar_coord', window_type='sliding')
 #plot_accuracys()
 #plot_train_time_Douglas()
