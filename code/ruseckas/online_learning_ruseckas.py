@@ -817,7 +817,7 @@ def plot_test_LOS_NLOS():
 
 
 label_input_type = 'coord'
-test_LOS_NLOS('LOS', label_input_type)
+#test_LOS_NLOS('LOS', label_input_type)
 #print('--------------------------------------------------------')
 #print('------- Beam Selection - Ruseckas - Online Learning')
 #print('--- Input: ', label_input_type)

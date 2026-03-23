@@ -8,6 +8,267 @@ sys.path.append ("../")
 import tools as tls
 import online_learning_ruseckas as olb
 import prepare_for_online_learning as prepare
+from sklearn.model_selection import KFold
+
+
+
+def k_fold_simulations():
+    data_for_train, data_for_validation, data_s009, num_classes = prepare.read_all_data ()
+    data_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+
+    fold_size = int(len(data_s009)/10)
+    connection = 'ALL'
+    result = pd.DataFrame()
+    for i in range(4):
+        dataset_size = len(data_s009)
+        if i == 0:
+            print ('i: ', i)
+            start = (i + 1) * fold_size
+            end = dataset_size
+            new_data_s009 = data_s009 [start:end]
+            if connection == 'LOS' or connection == 'NLOS':
+                print (connection)
+                df_results_top_k, all_index_predict_order = LOS_NLOS_inverted_dataset_beam_selection(data_s009=new_data_s009,
+                                                                                                 connection=connection)
+            else:
+                print (connection)
+                df_results_top_k, all_index_predict_order = inverter_dataset_beam_selection(data_s009=new_data_s009,
+                                                                                            test_s008=data_s008,
+                                                                                            num_classes=num_classes)
+
+            result = pd.concat([result, df_results_top_k[df_results_top_k['top-k']==1]], axis=0)
+
+
+        if i == 9:
+            print ('i: ', i)
+            start_1 = 0
+            end_1 = i * fold_size
+            new_data_s009 = data_s009 [start_1:end_1]
+            if connection == 'LOS' or connection == 'NLOS':
+                df_results_top_k, all_index_predict_order = LOS_NLOS_inverted_dataset_beam_selection (data_s009=new_data_s009,
+                                                                                                  connection=connection)
+            else:
+                print (connection)
+                df_results_top_k, all_index_predict_order = inverter_dataset_beam_selection (data_s009=new_data_s009,
+                                                                                             test_s008=data_s008,
+                                                                                             num_classes=num_classes)
+
+            result = pd.concat ([result, df_results_top_k [df_results_top_k ['top-k'] == 1]], axis=0)
+
+
+        if i != 0 and i != 9:
+            print ('i: ', i)
+            start_1 = 0
+            end_1 = i*fold_size
+            start_2 = (i+1)*fold_size
+            end_2 = dataset_size
+            new_data_s009 = pd.concat([data_s009[start_1:end_1], data_s009[start_2:end_2]], axis=0)
+            if connection == 'LOS' or connection == 'NLOS':
+                df_results_top_k, all_index_predict_order = LOS_NLOS_inverted_dataset_beam_selection(data_s009=new_data_s009,
+                                                                                                     connection=connection)
+            else:
+                print(connection)
+                df_results_top_k, all_index_predict_order = inverter_dataset_beam_selection (data_s009=new_data_s009,
+                                                                                             test_s008=data_s008,
+                                                                                            num_classes=num_classes)
+            result = pd.concat ([result, df_results_top_k [df_results_top_k ['top-k'] == 1]], axis=0)
+
+
+
+
+
+    path_result = ('../../results/inverter_dataset/score/Ruseckas/lidar_coord' + '/' + connection + '/')
+    # all_index_predict_order.to_csv (path_result + 'index_predict_' + input_type + '.csv', index=False)
+    result.to_csv (path_result + 'k_fold_accuracy_lidar_coord_' + connection + '.csv', index=False)
+    a=0
+
+
+
+
+def LOS_NLOS_inverted_dataset_beam_selection(data_s009, connection):
+    data_for_train, data_for_validation, _, num_classes = prepare.read_all_data ()
+    s008_test = pd.concat ([data_for_train, data_for_validation], axis=0)
+    input_type = 'lidar_coord'
+
+    size_for_train = int (len (data_s009) * 0.8)
+    s009_train = data_s009 [:size_for_train]
+    s009_val = data_s009 [size_for_train:]
+
+    # separar dataset em LOS e NLOS
+    if connection == 'LOS':
+        train_s009 = s009_train [s009_train ['LOS'] == 'LOS=1']
+        val_s009 = s009_val [s009_val ['LOS'] == 'LOS=1']
+        label_validation = np.array (val_s009 ['index_beams'].tolist ())
+        label_train = np.array (train_s009 ['index_beams'].tolist ())
+
+        test_s008 = s008_test [s008_test ['LOS'] == 'LOS=1']
+        label_test = np.array (test_s008 ['index_beams'].tolist ())
+
+    if connection == 'NLOS':
+        train_s009 = s009_train [s009_train ['LOS'] == 'LOS=0']
+        val_s009 = s009_val [s009_val ['LOS'] == 'LOS=0']
+        label_validation = np.array (val_s009 ['index_beams'].tolist ())
+        label_train = np.array (train_s009 ['index_beams'].tolist ())
+
+        test_s008 = s008_test [s008_test ['LOS'] == 'LOS=0']
+        label_test = np.array (test_s008 ['index_beams'].tolist ())
+
+    BATCH_SIZE = 32
+
+    if input_type == 'coord':
+        input_train = np.array (train_s009 ['coord'].tolist ())
+        input_validation = np.array (val_s009 ['coord'].tolist ())
+        input_test = np.array (test_s008 ['coord'].tolist ())
+
+        train_generator = prepare.DataGenerator_coord (input_train,
+                                                       label_train,
+                                                       BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_coord (input_validation,
+                                                     label_validation,
+                                                     BATCH_SIZE, shuffle=True)
+        input_train_shape = input_train.shape [1:]
+
+    if input_type == 'lidar':
+        lidar_train = np.array (train_s009 ['lidar'].tolist ())
+        lidar_val = np.array (val_s009 ['lidar'].tolist ())
+        lidar_test = np.array (test_s008 ['lidar'].tolist ())
+
+        input_train = lidar_train.reshape (lidar_train.shape [0], 20, 200, 10)
+        input_validation = lidar_val.reshape (lidar_val.shape [0], 20, 200, 10)
+        input_test = lidar_test.reshape (lidar_test.shape [0], 20, 200, 10)
+
+        train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE, shuffle=True)
+        input_train_shape = input_train.shape [1:]
+
+    if input_type == 'lidar_coord':
+        coord_train = np.array (train_s009 ['coord'].tolist ())
+        coord_val = np.array (val_s009 ['coord'].tolist ())
+        coord_test = np.array (test_s008 ['coord'].tolist ())
+
+        lidar_train = np.array (train_s009 ['lidar'].tolist ())
+        lidar_val = np.array (val_s009 ['lidar'].tolist ())
+        lidar_test = np.array (test_s008 ['lidar'].tolist ())
+
+        lidar_train = lidar_train.reshape (lidar_train.shape [0], 20, 200, 10)
+        input_train = [lidar_train.reshape (lidar_train.shape [0], 20, 200, 10), coord_train]
+
+        lidar_val = lidar_val.reshape (lidar_val.shape [0], 20, 200, 10)
+        input_val = [lidar_val.reshape (lidar_val.shape [0], 20, 200, 10), coord_val]
+
+        lidar_test = lidar_test.reshape (lidar_test.shape [0], 20, 200, 10)
+        input_test = [lidar_test.reshape (lidar_test.shape [0], 20, 200, 10), coord_test]
+
+        X_lidar_train = input_train [0]
+        X_coord_train = input_train [1]
+        train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                      X_coord_train,
+                                                      label_train, BATCH_SIZE, shuffle=True)
+        X_lidar_val = input_val [0]
+        X_coord_val = input_val [1]
+        val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                    X_coord_val,
+                                                    label_validation, BATCH_SIZE)
+
+        input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+
+    df_results_top_k, all_index_predict_order = olb.beam_selection_ruseckas (type_of_input=input_type,
+                                                                             train_generator=train_generator,
+                                                                             val_generator=val_generator,
+                                                                             input_test=input_test,
+                                                                             label_test=label_test,
+                                                                             num_classes=num_classes,
+                                                                             input_train_shape=input_train_shape,
+                                                                             episode=0, train=True)
+
+    return df_results_top_k, all_index_predict_order
+
+
+def inverter_dataset_beam_selection(data_s009, test_s008,num_classes):
+    #data_for_train, data_for_validation, _, num_classes = prepare.read_all_data ()
+    #test_s008 = pd.concat ([data_for_train, data_for_validation], axis=0)
+    input_type = 'lidar_coord'
+
+    size_for_train = int (len (data_s009) * 0.8)
+    train_s009 = data_s009 [:size_for_train]
+    val_s009 = data_s009 [size_for_train:]
+
+    label_test = np.array (test_s008 ['index_beams'].tolist ())
+    label_train = np.array (train_s009 ['index_beams'].tolist ())
+    label_validation = np.array (val_s009 ['index_beams'].tolist ())
+
+    BATCH_SIZE = 32
+
+    if input_type == 'coord':
+        input_train = np.array (train_s009 ['coord'].tolist ())
+        input_validation = np.array (val_s009 ['coord'].tolist ())
+        input_test = np.array (test_s008 ['coord'].tolist ())
+
+        train_generator = prepare.DataGenerator_coord (input_train,
+                                                       label_train,
+                                                       BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_coord (input_validation,
+                                                     label_validation,
+                                                     BATCH_SIZE, shuffle=True)
+        input_train_shape = input_train.shape [1:]
+
+    if input_type == 'lidar':
+        lidar_train = np.array (train_s009 ['lidar'].tolist ())
+        lidar_val = np.array (val_s009 ['lidar'].tolist ())
+        lidar_test = np.array (test_s008 ['lidar'].tolist ())
+
+        input_train = lidar_train.reshape (lidar_train.shape [0], 20, 200, 10)
+        input_validation = lidar_val.reshape (lidar_val.shape [0], 20, 200, 10)
+        input_test = lidar_test.reshape (lidar_test.shape [0], 20, 200, 10)
+
+        train_generator = prepare.DataGenerator_lidar (input_train, label_train, BATCH_SIZE, shuffle=True)
+        val_generator = prepare.DataGenerator_lidar (input_validation, label_validation, BATCH_SIZE, shuffle=True)
+        input_train_shape = input_train.shape [1:]
+
+    if input_type == 'lidar_coord':
+        print (input_type)
+        coord_train = np.array (train_s009 ['coord'].tolist ())
+        coord_val = np.array (val_s009 ['coord'].tolist ())
+        coord_test = np.array (test_s008 ['coord'].tolist ())
+
+        lidar_train = np.array (train_s009 ['lidar'].tolist ())
+        lidar_val = np.array (val_s009 ['lidar'].tolist ())
+        lidar_test = np.array (test_s008 ['lidar'].tolist ())
+
+        lidar_train = lidar_train.reshape (lidar_train.shape [0], 20, 200, 10)
+        input_train = [lidar_train.reshape (lidar_train.shape [0], 20, 200, 10), coord_train]
+
+        lidar_val = lidar_val.reshape (lidar_val.shape [0], 20, 200, 10)
+        input_val = [lidar_val.reshape (lidar_val.shape [0], 20, 200, 10), coord_val]
+
+        lidar_test = lidar_test.reshape (lidar_test.shape [0], 20, 200, 10)
+        input_test = [lidar_test.reshape (lidar_test.shape [0], 20, 200, 10), coord_test]
+
+        X_lidar_train = input_train [0]
+        X_coord_train = input_train [1]
+        train_generator = prepare.DataGenerator_both (X_lidar_train,
+                                                      X_coord_train,
+                                                      label_train, BATCH_SIZE, shuffle=True)
+        X_lidar_val = input_val [0]
+        X_coord_val = input_val [1]
+        val_generator = prepare.DataGenerator_both (X_lidar_val,
+                                                    X_coord_val,
+                                                    label_validation, BATCH_SIZE)
+
+        input_train_shape = [X_lidar_train.shape [1:], X_coord_train.shape [1:]]
+
+    df_results_top_k, all_index_predict_order = olb.beam_selection_ruseckas (type_of_input=input_type,
+                                                                             train_generator=train_generator,
+                                                                             val_generator=val_generator,
+                                                                             input_test=input_test,
+                                                                             label_test=label_test,
+                                                                             num_classes=num_classes,
+                                                                             input_train_shape=input_train_shape,
+                                                                             episode=0, train=True)
+
+    return df_results_top_k, all_index_predict_order
+
+
 
 def beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='coord'):
     data_for_train, data_for_validation, data_s009, num_classes = prepare.read_all_data ()
@@ -199,10 +460,11 @@ def beam_selection_with_inverted_dataset(input_type='lidar_coord'):
 
 
 #beam_selection_with_inverted_dataset()
+k_fold_simulations()
 
-beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='coord')
-beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='coord')
-beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar')
-beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar')
-beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar_coord')
-beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar_coord')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='coord')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='coord')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='LOS', input_type='lidar_coord')
+#beam_selection_LOS_NLOS_inverted_dataset(connection='NLOS', input_type='lidar_coord')
