@@ -2,6 +2,15 @@ import read_data
 import scipy.stats as st
 import numpy as np
 import pandas as pd
+from scipy.stats import wasserstein_distance
+
+import sys
+sys.path.insert(0, '../otdd_kheyer/OTDD/OTDD/')
+#sys.path.append ('../otdd_kheyer/OTDD/OTDD/')
+
+
+#from otdd import *
+import otdd
 
 def read_classes(dataset):
     if dataset == 's008':
@@ -789,7 +798,6 @@ def plot_radar():
     plt.show ()
     a=0
 
-
 def plot_relation_between_accuracy_and_divergence():
     import matplotlib.pyplot as plt
 
@@ -1015,10 +1023,239 @@ def venn_diagram(connection_type):
 
 
 
+def test_with_KL_divergence():
+    a=0
+def kl_divergence():
+    # KL divergence
+
+    classes_LOS_s009, classes_NLOS_s009, classes_ALL_s009 = read_classes (dataset='s009')
+    classes_LOS_s008, classes_NLOS_s008, classes_ALL_s008 = read_classes (dataset='s008')
+
+    KL_s008_s009_LOS = calculate_distribuitions_and_KL_divergence(classes_LOS_s008, classes_LOS_s009)
+    KL_s009_s008_LOS = calculate_distribuitions_and_KL_divergence(classes_LOS_s009, classes_LOS_s008)
+
+    print( f"KL Divergence s008→s009 (LOS): {KL_s008_s009_LOS:.6f}")
+    print( f"KL Divergence s009→s008 (LOS): {KL_s009_s008_LOS:.6f}")
+
+    KL_s008_s009_NLOS = calculate_distribuitions_and_KL_divergence(classes_NLOS_s008, classes_NLOS_s009)
+    KL_s009_s008_NLOS = calculate_distribuitions_and_KL_divergence(classes_NLOS_s009, classes_NLOS_s008)
+
+    print( f"KL Divergence s008→s009 (NLOS): {KL_s008_s009_NLOS:.6f}")
+    print( f"KL Divergence s009→s008 (NLOS): {KL_s009_s008_NLOS:.6f}")
+
+    KL_s008_s009_ALL = calculate_distribuitions_and_KL_divergence(classes_ALL_s008, classes_ALL_s009)
+    KL_s009_s008_ALL = calculate_distribuitions_and_KL_divergence(classes_ALL_s009, classes_ALL_s008)
+
+    print( f"KL Divergence s008→s009 (ALL): {KL_s008_s009_ALL:.6f}")
+    print( f"KL Divergence s009→s008 (ALL): {KL_s009_s008_ALL:.6f}")
+def alinhamento_das_classes(p_, q_):
+
+    p = pd.DataFrame({'freq': p_.values}, index=p_.index)
+    q = pd.DataFrame({'freq': q_.values}, index=q_.index)
+
+    # Identificacao das classes únicas presentes em ambos os datasets
+    todas_as_classes = p.index.union (q.index)
+
+    #Reindexar ambos para que tenham o mesmo índice, preenchendo faltantes com 0
+    p_alinhado = p ['freq'].reindex (todas_as_classes, fill_value=0)
+    q_alinhado = q ['freq'].reindex (todas_as_classes, fill_value=0)
+
+    return p_alinhado, q_alinhado
+def calculate_distribuitions_and_KL_divergence(p_, q_):
+    from scipy.stats import entropy
+
+    p, q = alinhamento_das_classes(p_, q_)
+
+    freq_p = p.values
+    freq_q = q.values
+
+    num_classes_p = p.index
+    num_classes_q = q.index
+
+    epsilon = 1e-10
+
+    prob_p = (freq_p + epsilon) / np.sum(freq_p + epsilon)
+    prob_q = (freq_q + epsilon) / np.sum(freq_q + epsilon)
+
+    '''Calculo Manual da KL Divergence: '''
+
+    # a) Calcular a razão entre as probabilidades
+    razao = prob_p / prob_q
+
+    # b) Calcular o logaritmo natural da razão
+    log_razao = np.log (razao)
+
+    # c) Multiplicar pelo peso da distribuição original (P)
+    termos = prob_p * log_razao
+
+    # d) Somar todos os termos
+    kl_manual = np.sum (termos)
+
+    #print (f"KL Divergence (Passo a passo): {kl_manual:.6f}")
+
+    kl_scipy = entropy (prob_p, prob_q)
+    #print (f"KL Divergence (SciPy): {kl_scipy:.6f}")
+
+    return kl_scipy
 
 
+
+def otdd_distance_example():
+    #import sys
+    #sys.path.append ("../otdd/")
+    #from otdd.pytorch.distance import DatasetDistance
+    #from otdd.pytorch.datasets import load_torchvision_data
+
+    # Load data
+    #loaders_src = load_torchvision_data ('MNIST', valid_size=0, resize=28, maxsize=2000) [0]
+    #loaders_tgt = load_torchvision_data ('USPS', valid_size=0, resize=28, maxsize=2000) [0]
+
+    # Instantiate distance
+    #dist = DatasetDistance (loaders_src ['train'], loaders_tgt ['train'],
+    #                        inner_ot_method='exact',
+    #                        debiased_loss=True,
+    #                        p=2, entreg=1e-1,
+    #                        device='cpu')
+
+    #d = dist.distance (maxsamples=1000)
+    #print (f'OTDD(MNIST,USPS)={d:8.2f}')
+    a=0
+'''
+def get_mnist_data():
+    import torch
+    from torchvision import datasets, transforms
+
+    import sys
+    sys.path.append ('../otdd_kheyer/OTDD/OTDD/')
+    from otdd_pytorch import TensorDataset
+
+    mnist_transform = transforms.Compose ([transforms.ToTensor(),
+                                           transforms.Normalize((0.1307,), (0.3081,))
+                                           ])
+
+    mnist_train = datasets.MNIST ('../data', train=True, download=True, transform=mnist_transform)
+
+    mnist_feats = []
+    mnist_labels = []
+
+    for i in range (len (mnist_train)):
+        feats, labels = mnist_train [i]
+        mnist_feats.append (feats)
+        mnist_labels.append (labels)
+
+    mnist_feats = torch.cat (mnist_feats).view (len (mnist_train), -1)
+    mnist_labels = torch.tensor (mnist_labels)
+
+    mnist_data = TensorDataset (mnist_feats, mnist_labels)
+
+    return mnist_data
+'''
+def otdd_distance_example_kheyer():
+
+    x, y = get_data (5000)
+
+    print(otdd)
+    data_x = otdd.ArrayDataset (x [0], x [1])
+    data_y = otdd.ArrayDataset (y [0], y [1])
+    a=0
+
+def get_data(n):
+    #import pykeops
+    from ot.datasets import make_data_classif
+
+    #import torch
+    #from torchvision import datasets, transforms
+    #import pandas as pd
+    import numpy as np
+
+    n = 5000
+
+    x = make_data_classif ('3gauss', n)
+    y = make_data_classif ('3gauss2', n)
+
+    y_p = (y [0] @ np.array ([[1, 0], [0, 1]])) + 5
+    a = [x [0], x [1] - 1]
+    b = [y_p, y [1] - 1]
+
+    return a, b
+
+def otdd_dist_beam_selection_data():
+    data_LOS_s008, data_NLOS_s008, data_ALL_s008 = read_data.read_data_s008 (scale_to_coord=16)
+    data_LOS_s009, data_NLOS_s009, data_ALL_s009 = read_data.read_data_s009 (scale_to_coord=16)
+
+    s008_LOS_feature = data_LOS_s008.filter(items=['x', 'y', 'index_beams'])
+    s009_LOS_feature = data_LOS_s009.filter(items=['x', 'y', 'index_beams'])
+
+    #cost = distance_function.gaussian_distance
+    a=0
+
+
+
+def probabilty_distribuition_calculate(p, q):
+    freq_p = p.values
+    freq_q = q.values
+
+    num_classes_p = p.index
+    num_classes_q = q.index
+
+    epsilon = 1e-10
+
+    prob_p = (freq_p + epsilon) / np.sum (freq_p + epsilon)
+    prob_q = (freq_q + epsilon) / np.sum (freq_q + epsilon)
+
+    return prob_p, prob_q
+def distance_of_wasserstein():
+    classes_LOS_s009, classes_NLOS_s009, classes_ALL_s009 = read_classes (dataset='s009')
+    classes_LOS_s008, classes_NLOS_s008, classes_ALL_s008 = read_classes (dataset='s008')
+
+    dist_LOS, _, _ = wasserstein_distance_calculate (classes_LOS_s008, classes_LOS_s009)
+    dist_NLOS, _, _ = wasserstein_distance_calculate (classes_NLOS_s008, classes_NLOS_s009)
+    dist_ALL, _, _ = wasserstein_distance_calculate (classes_ALL_s008, classes_ALL_s009)
+def wasserstein_distance_calculate(p_, q_):
+
+    p, q = alinhamento_das_classes (p_, q_)
+    prob_p, prob_q = probabilty_distribuition_calculate(p, q)
+
+    all_class = sorted (list (set (p_.index) | set (q_.index)))
+
+    import ot
+
+    M = ot.dist (np.array (all_class).reshape (-1, 1),
+                 np.array (all_class).reshape (-1, 1), metric='euclidean')
+
+    dist = ot.emd2 (prob_p, prob_q, M)
+
+    print("Usando ot.emd2 com custo euclidiano entre as classes")
+    print (f"Distância de Wasserstein: {dist}")
+
+
+    dist_s008_s009 = wasserstein_distance(u_values=np.array(all_class), v_values=np.array(all_class),
+                                          u_weights=p.values, v_weights=q.values)
+
+    dist_s009_s008 = wasserstein_distance(u_values=np.array(all_class), v_values=np.array(all_class),
+                                          u_weights=prob_q, v_weights=prob_p)
+
+    print("Usando o pacote scipy.stats.wasserstein_distance")
+    print (f"Wasserstein distance s008→s009 : {dist_s008_s009:.6f}")
+    print (f"Wasserstein distance s009→s008 : {dist_s009_s008:.6f}")
+
+    return dist, dist_s008_s009, dist_s009_s008
+
+
+
+
+
+
+
+#otdd_dist_beam_selection_data()
+#get_mnist_data()
+#otdd_distance_example_kheyer()
+otdd_distance_example_kheyer()
+#distance_of_wasserstein()
+#kl_divergence()
+#otdd_distance_example()
 #plot_radar()
-venn_diagram('NLOS')
+#venn_diagram('NLOS')
 #venn_diagram('ALL')
 #calculate_the_diff_between_distributions()
 #diff_of_distributions()

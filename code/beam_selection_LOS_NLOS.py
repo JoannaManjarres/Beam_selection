@@ -170,6 +170,99 @@ def Thermomether_coord_x_y_unbalanced_for_s009(escala, all_info_coord_val, data)
 
     return encondig_coord
 
+def k_fold_simulations():
+    preprocess_resolution = 8
+    LOS_s009, NLOS_s009, full_data_s009 = read_data.read_data_s009 (preprocess_resolution)
+    LOS_s008, NLOS_s008, full_data_s008 = read_data.read_data_s008 (preprocess_resolution)
+    train_data = 's008'
+    connection_type = 'ALL'
+
+    if train_data == 's008':
+        if connection_type == 'LOS':
+            input_train = LOS_s008['lidar_coord']
+            label_train = [str (y) for y in LOS_s008 ['index_beams']]
+            input_test = LOS_s009['lidar_coord']
+            label_test = [str (y) for y in LOS_s009 ['index_beams']]
+        elif connection_type == 'NLOS':
+            input_train = NLOS_s008['lidar_coord']
+            label_train = [str (y) for y in NLOS_s008 ['index_beams']]
+            input_test = NLOS_s009['lidar_coord']
+            label_test = [str (y) for y in NLOS_s009 ['index_beams']]
+        elif connection_type == 'ALL':
+            input_train = full_data_s008['lidar_coord']
+            label_train = [str (y) for y in full_data_s008 ['index_beams']]
+            input_test = full_data_s009['lidar_coord']
+            label_test = [str (y) for y in full_data_s009 ['index_beams']]
+    elif train_data == 's009':
+        if connection_type == 'LOS':
+            input_train = LOS_s009['lidar_coord']
+            label_train = [str (y) for y in LOS_s009 ['index_beams']]
+            input_test = LOS_s008['lidar_coord']
+            label_test = [str (y) for y in LOS_s008 ['index_beams']]
+        elif connection_type == 'NLOS':
+            input_train = NLOS_s009['lidar_coord']
+            label_train = [str (y) for y in NLOS_s009 ['index_beams']]
+            input_test = NLOS_s008['lidar_coord']
+            label_test = [str (y) for y in NLOS_s008 ['index_beams']]
+        elif connection_type == 'ALL':
+            input_train = full_data_s009['lidar_coord']
+            label_train = [str (y) for y in full_data_s009 ['index_beams']]
+            input_test = full_data_s008['lidar_coord']
+            label_test = [str (y) for y in full_data_s008 ['index_beams']]
+
+    fold_size = int (len (input_train) / 10)
+    result = pd.DataFrame ()
+
+    for i in range (10):
+        dataset_size = len(input_train)
+        if i == 0:
+            print ('i: ', i)
+            start = (i + 1) * fold_size
+            end = dataset_size
+            new_data_train = input_train [start:end]
+            new_label_train = label_train [start:end]
+            df_results_top_k = bsw.top_k_wisard_beam_selection (x_train=new_data_train.tolist (),
+                                                                x_test=input_test.tolist (),
+                                                                y_train=new_label_train, y_test=label_test,
+                                                                address_of_size=34, name_of_conf_input='')
+            result = pd.concat ([result, df_results_top_k [df_results_top_k ['top-k'] == 1]], axis=0)
+
+        if i == 9:
+            print ('i: ', i)
+            start = 0
+            end = i * fold_size
+            new_data_train = input_train [start:end]
+            new_label_train = label_train [start:end]
+            df_results_top_k = bsw.top_k_wisard_beam_selection (x_train=new_data_train.tolist (),
+                                                                x_test=input_test.tolist (),
+                                                                y_train=new_label_train, y_test=label_test,
+                                                                address_of_size=34, name_of_conf_input='')
+            result = pd.concat ([result, df_results_top_k [df_results_top_k ['top-k'] == 1]], axis=0)
+
+        if i != 0 and i != 9:
+            print ('i: ', i)
+            start = 0
+            end = dataset_size
+
+            end_1 = i * fold_size
+            start_1 = 0
+            start_2 = (1+i) * fold_size
+            end_2 = dataset_size
+
+            new_data_train = pd.concat ([input_train [start_1:end_1], input_train [start_2:end_2]], axis=0)
+            new_label_train = label_train [start_1:end_1]+label_train [start_2:end_2]
+            df_results_top_k = bsw.top_k_wisard_beam_selection (x_train=new_data_train.tolist (),
+                                                                x_test=input_test.tolist (),
+                                                                y_train=new_label_train, y_test=label_test,
+                                                                address_of_size=34, name_of_conf_input='')
+            result = pd.concat ([result, df_results_top_k [df_results_top_k ['top-k'] == 1]], axis=0)
+    #path_result = ('../results/inverter_dataset/score/Wisard/top-k/lidar_coord' + '/' + connection_type + '/')
+    path_result = ('../results/results_article_LoS_NLoS/data_for_article/LoS_NLoS_tests/wisard/lidar_coord' + '/' + connection_type + '/')
+    #all_index_predict_order.to_csv (path_result + 'index_predict_' + input_type + '.csv', index=False)
+    result.to_csv (path_result + 'k_fold_accuracy_lidar_coord_' + connection_type + '.csv', index=False)
+
+
+
 def get_coord_preprocess(connection_type, preprocess_resolution):
     train_data_LOS_s009, train_data_NLOS_s009, valid_data_s009 = read_data.read_data_s009(preprocess_resolution)
     train_data_LOS_s008, train_data_NLOS_s008, valid_data_s008 = read_data.read_data_s008(preprocess_resolution)
@@ -962,6 +1055,6 @@ def beam_selection_with_s008_or_s009(input_type='coord', connection_type='ALL'):
 #plot_all_performance_WiSARD(inverter_dataset=False)
 #beam_selection_LOS_NLOS(input_type='lidar', connection_type='LOS')
 
-
+k_fold_simulations()
 #beam_selection_with_s008_or_s009()
 #beam_selection_LOS_NLOS_inverter_dataset(input_type='coord', connection_type='LOS')

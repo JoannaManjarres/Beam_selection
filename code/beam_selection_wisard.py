@@ -582,7 +582,8 @@ def top_k_wisard_beam_selection(x_train, x_test,
 
         score.append(acerto / len(out))
 
-    df_score_wisard_top_k = pd.DataFrame ({"Top-K": top_k, "Acuracia": score})
+    df_score_wisard_top_k = pd.DataFrame ({"top-k": top_k, "score": score, "samples_for_train": len(x_train),
+                                           "samples_for_test": len(x_test)})
 
     if save_results:
         path_csv = '../results/score/Wisard/top_k/'+name_of_conf_input+'/'
@@ -610,4 +611,4 @@ def top_k_wisard_beam_selection(x_train, x_test,
         print ("-----------------------------")
 
 
-    return top_k, score
+    return df_score_wisard_top_k

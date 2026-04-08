@@ -78,6 +78,7 @@ def beam_selection_ruseckas(type_of_input,
                                                                         episode=episode)
         df_results_top_k['trainning_process_time'] = trainning_process_time
         df_results_top_k['samples_for_train'] = np.shape(train_generator.indexes)[0]
+        df_results_top_k['samples_for_validation'] = np.shape(val_generator.indexes)[0]
 
         return df_results_top_k, all_index_predict_order
     else:
